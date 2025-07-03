@@ -1,0 +1,21 @@
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# 系統檔
+Thumbs.db
+.DS_Store
+# 忽略 SVN 資料夾
+.svn/
+**/.svn/
+
+# 忽略編譯產物資料夾
+bin/
+obj/
+**/bin/
+**/obj/
