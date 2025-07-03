@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using TscLibCore.BaseObject;
 
 #nullable disable
 
 namespace TR5MidTerm.Models
 {
-    public partial class TRDBContext : DbContext
+    public partial class TRDBContext : BaseDbContext
     {
         public TRDBContext()
         {

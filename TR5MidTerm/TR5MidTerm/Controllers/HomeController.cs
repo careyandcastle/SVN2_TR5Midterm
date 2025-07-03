@@ -6,12 +6,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using TR5MidTerm.Models;
+using TscLibCore.BaseObject;
 
 namespace TR5MidTerm.Controllers
 {
+    [ProcUseRang("Home", ProcUseRang.Menu)]
+    [TypeFilter(typeof(BaseActionFilter))]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        //private const string ProcNo = "TR5MidTerm";   
 
         public HomeController(ILogger<HomeController> logger)
         {
