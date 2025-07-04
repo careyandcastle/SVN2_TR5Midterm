@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using TscLibCore.BaseObject;
@@ -487,6 +488,11 @@ namespace TR5MidTerm.Models
             });
 
             OnModelCreatingPartial(modelBuilder);
+        }
+
+        internal Task SaveChangesAsync()
+        {
+            throw new NotImplementedException();
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

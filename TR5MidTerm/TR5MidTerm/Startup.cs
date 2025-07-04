@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TscLibCore.BaseObject;
 using TscLibCore.DB;
+using TR5MidTerm.Models.MappingProfiles;
 
 namespace TR5MidTerm
 {
@@ -59,6 +60,9 @@ namespace TR5MidTerm
 
                 b.AddInterceptors(new BaseDbCommandInterceptor(DB_Name, key.Name, key.PWD));
             });
+
+            services.AddAutoMapper(typeof(midTerm_AutoMapperProfile));  // 多模組方式（可多行）
+            //services.AddAutoMapper(typeof( ));  // 多模組方式（可多行）
 
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
