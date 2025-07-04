@@ -83,15 +83,8 @@ namespace TR5MidTerm
                         pattern: "{controller=Home}/{action=Index}"
 
                     );
-
-
-                    // ✅ 這樣輸入 http://localhost/Home/Index 或 http://localhost 就會進到 HomeController.Index()
-                    // ✅ 如果網址省略 controller 或 action，就會使用預設值 Home / Index
                 }
-
-                // ✅ 不管是不是開發機，都可以走這段：
-                // 🔍 這段網址會要求必須前綴加上 "MVC_Demo"，像這樣：
-                // http://localhost/MVC_Demo2/Home/Index → 對應 HomeController.Index()
+ 
                 endpoints.MapControllerRoute(
                     name: "TR5MidTerm_Route",
                     pattern: "TR5MidTerm/{controller=Home}/{action=Index}"

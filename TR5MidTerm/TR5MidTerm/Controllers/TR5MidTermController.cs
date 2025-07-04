@@ -15,12 +15,14 @@ using System.Data;
 using TscLibCore.FileTool;
 using System.IO;
 using TscLibCore.Modules;
-
+using TscLibCore.Authority;
+using System.Diagnostics;
 
 namespace TR5MidTerm.Controllers
 {
     [ProcUseRang(ProcNo, ProcUseRang.Menu)]
     [TypeFilter(typeof(BaseActionFilter))]
+
     public class TR5MidTermController : Controller
     {
         private readonly TRDBContext _context;
@@ -44,6 +46,8 @@ namespace TR5MidTerm.Controllers
 
         public IActionResult Index()
         {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            Debug.WriteLine($"[InitInventoryDefaultValues] ✅ 從 Session 取得使用者：UserNo={ua.UserNo}, BusinessNo={ua.BusinessNo}, DepartmentNo={ua.DepartmentNo}, DivisionNo={ua.DivisionNo}, BranchNo={ua.BranchNo}"); ;
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<承租人檔VM>();
 
@@ -309,10 +313,11 @@ namespace TR5MidTerm.Controllers
             return File(byteContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
 
-        //public bool isMasterKeyExist()
-        //{
-        //    return (_context.承租人檔.Any(m => ) == false);
-        //}
+        public bool isMasterKeyExist()
+        {
+            //return (_context.承租人檔.Any(m => ) == false);
+            return true;
+        }
 
     }
 }
