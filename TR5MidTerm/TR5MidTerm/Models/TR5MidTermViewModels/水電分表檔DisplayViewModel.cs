@@ -29,7 +29,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 總表號 { get; set; }
         [Key]
         public int 分表號 { get; set; }
-        [Required]
+        //[Required]
         //[StringLength(20)]
         public string 備註 { get; set; }
         //[Column(TypeName = "decimal(18, 0)")]

@@ -13,19 +13,19 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
     public partial class 水電總表檔DisplayViewModel
     {
 
-        //[Key]
+        [Key]
         //[StringLength(2)]
         public string 事業 { get; set; }
-        //[Key]
+        [Key]
         //[StringLength(2)]
         public string 單位 { get; set; }
-        //[Key]
+        [Key]
         //[StringLength(2)]
         public string 部門 { get; set; }
-        //[Key]
+        [Key]
         //[StringLength(2)]
         public string 分部 { get; set; }
-        //[Key]
+        [Key]
         //[StringLength(20)]
         public string 總表號 { get; set; }
         //[StringLength(5)]
