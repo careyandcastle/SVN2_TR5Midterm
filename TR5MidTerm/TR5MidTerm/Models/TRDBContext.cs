@@ -490,10 +490,15 @@ namespace TR5MidTerm.Models
             OnModelCreatingPartial(modelBuilder);
         }
 
-        internal Task SaveChangesAsync()
+        internal Guid Key_Guid(object symmKey)
         {
             throw new NotImplementedException();
         }
+
+        //internal Task SaveChangesAsync()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }

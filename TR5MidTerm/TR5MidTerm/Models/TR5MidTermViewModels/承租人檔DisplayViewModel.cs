@@ -10,7 +10,7 @@ using TscLibCore.Attribute;
 
 namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
-    public partial class 承租人檔VM
+    public partial class 承租人檔DisplayViewModel
     {
 
         [Key]
@@ -38,6 +38,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public byte[] 承租人 { get; set; }
         //[Required]
         //[StringLength(2)]
+        [HiddenForView]
         public string 身分別編號 { get; set; }
         //[Required]
         [HiddenForView]
@@ -75,7 +76,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 刪除註記顯示 { get; set; }
 
         //導覽屬性顯示用 0704
-        //public string 身分別名稱 { get; set; }
+        [DisplayName("身分別")]
+        public string 身分別名稱 { get; set; }
 
     }
 }

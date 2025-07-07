@@ -1,0 +1,76 @@
+﻿@using TR5MidTerm.Controllers
+@model TR5MidTerm.Models.TR5MidTermViewModels.承租人檔CreateViewModel
+
+<div>
+    <div class="row">
+        <div class="col">
+            <form asp-action="Create">
+                @Html.AntiForgeryToken()
+
+                @* 全域錯誤訊息區塊 *@
+                <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+                    <ul></ul>
+                </div>
+
+                @* 使用者輸入：承租人（明文） *@
+                <div class="form-group">
+                    <label asp-for="承租人明文" class="control-label"></label>
+                    <input asp-for="承租人明文" class="form-control" />
+                    <span asp-validation-for="承租人明文" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="承租人編號" class="control-label"></label>
+                    <input asp-for="承租人編號" class="form-control" />
+                    <span asp-validation-for="承租人編號" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="統一編號明文" class="control-label"></label>
+                    <input asp-for="統一編號明文" class="form-control" />
+                    <span asp-validation-for="統一編號明文" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="行動電話明文" class="control-label"></label>
+                    <input asp-for="行動電話明文" class="form-control" />
+                    <span asp-validation-for="行動電話明文" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="電子郵件明文" class="control-label"></label>
+                    <input asp-for="電子郵件明文" class="form-control" />
+                    <span asp-validation-for="電子郵件明文" class="text-danger"></span>
+                </div>
+
+                @* 下拉選單：身分別 *@
+                <div class="form-group">
+                    <label asp-for="身分別編號" class="control-label"></label>
+                    <select asp-for="身分別編號" class="form-control" asp-items="ViewBag.身分別選項"></select>
+                    <span asp-validation-for="身分別編號" class="text-danger"></span>
+                </div>
+
+                @* 顯示用（不可編輯）：刪除註記顯示 *@
+                <div class="form-group">
+                    <label asp-for="刪除註記" class="control-label"></label>
+                    <input class="form-control" value="@Model.刪除註記顯示" disabled />
+                </div>
+
+                @* 隱藏欄位（必要主鍵） *@
+                @Html.HiddenFor(m => m.事業)
+                @Html.HiddenFor(m => m.單位)
+                @Html.HiddenFor(m => m.部門)
+                @Html.HiddenFor(m => m.分部)
+                @Html.HiddenFor(m => m.承租人編號)
+                @Html.HiddenFor(m => m.刪除註記)
+                @Html.HiddenFor(m => m.修改人)
+                @Html.HiddenFor(m => m.修改時間)
+
+                <div class="form-group">
+                    <input type="submit" value="送出" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">返回</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

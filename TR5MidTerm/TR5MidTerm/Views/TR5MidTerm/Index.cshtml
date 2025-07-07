@@ -1,5 +1,5 @@
 ﻿@using TR5MidTerm.Models.TR5MidTermViewModels;
-@model 承租人檔VM
+@model 承租人檔DisplayViewModel
 @using TscLibCore.Commons;
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @using Microsoft.AspNetCore.Http;
@@ -33,7 +33,7 @@
     var dateType = (datetime: "datetime", date: "date");
     foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.MasterTable.ToString()])
     {
-        var prop = typeof(承租人檔VM).GetProperty(propName.Key);
+        var prop = typeof(承租人檔DisplayViewModel).GetProperty(propName.Key);
         Type propertyType = prop.PropertyType;
         Type typeWithNullable = Nullable.GetUnderlyingType(propertyType);
         propertyType = typeWithNullable ?? propertyType;
@@ -77,10 +77,10 @@
                 </b-col>
             </b-row>
         </template>
-        <template #filter-row="slot">
-            <b-row class="mb-2">
+        <!--<template #filter-row="slot">
+            <b-row class="mb-2">-->
                 @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-                <b-col style="max-width:14em;"
+                <!--<b-col style="max-width:14em;"
                        v-for="field in slot.data.mTableFields" :key="field.key"
                        v-if="['m-table-actions', '__rowIndex__', '事業','單位','部門','分部','承租人編號','承租人','身分別編號','統一編號','行動電話','電子郵件','刪除註記','修改人','修改時間'].some(item => item === field.key) === false">
                     <b-input :placeholder="field.label"
@@ -94,7 +94,7 @@
                     <b-button @@click="slot.data.onCleanFilter" style="max-height:62px;" class="float-right" variant="detail3" :disabled="!slot.data.isFiltered">清除過濾</b-button>
                 </b-col>
             </b-row>
-        </template>
+        </template>-->
     </table-component>
 </div>
 
