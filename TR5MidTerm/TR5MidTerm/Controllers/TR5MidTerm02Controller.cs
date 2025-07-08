@@ -15,7 +15,8 @@ using System.Data;
 using TscLibCore.FileTool;
 using System.IO;
 using TscLibCore.Modules;
-
+using Microsoft.AspNetCore.Mvc.Rendering;
+using TscLibCore.Authority;
 
 namespace TR5MidTerm.Controllers
 {
@@ -74,6 +75,20 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+            
+            // ✅ 載入下拉選單：計量表種類
+            ViewBag.計量表種類選項 = _context.計量表種類檔
+                .OrderBy(x => x.計量表種類編號)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.計量表種類編號,
+                    Text = $"{x.計量表種類編號} - {x.計量表種類}"
+                }).ToList();
+
+             
+
             return PartialView();
         }
 
@@ -334,9 +349,31 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
 
+            //var query = from s in _context.水電分表檔
+            //            where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.總表號 == keys.總表號
+            //            select s;
+
             var query = from s in _context.水電分表檔
-                        where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.總表號 == keys.總表號
-                        select s;
+                        where s.事業 == keys.事業 &&
+                              s.單位 == keys.單位 &&
+                              s.部門 == keys.部門 &&
+                              s.分部 == keys.分部 &&
+                              s.總表號 == keys.總表號
+                        select new 水電分表檔DisplayViewModel
+                        {
+                            事業 = s.事業,
+                            單位 = s.單位,
+                            部門 = s.部門,
+                            分部 = s.分部,
+                            總表號 = s.總表號,
+                            分表號 = s.分表號,
+                            備註 = s.備註,
+                            上期度數 = s.上期度數,
+                            本期度數 = s.本期度數,
+                            修改人 = s.修改人,
+                            修改時間 = s.修改時間,
+                            目前使用度數 = s.本期度數 - s.上期度數,
+                        };
 
             return CreatedAtAction(nameof(GetDetails), new ReturnData(ReturnState.ReturnCode.OK)
             {
