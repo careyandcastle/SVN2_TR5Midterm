@@ -77,12 +77,12 @@
                 </b-col>
             </b-row>
         </template>
-        <!--<template #filter-row="slot">
-            <b-row class="mb-2">-->
+        <template #filter-row="slot">
+            <b-row class="mb-2">
                 @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-                <!--<b-col style="max-width:14em;"
+                <b-col style="max-width:14em;"
                        v-for="field in slot.data.mTableFields" :key="field.key"
-                       v-if="['m-table-actions', '__rowIndex__', '事業','單位','部門','分部','承租人編號','承租人','身分別編號','統一編號','行動電話','電子郵件','刪除註記','修改人','修改時間'].some(item => item === field.key) === false">
+                       v-if="['m-table-actions', '__rowIndex__', '承租人','身分別編號','統一編號','行動電話','電子郵件','刪除註記','修改人','修改時間','承租人顯示','統一編號顯示','行動電話顯示','電子郵件顯示','刪除註記顯示','身分別名稱'].some(item => item === field.key) === false">
                     <b-input :placeholder="field.label"
                              :name="field.key"
                              v-b-tooltip.bottom.v-secondary="field.label"
@@ -94,7 +94,7 @@
                     <b-button @@click="slot.data.onCleanFilter" style="max-height:62px;" class="float-right" variant="detail3" :disabled="!slot.data.isFiltered">清除過濾</b-button>
                 </b-col>
             </b-row>
-        </template>-->
+        </template>
     </table-component>
 </div>
 
@@ -106,6 +106,11 @@
 
             //主檔 Table Key 欄位名稱
             const masterTableKeys = [
+                '事業',
+                '單位',
+                '部門',
+                '分部',
+                '承租人編號',
             ];
 
             //主檔 data source 傳給 Server的參數
@@ -154,10 +159,20 @@
             //點擊時發生呼叫事件
             const _onMasterRowSelect = function (rowData) {
                 var selectParam = {
+                    事業: null,
+                    單位: null,
+                    部門: null,
+                    分部: null,
+                    承租人編號: null,
                 };
 
                 if (rowData.length > 0) {
                     let data = rowData[0];
+                    selectParam.事業 = this.事業 = data.事業;
+                    selectParam.單位 = this.單位 = data.單位;
+                    selectParam.部門 = this.部門 = data.部門;
+                    selectParam.分部 = this.分部 = data.分部;
+                    selectParam.承租人編號 = this.承租人編號 = data.承租人編號;
                     this.selectedMasterRow.param = selectParam;
 
                     //傳送給server時, 轉ISO時間
@@ -256,6 +271,11 @@
                 operatePermissions: _opPermiss,
                 isFiltered: false,
                 isNewItemOnTop: true,
+                事業: '',
+                單位: '',
+                部門: '',
+                分部: '',
+                承租人編號: '',
             }
             params.methods = {
                 //系統覆寫

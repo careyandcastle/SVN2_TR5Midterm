@@ -15,7 +15,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
 
  
         [DisplayName("承租人")]
-        public string 承租人顯示 { get; set; }
+        public string 承租人明文 { get; set; }
 
         //[HiddenForView]
         public string 統一編號明文 { get; set; }

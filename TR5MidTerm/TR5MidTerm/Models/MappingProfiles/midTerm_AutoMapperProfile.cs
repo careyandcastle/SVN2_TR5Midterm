@@ -20,6 +20,8 @@ namespace TR5MidTerm.Models.MappingProfiles
             .ForMember(dest => dest.行動電話, opt => opt.Ignore())
             .ForMember(dest => dest.電子郵件, opt => opt.Ignore());
             ;
+            CreateMap<承租人檔EditViewModel, 承租人檔>();
+            CreateMap<承租人檔,承租人檔EditViewModel>();
 
 
         }

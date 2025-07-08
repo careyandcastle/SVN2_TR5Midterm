@@ -1,0 +1,96 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.水電總表檔CreateViewModel
+@*@{
+    Layout = null;
+}*@
+<!-- ✅ Vue 掛載區塊 -->
+
+<div>
+    <div id="app">
+        <p>🔥 Vue 測試訊息：{{ message }}</p>
+    </div>
+
+    <!-- ✅ Razor + ASP.NET MVC 的表單 -->
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label asp-for="事業"></label>
+            <input asp-for="事業" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="單位"></label>
+            <input asp-for="單位" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="部門"></label>
+            <input asp-for="部門" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="分部"></label>
+            <input asp-for="分部" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="總表號"></label>
+            <input asp-for="總表號" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="案號"></label>
+            <input asp-for="案號" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="計量表種類編號"></label>
+            <select asp-for="計量表種類編號" asp-items="ViewBag.計量表種類選項" class="form-control">
+                <option value="">請選擇</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="計量對象"></label>
+            <input asp-for="計量對象" class="form-control" />
+        </div>
+
+        <div class="form-group text-right mt-3">
+            <button type="submit" class="btn btn-primary">儲存</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        </div>
+    </form>
+
+
+    <script>
+        $(document).ready(function () {
+
+            new Vue({
+                el: '#app',
+                data: {
+                    message: 'Vue 掛載成功 ✅'
+                },
+                mounted: function () {
+                    console.log("✅ Vue 成功掛載");
+                }
+            });
+
+            //app.mount('#app');
+        });
+
+
+                    //this.$on('fetched-page-modal::ready', (modalId) => {
+
+
+
+
+                    //});
+
+    </script>
+
+</div>
+
+
+<!-- ✅ Vue 掛載腳本 -->
+
+

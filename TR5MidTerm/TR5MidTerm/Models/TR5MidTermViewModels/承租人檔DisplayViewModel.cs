@@ -65,13 +65,13 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
 
         // 顯示用欄位（解密後的字串）0704
         [DisplayName("承租人")]
-        public string 承租人顯示 { get; set; }
+        public string 承租人明文 { get; set; }
         [DisplayName("統一編號")]
-        public string 統一編號顯示 { get; set; }
+        public string 統一編號明文 { get; set; }
         [DisplayName("行動電話")]
-        public string 行動電話顯示 { get; set; }
+        public string 行動電話明文 { get; set; }
         [DisplayName("電子郵件")]
-        public string 電子郵件顯示 { get; set; }
+        public string 電子郵件明文 { get; set; }
         [DisplayName("刪除註記")]
         public string 刪除註記顯示 { get; set; }
 

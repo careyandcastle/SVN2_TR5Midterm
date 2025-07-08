@@ -17,6 +17,7 @@ using System.IO;
 using TscLibCore.Modules;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TscLibCore.Authority;
+using TR5MidTerm.PC;
 
 namespace TR5MidTerm.Controllers
 {
@@ -75,7 +76,7 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
-            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            //var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
             
             // ✅ 載入下拉選單：計量表種類
@@ -224,8 +225,17 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            //if (ModelState.IsValid == false)
+            //    return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            //await ValidateForEdit(postData);
+
+            if (!ModelState.IsValid)
+            {
+                return Ok(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR)
+                {
+                    data = ModelState.ToErrorInfos()
+                });
+            }
 
             try
             {
