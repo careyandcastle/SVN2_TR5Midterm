@@ -14,10 +14,10 @@
     var tablesField = ViewBag.TableFieldDescDict;
     var masterTableDescHTML = Html.Raw(CreateTableFieldsDescription.TableFieldDescToHTML(tablesField, TableType.MasterTable));
     var detailTableDescHTML = Html.Raw(CreateTableFieldsDescription.TableFieldDescToHTML(tablesField, TableType.DetailTable));
-    
+
     var requestToken = Html.Raw(Antiforgery.GetAndStoreTokens(Context).RequestToken);
     UserAccountForSession sess = HttpContextAccessor.HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-    
+
     ViewData["Title"] = (string)sess.GetUserAuthority()["procname"];
     var canCreate = Html.Raw(sess.AddYn).ToString().ToLower();
     var canUpdate = Html.Raw(sess.UpdateYn).ToString().ToLower();
@@ -51,27 +51,27 @@
             dateTimePropertyName.MasterTable.Add(propName.Key, dateTimeFormat);
         }
     }
-            foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.DetailTable.ToString()])
+    foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.DetailTable.ToString()])
+    {
+        var prop = typeof(水電分表檔DisplayViewModel).GetProperty(propName.Key);
+        Type propertyType = prop.PropertyType;
+        Type typeWithNullable = Nullable.GetUnderlyingType(propertyType);
+        propertyType = typeWithNullable ?? propertyType;
+        if (propertyType == typeof(DateTime))
         {
-            var prop = typeof(水電分表檔DisplayViewModel).GetProperty(propName.Key);
-            Type propertyType = prop.PropertyType;
-            Type typeWithNullable = Nullable.GetUnderlyingType(propertyType);
-            propertyType = typeWithNullable ?? propertyType;
-            if (propertyType == typeof(DateTime))
+            var att = (DataTypeAttribute)prop.GetCustomAttributes(typeof(DataTypeAttribute), false).FirstOrDefault();
+
+            var dateTimeFormat = dateType.datetime;
+
+            if (att != null && ((DataTypeAttribute)att).DataType == DataType.Date)
             {
-                var att = (DataTypeAttribute)prop.GetCustomAttributes(typeof(DataTypeAttribute), false).FirstOrDefault();
+                dateTimeFormat = dateType.date;
+            }
 
-                var dateTimeFormat = dateType.datetime;
-
-                if (att != null && ((DataTypeAttribute)att).DataType == DataType.Date)
-                {
-                    dateTimeFormat = dateType.date;
-                }
-
-                dateTimePropertyName.DetailTable.Add(propName.Key, dateTimeFormat);
-            }            
+            dateTimePropertyName.DetailTable.Add(propName.Key, dateTimeFormat);
         }
     }
+}
 
 <h1 class="mt-1">@ViewData["Title"]</h1>
 <div id="tr5midtermcontroller-index">
@@ -107,7 +107,7 @@
         <template #filter-row="slot">
             <b-row class="mb-2">
                 @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-                <b-col style="max-width:14em;" 
+                <b-col style="max-width:14em;"
                        v-for="field in slot.data.mTableFields" :key="field.key"
                        v-if="['m-table-actions', '__rowIndex__', '案號','計量表種類編號','計量對象','修改人','修改時間'].some(item => item === field.key) === false">
                     <b-input :placeholder="field.label"
@@ -127,10 +127,10 @@
 
 @section Scripts {
     <script>
-        (function () {            
+        (function () {
             //主檔 Table 欄位名稱中文定義
             const _mTableFieldDesc = @masterTableDescHTML;
-            
+
             //主檔 Table Key 欄位名稱
             const masterTableKeys = [
                 '事業',
@@ -143,9 +143,9 @@
             //主檔 data source 傳給 Server的參數
             let dsMasterProviderParams = {
                 searchBy: null
-            };                       
+            };
 
-            const dateTimePropertyName = @Json.Serialize(@dateTimePropertyName);            
+            const dateTimePropertyName = @Json.Serialize(@dateTimePropertyName);
 
             //主檔 data source
             const _dsMasterProvider = async function (ctx) {
@@ -162,9 +162,9 @@
                     });
 
                     this.totalRows = response.data.total;
-                   
+
                     let latestData = TSCC.Utility.Table.GetDataSource.call(this, masterTableKeys, response, ctx);
-                    
+
                     //轉成台灣時間
                     latestData.forEach(data => {
                         Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
@@ -251,7 +251,7 @@
                     selectParam.總表號 = this.總表號 = data.總表號;
                     this.selectedMasterRow.param = selectParam;
 
-                    //傳送給server時, 轉ISO時間                    
+                    //傳送給server時, 轉ISO時間
                     Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
                         let dateLocalestring = data[propName];
                         if (selectParam.hasOwnProperty(propName) && data.hasOwnProperty(propName) && dateLocalestring) {
@@ -272,7 +272,7 @@
                 selectParam.分表號 = this.分表號 = data.分表號;
                 this.selectedDetailRow.param = selectParam;
 
-                //傳送給server時, 轉ISO時間                
+                //傳送給server時, 轉ISO時間
                 Object.entries(dateTimePropertyName[TableType.DetailTable]).forEach(([propName, dateType]) => {
                     let dateLocalestring = data[propName];
                     if (selectParam.hasOwnProperty(propName) && data.hasOwnProperty(propName) && dateLocalestring) {

@@ -10,9 +10,8 @@ using TscLibCore.Attribute;
 
 namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
-    public partial class 水電總表檔DisplayViewModel
+    public partial class 租約主檔DisplayViewModel
     {
-
         [Key]
         //[StringLength(2)]
         public string 事業 { get; set; }
@@ -26,25 +25,32 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         //[StringLength(2)]
         public string 分部 { get; set; }
         [Key]
-        //[StringLength(20)]
-        public string 總表號 { get; set; }
         //[StringLength(5)]
         public string 案號 { get; set; }
-        //[Required]
+        //[StringLength(50)]
+        public string 案名 { get; set; }
+        [Required]
+        //[StringLength(5)]
+        public string 承租人編號 { get; set; }
+        [Required]
         //[StringLength(2)]
-        public string 計量表種類編號 { get; set; }
-        //[Required]
+        public string 租賃方式編號 { get; set; }
+        [Required]
         //[StringLength(20)]
-        public string 計量對象 { get; set; }
+        public string 租賃用途 { get; set; }
+        //[Column(TypeName = "date")]
+        public DateTime 租約起始日期 { get; set; }
+        public int 租期月數 { get; set; }
+        public int 計租週期月數 { get; set; }
+        public int 繳款期限天數 { get; set; }
+        //[Column(TypeName = "date")]
+        public DateTime? 租約終止日期 { get; set; }
+        //[StringLength(200)]
+        public string 備註 { get; set; }
         //[Required]
         //[StringLength(10)]
         public string 修改人 { get; set; }
         //[Column(TypeName = "datetime")]
         public DateTime 修改時間 { get; set; }
-
-        public bool 可否新增 { get; set; }
-        public bool 可否展開 { get; set; }
-
-
     }
 }

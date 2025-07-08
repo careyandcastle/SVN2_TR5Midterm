@@ -45,5 +45,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         //[ForeignKey("事業,單位,部門,分部,總表號")]
         //[InverseProperty("水電分表檔")]
         //public virtual 水電總表檔 水電總表檔 { get; set; }
+        public bool 可否修改 { get; set; }
+        public bool 可否刪除 { get; set; }
     }
 }
