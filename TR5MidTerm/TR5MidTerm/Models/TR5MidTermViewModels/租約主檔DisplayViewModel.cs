@@ -29,13 +29,13 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 案號 { get; set; }
         //[StringLength(50)]
         public string 案名 { get; set; }
-        [Required]
+        //[Required]
         //[StringLength(5)]
         public string 承租人編號 { get; set; }
-        [Required]
+        //[Required]
         //[StringLength(2)]
         public string 租賃方式編號 { get; set; }
-        [Required]
+        //[Required]
         //[StringLength(20)]
         public string 租賃用途 { get; set; }
         //[Column(TypeName = "date")]

@@ -1,0 +1,299 @@
+﻿@using TR5MidTerm.Models.TR5MidTermViewModels;
+@model 商品檔DisplayViewModel
+@using TscLibCore.Commons;
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+@using TscLibCore.Modules;
+@using TscLibCore.Authority;
+@using System.ComponentModel.DataAnnotations;
+@using TableFieldDescDictionary =
+    System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.Dictionary<System.String, System.String>>;
+@{
+    //產生欄位名稱中文定義
+    var tablesField = ViewBag.TableFieldDescDict;
+    var masterTableDescHTML = Html.Raw(CreateTableFieldsDescription.TableFieldDescToHTML(tablesField, TableType.MasterTable));
+
+
+    var requestToken = Html.Raw(Antiforgery.GetAndStoreTokens(Context).RequestToken);
+    UserAccountForSession sess = HttpContextAccessor.HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+    ViewData["Title"] = (string)sess.GetUserAuthority()["procname"];
+    var canCreate = Html.Raw(sess.AddYn).ToString().ToLower();
+    var canUpdate = Html.Raw(sess.UpdateYn).ToString().ToLower();
+    var canDelete = Html.Raw(sess.DeleteYn).ToString().ToLower();
+    var canQuery = Html.Raw(sess.QueryYn).ToString().ToLower();
+    var canExport = Html.Raw(sess.ExportYn).ToString().ToLower();
+
+    var dateTimePropertyName = new
+    {
+        MasterTable = new Dictionary<string, string>(),
+        DetailTable = new Dictionary<string, string>(),
+    };
+    var dateType = (datetime: "datetime", date: "date");
+    foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.MasterTable.ToString()])
+    {
+        var prop = typeof(商品檔DisplayViewModel).GetProperty(propName.Key);
+        Type propertyType = prop.PropertyType;
+        Type typeWithNullable = Nullable.GetUnderlyingType(propertyType);
+        propertyType = typeWithNullable ?? propertyType;
+        if (propertyType == typeof(DateTime))
+        {
+            var att = (DataTypeAttribute)prop.GetCustomAttributes(typeof(DataTypeAttribute), false).FirstOrDefault();
+
+            var dateTimeFormat = dateType.datetime;
+
+            if (att != null && ((DataTypeAttribute)att).DataType == DataType.Date)
+            {
+                dateTimeFormat = dateType.date;
+            }
+
+            dateTimePropertyName.MasterTable.Add(propName.Key, dateTimeFormat);
+        }
+    }
+}
+
+<h1 class="mt-1">@ViewData["Title"]</h1>
+<div id="tr5midtermcontroller-index">
+    <table-component id="tr5midtermcontroller-master-table"
+                     @*sticky-header-height="642px"*@
+                     ref="tr5midtermcontroller-master-table">
+        <template #default="slot">
+            <!--OP Button-->
+            <b-row class="mb-2">
+                <b-col>
+                    <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>
+                    <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
+                    <b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">編輯</b-button>
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>
+                    <b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>
+                    <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
+                    <!--Master OP Page-->
+                    <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
+                    <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
+                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.param" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
+                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.param" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
+                    <query-page-modal id="master-table-query-modal" title="進階查詢" :queryfields="slot.data.mTableFields" :is_filtered="slot.data.isFiltered"></query-page-modal>
+                </b-col>
+            </b-row>
+        </template>
+        <template #filter-row="slot">
+            <b-row class="mb-2">
+                @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
+                <b-col style="max-width:14em;"
+                       v-for="field in slot.data.mTableFields" :key="field.key"
+                       v-if="['m-table-actions', '__rowIndex__', '商品名稱','商品類別編號','物件編號','單價','修改人','修改時間'].some(item => item === field.key) === false">
+                    <b-input :placeholder="field.label"
+                             :name="field.key"
+                             v-b-tooltip.bottom.v-secondary="field.label"
+                             @@keyup="slot.data.onFilterValueUpdate"
+                             :ref="'filter_input_' + field.key">
+                    </b-input>
+                </b-col>
+                <b-col>
+                    <b-button @@click="slot.data.onCleanFilter" style="max-height:62px;" class="float-right" variant="detail3" :disabled="!slot.data.isFiltered">清除過濾</b-button>
+                </b-col>
+            </b-row>
+        </template>
+    </table-component>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            //主檔 Table 欄位名稱中文定義
+            const _mTableFieldDesc = @masterTableDescHTML;
+
+            //主檔 Table Key 欄位名稱
+            const masterTableKeys = [
+                '事業',
+                '單位',
+                '部門',
+                '分部',
+                '商品編號',
+            ];
+
+            //主檔 data source 傳給 Server的參數
+            let dsMasterProviderParams = {
+                searchBy: null
+            };
+
+            const dateTimePropertyName = @Json.Serialize(@dateTimePropertyName);
+
+            //主檔 data source
+            const _dsMasterProvider = async function (ctx) {
+                try {
+                    dsMasterProviderParams.pageSize = ctx.perPage;
+                    dsMasterProviderParams.pageIndex = ctx.currentPage;
+                    dsMasterProviderParams.sortBy = ctx.sortBy;
+                    dsMasterProviderParams.isDesc = ctx.sortDesc || false;
+                    let response = await axios.post('GetDataPost', dsMasterProviderParams, {
+                        headers: {
+                            'content-type': 'application/json',
+                            "RequestVerificationToken": "@requestToken"
+                        }
+                    });
+
+                    this.totalRows = response.data.total;
+
+                    let latestData = TSCC.Utility.Table.GetDataSource.call(this, masterTableKeys, response, ctx);
+
+                    //轉成台灣時間
+                    latestData.forEach(data => {
+                        Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
+                            let dateISOstring = data[propName];
+                            if (data.hasOwnProperty(propName) && dateISOstring) {
+                                data[propName] = new Date(dateISOstring).to_zhTW_string(dateType);
+                            }
+                        });
+                    });
+
+                    return latestData;
+                } catch (error) {
+                    debugger;
+                    console.log(error);
+                    return [];
+                }
+            }
+
+            //點擊時發生呼叫事件
+            const _onMasterRowSelect = function (rowData) {
+                var selectParam = {
+                    事業: null,
+                    單位: null,
+                    部門: null,
+                    分部: null,
+                    商品編號: null,
+                };
+
+                if (rowData.length > 0) {
+                    let data = rowData[0];
+                    selectParam.事業 = this.事業 = data.事業;
+                    selectParam.單位 = this.單位 = data.單位;
+                    selectParam.部門 = this.部門 = data.部門;
+                    selectParam.分部 = this.分部 = data.分部;
+                    selectParam.商品編號 = this.商品編號 = data.商品編號;
+                    this.selectedMasterRow.param = selectParam;
+
+                    //傳送給server時, 轉ISO時間
+                    Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
+                        let dateLocalestring = data[propName];
+                        if (selectParam.hasOwnProperty(propName) && data.hasOwnProperty(propName) && dateLocalestring) {
+                            selectParam[propName] = this[propName] = Date.parse_zhTW_string(dateLocalestring).toISOString();
+                        }
+                    });
+                }
+            }
+
+            const _assignFilter = function (filterData) {
+                let shouldRefresh = this.isFiltered || (filterData && Object.keys(filterData).length > 0);
+                this.isFiltered = !!filterData && Object.keys(filterData).length > 0;
+                dsMasterProviderParams.searchBy = filterData;
+                shouldRefresh && this.refreshMasterTable();
+            }
+
+            //匯出ods
+            const _onDataExport = async function () {
+                let response = await axios.post('@Url.Action("Export","TR5MidTermController")', dsMasterProviderParams, {
+                    responseType: 'blob',
+                    headers: {
+                        RequestVerificationToken: "@requestToken"
+                    },
+                });
+
+                const url = window.URL.createObjectURL(new Blob([response.data], {
+                    type: response.headers['content-type']
+                }));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'TR5MidTermController.ods');
+                document.body.appendChild(link);
+                link.click();
+            }
+
+            //覆寫欄位尋找與清除事件
+            const _onFilterValueUpdate = function (event) {
+                const keyCodeAllowRegExp = /\b(8|4[6-9]|5[0-7]|6[5-9]|[7|8]\d|90|9[6-9]|10[0-5]|10[7-9]|11[0-1]|18[7-9]|13)\b/;
+                if (typeof(event) == 'KeyboardEvent' && keyCodeAllowRegExp.test(event.keyCode.toString()) == false) return;
+                let filterDataObj = {};
+                for (let inputRef in this.$parent.$refs) {
+                    let [inputInst, val] = [this.$parent.$refs[inputRef][0], ""];
+                    if (inputRef.includes('filter_input_') && (val = inputInst.vModelValue).length > 0) {
+                        filterDataObj[inputInst.name] = { condit: 'eq', value: val};
+                    }
+                }
+                _assignFilter.call(this, filterDataObj);
+            }
+
+            const _onAdvanceSearch = function(qParams) {
+                let filterDataObj = {};
+                for (const [key, searchParam] of Object.entries(qParams)) {
+                    console.log(`${key}: ${searchParam.condit},  ${searchParam.value}`);
+                    filterDataObj[key] = searchParam;
+                }
+                _assignFilter.call(this, filterDataObj);
+            }
+
+            const _onCleanFilter = function () {
+                dsMasterProviderParams.searchBy = null;
+                for (let inputRef in this.$parent.$refs) {
+                    let inputInst = this.$parent.$refs[inputRef][0];
+                    if (inputRef.includes('filter_input_')) {
+                        inputInst.vModelValue = "";
+                        inputInst.$el.value = "";
+                    }
+                }
+                _assignFilter.call(this, null);
+            }
+
+            const _onFiltered = function (event) {
+                console.log("_onFiltered customize: ", event);
+            }
+
+            const _serverReturned = function (retData) {
+                console.log("serverReturned customize: ", retData);
+            }
+
+            const _onBeforeMount = function (tableInstance) {
+                //tableInstance.stickyHeaderHeight = `${200}px`
+                console.log("onBeforeMount customize");
+            }
+
+            const _onMounted = function (tableInstance) {
+                console.log("_onMounted customize");
+            }
+
+            //要注入的自訂參數
+            let _opPermiss = { canCreate: @canCreate, canUpdate: @canUpdate, canDelete: @canDelete, canQuery: @canQuery, canExport: @canExport };
+            const params = { data: null, methods: null };
+            params.data = {
+                mTableFieldDesc: _mTableFieldDesc,
+                operatePermissions: _opPermiss,
+                isFiltered: false,
+                isNewItemOnTop: true,
+                事業: '',
+                單位: '',
+                部門: '',
+                分部: '',
+                商品編號: '',
+            }
+            params.methods = {
+                //系統覆寫
+                dsMasterProvider: _dsMasterProvider,
+                onMasterRowSelect: _onMasterRowSelect,
+                serverReturned: _serverReturned,
+                onFiltered: _onFiltered,
+                onBeforeMount: _onBeforeMount,
+                onMounted: _onMounted,
+                //User自訂
+                onFilterValueUpdate: _onFilterValueUpdate,
+                onAdvanceSearch: _onAdvanceSearch,
+                onCleanFilter: _onCleanFilter,
+                onDataExport: _onDataExport,
+            };
+            //掛載Table
+            TSC_NS.CreateVue(params).$mount('#tr5midtermcontroller-index');
+        })();
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

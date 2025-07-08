@@ -25,7 +25,7 @@ namespace TR5MidTerm.Controllers
     [ProcUseRang(ProcNo, ProcUseRang.Menu)]
     [TypeFilter(typeof(BaseActionFilter))]
 
-    public class TR5MidTermController : Controller
+    public class TR5MidTerm01Controller : Controller
     {
         private readonly TRDBContext _context;
         private const string ProcNo = "TR5MidTerm";
@@ -33,7 +33,7 @@ namespace TR5MidTerm.Controllers
         private static IConfigurationProvider _config;
         private static IMapper _mapper;
 
-        public TR5MidTermController(TRDBContext context, IMapper mapper)
+        public TR5MidTerm01Controller(TRDBContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
