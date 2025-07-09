@@ -86,7 +86,7 @@
                     <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
                     @*<b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">編輯</b-button>
         <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>*@
-                <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
+                <b-button v-if="slot.data.operatePermissions.canEdit" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
                     <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
                         <b-spinner small type="border" class="custom-spinner"></b-spinner>
                     </span>編輯
