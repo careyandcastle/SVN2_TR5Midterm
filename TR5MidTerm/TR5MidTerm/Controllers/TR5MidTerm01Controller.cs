@@ -40,12 +40,53 @@ namespace TR5MidTerm.Controllers
             _mapper = mapper;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> IndexAsync()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             Debug.WriteLine($"[InitInventoryDefaultValues] ✅ 從 Session 取得使用者：UserNo={ua.UserNo}, BusinessNo={ua.BusinessNo}, DepartmentNo={ua.DepartmentNo}, DivisionNo={ua.DivisionNo}, BranchNo={ua.BranchNo}"); ;
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<承租人檔DisplayViewModel>();
+
+            #region query下拉式清單
+            // 🔹 事業清單（所有事業）
+            var 事業清單 = await _context.事業
+                .Select(x => new SelectListItem
+                {
+                    Value = x.事業1,
+                    Text = x.事業1 + "_" + x.事業名稱
+                }).ToListAsync();
+
+            // 🔹 單位清單（限定在使用者所屬事業下）
+            var 單位清單 = await _context.單位
+                .Select(x => new SelectListItem
+                {
+                    Value = x.單位1,
+                    Text = x.單位1 + "_" + x.單位名稱
+                }).ToListAsync();
+
+            // 🔹 部門清單（限定在使用者所屬事業與單位下）
+            var 部門清單 = await _context.部門
+                .Where(x => x.單位 == ua.DepartmentNo)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.部門1,
+                    Text = x.部門1 + "_" + x.部門名稱
+                }).ToListAsync();
+
+            // 🔹 分部清單（限定在使用者所屬單位與部門下）
+            var 分部清單 = await _context.分部
+                .Where(x => x.單位 == ua.DepartmentNo && x.部門 == ua.DivisionNo)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.分部1,
+                    Text = x.分部1 + "_" + x.分部名稱
+                }).ToListAsync();
+
+            ViewBag.事業選單 = 事業清單;
+            ViewBag.單位選單 = 單位清單;
+            ViewBag.部門選單 = 部門清單;
+            ViewBag.分部選單 = 分部清單;
+            #endregion
 
             return View();
         }
