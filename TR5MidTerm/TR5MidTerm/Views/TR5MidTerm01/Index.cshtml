@@ -1,4 +1,5 @@
 ﻿@using TR5MidTerm.Models.TR5MidTermViewModels;
+ 
 @model 承租人檔DisplayViewModel
 @using TscLibCore.Commons;
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
@@ -81,7 +82,7 @@
                     <multi-input :schema="slot.data.params.data.querySchema"
                                  :select-options="slot.data.params.data.querySelectOptions"
                                  :value-obj="slot.data.params.data.queryData"
-                                 @*v-on:field-change="slot.data.queryChanged"*@
+                                 v-on:field-change="slot.data.queryChanged"
                                  v-on:reset-all="slot.data.queryResetAll"
                                  v-on:filter-click="slot.data.queryFilterClicked">
                     </multi-input>
@@ -90,8 +91,8 @@
         </template>
         <!--<template #filter-row="slot">
             <b-row class="mb-2">-->
-                @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-                <!--<b-col style="max-width:14em;"
+        @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
+        <!--<b-col style="max-width:14em;"
                        v-for="field in slot.data.mTableFields" :key="field.key"
                        v-if="['m-table-actions', '__rowIndex__', '承租人','身分別編號','統一編號','行動電話','電子郵件','刪除註記','修改人','修改時間','承租人顯示','統一編號顯示','行動電話顯示','電子郵件顯示','刪除註記顯示','身分別名稱'].some(item => item === field.key) === false">
                     <b-input :placeholder="field.label"
@@ -301,18 +302,71 @@
                 { key: '部門', label: '部門', type: 'select' },
                 { key: '分部', label: '分部', type: 'select' },
                 { key: '刪除註記', label: '刪除註記', type: 'radio', useBoostrapButtons: true }, // slot 會自訂成 button group
-                 
+
             ];
+            //#region 連動選單onChanged
             const _queryChanged = function (key, value) {
-                let filterDataObj = {};
+                @*let filterDataObj = {};
                 this.params.querySchema.forEach((item) => {
                     let val = this.params.queryData[item.key];
                     if (val != null && val !== '') {
                         filterDataObj[item.key] = { condit: 'eq', value: val };
                     }
                 });
-                _assignFilter.call(this, filterDataObj); // ← 套用過濾條件
+                _assignFilter.call(this, filterDataObj); // ← 套用過濾條件*@
+                if (key == '事業') {
+                    onBizSelectChanged();
+                }
+                if (key == '單位') {
+                    // 當單位變更時，可以更新部門選項
+                    onDepSelectChanged();
+                }
+                if (key == '部門') {
+                    onBranchSelectChanged();
+                }
             };
+            const onBizSelectChanged = function () {
+    $.get('@Url.Action("GetDepartmentSelectList", "TR5MidTerm01")',
+        { Biz: _queryData.事業 },
+        (data) => {
+            _querySelectOptions.單位 = ConvertSelectListItemsToBFormSelectOptions(data);
+            _queryData.單位 = '';
+            _querySelectOptions.部門 = [];
+            _queryData.部門 = '';
+            _querySelectOptions.分部 = [];
+            _queryData.分部 = '';
+        }
+    );
+};
+            const onDepSelectChanged = function () {
+    $.get('@Url.Action("GetDivisionSelectList", "TR5MidTerm01")',
+        {
+            Biz: _queryData.事業,
+            DepNo: _queryData.單位
+        },
+        (data) => {
+            _querySelectOptions.部門 = ConvertSelectListItemsToBFormSelectOptions(data);
+            _queryData.部門 = '';
+            _querySelectOptions.分部 = [];
+            _queryData.分部 = '';
+        }
+    );
+};
+            const onBranchSelectChanged = function () {
+    $.get('@Url.Action("GetBranchSelectList", "TR5MidTerm01")',
+        {
+            Biz: _queryData.事業,
+            DepNo: _queryData.單位,
+            DivNo: _queryData.部門
+        },
+        (data) => {
+            _querySelectOptions.分部 = ConvertSelectListItemsToBFormSelectOptions(data);
+            _queryData.分部 = '';
+        }
+    );
+};
+            //#endregion
+
 
             //當按下查詢按鈕
             const _queryFilterClicked = function () {
@@ -350,7 +404,7 @@
                 部門: '',
                 分部: '',
                 刪除註記: '%',
-      
+
             });
 
 
@@ -365,13 +419,13 @@
                 operatePermissions: _opPermiss,
                 isFiltered: false,
                 isNewItemOnTop: true,
-    
+
                 //#endregion
                 //#region 自定義query注入
                 querySchema: _querySchema,
                 querySelectOptions: _querySelectOptions,
                 queryData: _queryData,
-                 
+
 
                 //#endregion
             }

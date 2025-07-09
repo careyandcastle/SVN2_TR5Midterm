@@ -40,6 +40,7 @@ namespace TR5MidTerm.Controllers
             _mapper = mapper;
         }
 
+        #region 首頁
         public async Task<IActionResult> IndexAsync()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
@@ -47,40 +48,25 @@ namespace TR5MidTerm.Controllers
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<承租人檔DisplayViewModel>();
 
-            #region query下拉式清單
-            // 🔹 事業清單（所有事業）
+            #region query下拉式清單 
+            var 已使用事業代碼 = await _context.承租人檔
+       .Select(x => x.事業)
+       .Distinct()
+       .ToListAsync();
+
             var 事業清單 = await _context.事業
-                .Select(x => new SelectListItem
-                {
-                    Value = x.事業1,
-                    Text = x.事業1 + "_" + x.事業名稱
-                }).ToListAsync();
-
-            // 🔹 單位清單（所有單位）
-            var 單位清單 = await _context.單位
-                .Select(x => new SelectListItem
-                {
-                    Value = x.單位1,
-                    Text = x.單位1 + "_" + x.單位名稱
-                }).ToListAsync();
-
-            // 🔹 部門清單（限定在使用者所屬事業與單位下）
-            var 部門清單 = await _context.部門
-                .Where(x => x.單位 == ua.DepartmentNo)
-                .Select(x => new SelectListItem
-                {
-                    Value = x.部門1,
-                    Text = x.部門1 + "_" + x.部門名稱
-                }).ToListAsync();
-
-            // 🔹 分部清單（限定在使用者所屬單位與部門下）
-            var 分部清單 = await _context.分部
-                .Where(x => x.單位 == ua.DepartmentNo && x.部門 == ua.DivisionNo)
-                .Select(x => new SelectListItem
-                {
-                    Value = x.分部1,
-                    Text = x.分部1 + "_" + x.分部名稱
-                }).ToListAsync();
+        .Where(d => 已使用事業代碼.Contains(d.事業1))
+        .Select(d => new SelectListItem
+        {
+            Value = d.事業1,
+            Text = d.事業1 + "_" + d.事業名稱
+        }).ToListAsync();
+             
+            var 單位清單 = new List<SelectListItem>();
+             
+            var 部門清單 = new List<SelectListItem>();
+             
+            var 分部清單 = new List<SelectListItem>();
 
             ViewBag.事業選單 = 事業清單;
             ViewBag.單位選單 = 單位清單;
@@ -161,7 +147,7 @@ namespace TR5MidTerm.Controllers
                         #endregion
                     }).AsNoTracking();
         }
-
+        #endregion
         #region 增
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public async Task<IActionResult> Create()
@@ -554,12 +540,73 @@ namespace TR5MidTerm.Controllers
             return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
         #endregion
-
+        #region 其它
         public bool isMasterKeyExist()
         {
             //return (_context.承租人檔.Any(m => ) == false);
             return true;
         }
+        #endregion
+        #region 提供index使用
+        //[HttpGet]
+        public async Task<IActionResult> GetDepartmentSelectList(string Biz)
+        {
+            var 已使用單位代碼 = await _context.承租人檔
+        .Where(x => x.事業 == Biz)
+        .Select(x => x.單位)
+        .Distinct()
+        .ToListAsync();
 
+            var 單位清單 = await _context.單位
+                .Where(d => 已使用單位代碼.Contains(d.單位1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.單位1,
+                    Text = d.單位1 + "_" + d.單位名稱
+                }).ToListAsync();
+
+            return Json(單位清單);
+        }
+        public async Task<IActionResult> GetDivisionSelectList(string Biz, string DepNo)
+        {
+            var 已使用部門代碼 = await _context.承租人檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo)
+        .Select(x => x.部門)
+        .Distinct()
+        .ToListAsync();
+
+            var 部門清單 = await _context.部門
+                .Where(d => d.單位 == DepNo && 已使用部門代碼.Contains(d.部門1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.部門1,
+                    Text = d.部門1 + "_" + d.部門名稱
+                }).ToListAsync();
+
+            return Json(部門清單);
+        }
+
+        //[HttpGet]
+        public async Task<IActionResult> GetBranchSelectList(string Biz, string DepNo, string DivNo)
+        { 
+            var 已使用分部代碼 = await _context.承租人檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo && x.部門 == DivNo)
+        .Select(x => x.分部)
+        .Distinct()
+        .ToListAsync();
+
+            var 分部清單 = await _context.分部
+                .Where(d => d.單位 == DepNo && d.部門 == DivNo && 已使用分部代碼.Contains(d.分部1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.分部1,
+                    Text = d.分部1 + "_" + d.分部名稱
+                }).ToListAsync();
+
+            return Json(分部清單);
+        }
+
+
+        #endregion
     }
 }
