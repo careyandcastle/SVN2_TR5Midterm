@@ -1,0 +1,64 @@
+﻿@using TR5MidTerm.Models.TR5MidTermViewModels
+{
+@model 承租人檔DisplayViewModel
+
+@{
+    ViewData["Title"] = "刪除承租人資料";
+}
+
+<h1 class="mt-2 text-danger">@ViewData["Title"]</h1>
+
+<h3 class="text-warning">請確認是否刪除此筆承租人設定？</h3>
+
+<hr />
+<div class="text-danger">
+    @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "text-danger" })
+</div>
+
+<dl class="row">
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.事業顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.事業顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.單位顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.單位顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.部門顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.部門顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.分部顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.分部顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.承租人編號)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.承租人編號)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.承租人明文)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.承租人明文)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.身分別名稱)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.身分別名稱)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.統一編號明文)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.統一編號明文)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.刪除註記)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.刪除註記)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.修改人)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.修改人)</dd>
+</dl>
+
+<form asp-action="DeleteConfirmed">
+    @Html.AntiForgeryToken()
+
+    @* 主鍵欄位（隱藏） *@
+    <input type="hidden" asp-for="事業" />
+    <input type="hidden" asp-for="單位" />
+    <input type="hidden" asp-for="部門" />
+    <input type="hidden" asp-for="分部" />
+    <input type="hidden" asp-for="承租人編號" />
+
+    <div class="form-group">
+        <input type="submit" value="確認刪除" class="btn btn-danger" /> |
+        <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+    </div>
+</form>

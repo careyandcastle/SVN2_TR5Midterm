@@ -17,6 +17,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [HiddenForView]
         //[StringLength(2)]
         public string 事業 { get; set; }
+        
         [Key]
         [HiddenForView]
         //[StringLength(2)]
@@ -51,18 +52,14 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public bool 刪除註記 { get; set; }
         //[Required]
         //[StringLength(10)]
-         
-        public string 修改人 { get; set; }
-        //[Column(TypeName = "datetime")]
-        public DateTime 修改時間 { get; set; }
-
-        // 0703註解掉
-        //[ForeignKey(nameof(身分別編號))]
-        //[InverseProperty(nameof(身分別檔.承租人檔))]
-        //public virtual 身分別檔 身分別編號Navigation { get; set; }
-        //[InverseProperty("承租人檔")]
-        //public virtual ICollection<租約主檔> 租約主檔 { get; set; }
-
+        [DisplayName("事業")]
+        public string 事業顯示 { get; set; }
+        [DisplayName("單位")]
+        public string 單位顯示 { get; set; }
+        [DisplayName("部門")]
+        public string 部門顯示 { get; set; }
+        [DisplayName("分部")]
+        public string 分部顯示 { get; set; }
         // 顯示用欄位（解密後的字串）0704
         [DisplayName("承租人")]
         public string 承租人明文 { get; set; }
@@ -78,6 +75,10 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         //導覽屬性顯示用 0704
         [DisplayName("身分別")]
         public string 身分別名稱 { get; set; }
+
+        public string 修改人 { get; set; }
+        //[Column(TypeName = "datetime")]
+        public DateTime 修改時間 { get; set; }
 
     }
 }

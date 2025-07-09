@@ -19,11 +19,11 @@
                     <span asp-validation-for="承租人明文" class="text-danger"></span>
                 </div>
 
-                <div class="form-group">
+                @*<div class="form-group">
                     <label asp-for="承租人編號" class="control-label"></label>
                     <input asp-for="承租人編號" class="form-control" />
                     <span asp-validation-for="承租人編號" class="text-danger"></span>
-                </div>
+                </div>*@
 
                 <div class="form-group">
                     <label asp-for="統一編號明文" class="control-label"></label>
@@ -52,7 +52,7 @@
 
                 @* 顯示用（不可編輯）：刪除註記顯示 *@
                 <div class="form-group">
-                    <label asp-for="刪除註記" class="control-label"></label>
+                    <label asp-for="刪除註記顯示" class="control-label"></label>
                     <input class="form-control" value="@Model.刪除註記顯示" disabled />
                 </div>
 
@@ -61,7 +61,7 @@
                 @Html.HiddenFor(m => m.單位)
                 @Html.HiddenFor(m => m.部門)
                 @Html.HiddenFor(m => m.分部)
-                @Html.HiddenFor(m => m.承租人編號)
+                @*@Html.HiddenFor(m => m.承租人編號)*@
                 @Html.HiddenFor(m => m.刪除註記)
                 @Html.HiddenFor(m => m.修改人)
                 @Html.HiddenFor(m => m.修改時間)
@@ -74,3 +74,8 @@
         </div>
     </div>
 </div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    這行會載入並執行 _ValidationScriptsPartial.cshtml 這個部分視圖（partial view），作用是引用 用來處理用戶端驗證 的 JavaScript，例如 jQuery Validate。
+
+}

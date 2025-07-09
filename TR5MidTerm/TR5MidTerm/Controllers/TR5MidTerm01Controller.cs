@@ -38,14 +38,6 @@ namespace TR5MidTerm.Controllers
         {
             _context = context;
             _mapper = mapper;
-            //_config ??= new MapperConfiguration(cfg =>
-            //{
-            //    cfg.CreateProjection<承租人檔, 承租人檔VM>();
-            //    cfg.CreateMap<承租人檔VM, 承租人檔>();
-            //    cfg.CreateMap<承租人檔, 承租人檔VM>();
-            //});
-
-            //_mapper ??= _config.CreateMapper();
         }
 
         public IActionResult Index()
@@ -62,12 +54,8 @@ namespace TR5MidTerm.Controllers
         [ValidateAntiForgeryToken]
         [NeglectActionFilter]
         public async Task<IActionResult> GetData([FromBody] QueryConditions qc)
-        {
-            //var sql = (from s in _context.承租人檔
-            //          select s).AsNoTracking().ProjectTo<承租人檔VM>(_config);
-            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            //IQueryable<承租人檔VM> sql = GetBaseQuery(ua.BusinessNo, ua.DepartmentNo);
-            IQueryable<承租人檔DisplayViewModel> sql = GetBaseQuery(ua.BusinessNo);
+        { 
+            IQueryable<承租人檔DisplayViewModel> sql = GetBaseQuery();
 
             PaginatedList<承租人檔DisplayViewModel> queryedData = null;
             queryedData = await PaginatedList<承租人檔DisplayViewModel>.CreateAsync(sql, qc);
@@ -79,26 +67,39 @@ namespace TR5MidTerm.Controllers
             });
         }
 
-        private IQueryable<承租人檔DisplayViewModel> GetBaseQuery(string BusinessNo)
+        private IQueryable<承租人檔DisplayViewModel> GetBaseQuery()
         {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
             return (from m in _context.承租人檔
                         .Include(m => m.身分別編號Navigation)
-                    //join u in _context.修改人 on m.修改人 equals u.修改人1 into ujoin
-                    //from _u in ujoin.DefaultIfEmpty()
-                    where m.事業 == BusinessNo
+                    join biz in _context.事業 on m.事業 equals biz.事業1
+                    join dep in _context.單位 on m.單位 equals dep.單位1
+                    join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
+                    join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    where m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo
                     select new 承租人檔DisplayViewModel
                     {
+                        #region 組織
                         事業 = m.事業,
+                        事業顯示 = biz.事業名稱,
+
                         單位 = m.單位,
+                        單位顯示 = dep.單位名稱,
+
                         部門 = m.部門,
+                        部門顯示 = sec.部門名稱,
                         分部 = m.分部,
+
+                        分部顯示 = sub.分部名稱,
                         承租人編號 = m.承租人編號,
+                        #endregion
+                        身分別編號 = m.身分別編號,
+                        身分別名稱 = m.身分別編號Navigation.身分別,
+                        #region 解密
 
                         承租人 = m.承租人,
                         承租人明文 = CustomSqlFunctions.DecryptToString(m.承租人),
-
-                        身分別編號 = m.身分別編號,
-                        身分別名稱 = m.身分別編號Navigation.身分別,
 
                         統一編號 = m.統一編號,
                         統一編號明文 = CustomSqlFunctions.DecryptToString(m.統一編號),
@@ -108,25 +109,24 @@ namespace TR5MidTerm.Controllers
 
                         電子郵件 = m.電子郵件,
                         電子郵件明文 = CustomSqlFunctions.DecryptToString(m.電子郵件),
-
+                        #endregion
+                        #region 註記
                         刪除註記 = m.刪除註記,
                         刪除註記顯示 = m.刪除註記 ? "是" : "否",
-
+                        #endregion
+                        #region 修改人與修改時間
                         修改人 = m.修改人,
-                        //修改人姓名 = CustomSqlFunctions.ConcatCodeAndName(m.修改人, CustomSqlFunctions.DecryptToString(_u.姓名)),
                         修改時間 = m.修改時間
+                        #endregion
                     }).AsNoTracking();
         }
 
-
+        #region 增
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public async Task<IActionResult> Create()
         {
-            // ✅ 假設從共用方法取得組織與登入者資訊
-            //var (org, period, date, formattedDate, userNo, biz, dept, div, branch) = InitInventoryDefaultValues();
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            Debug.WriteLine($"[承租人 Create] ▶ 使用者={ua.UserNo}, 組織={ua.BusinessNo}/{ua.DepartmentNo}/{ua.DivisionNo}/{ua.DivisionNo}");
-
+             
             // 📌 載入「身分別下拉選項」
             var 身分別選項 = await _context.身分別檔
                 .Select(s => new SelectListItem
@@ -152,8 +152,7 @@ namespace TR5MidTerm.Controllers
                 // 👉 預設值（若有）
                 刪除註記 = false,
                 刪除註記顯示 = "否",
-                //修改人 = ua.UserNo,
-                修改時間 = DateTime.Now
+                 
             };
 
             return PartialView(viewModel); // 若為一般頁面則改 return View(viewModel);
@@ -163,19 +162,15 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public async Task<IActionResult> Create(承租人檔CreateViewModel model)
         {
+            #region 驗證
             if (!ModelState.IsValid)
                 return ModelStateInvalidResult("Create", false);
+            #endregion
 
 
+            #region 資料解密
             var SymmKey = _context.SymmetricKeyName;
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            //var KeyGUID = _context.Key_Guid(SymmKey);
-
-            //if (KeyGUID == null)
-            //{
-            //    throw new Exception("kye is null");
-            //}
-
             var 承租人資料 = _context.承租人檔
                 .Select(x => new {
                     承租人 = _context.EncryptByKey(SymmKey, model.承租人明文),
@@ -184,9 +179,13 @@ namespace TR5MidTerm.Controllers
                     電子郵件 = _context.EncryptByKey(SymmKey, model.電子郵件明文),
                 })
                 .First();
-
+            #endregion
+            #region 寫入
             try
             {
+                model.承租人編號 = await GetNext承租人編號Async(
+    model.事業, model.單位, model.部門, model.分部);
+
                 var entity = new 承租人檔
                 {
                     事業 = model.事業,
@@ -195,14 +194,12 @@ namespace TR5MidTerm.Controllers
                     分部 = model.分部,
                     承租人編號 = model.承租人編號,
                     身分別編號 = model.身分別編號,
-                    // 🔐 明文欄位 → 加密欄位 
-                    //承租人 = _context.承租人檔.Select(x => _context.EncryptByKey(_context.Key_Guid(SymmKey), model.承租人明文)).FirstOrDefault(),
                     承租人 = 承租人資料.承租人,
                     統一編號 = 承租人資料.統一編號,
                     行動電話 = 承租人資料.行動電話,
                     電子郵件 = 承租人資料.電子郵件,
                     刪除註記 = false,
-                    修改人 = ua.UserNo,
+                    修改人 = ua.UserNo + '_' + ua.UserName,
                     修改時間 = DateTime.Now,
 
                     
@@ -214,7 +211,7 @@ namespace TR5MidTerm.Controllers
 
                 if (result > 0)
                 {
-                    var display = await GetBaseQuery(ua.BusinessNo)
+                    var display = await GetBaseQuery()
                         .Where(x =>
                             x.事業 == entity.事業 &&
                             x.單位 == entity.單位 &&
@@ -225,7 +222,12 @@ namespace TR5MidTerm.Controllers
 
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK) { data = display });
                 }
+
+                
             }
+            #endregion
+            #region 報錯
+
             catch (Exception ex)
             {
                 // 處理例外
@@ -241,9 +243,36 @@ namespace TR5MidTerm.Controllers
             {
                 message = "發生未知錯誤，請聯絡管理員"
             });
+
+            #endregion
         }
 
+        private async Task<string> GetNext承租人編號Async(string 事業, string 單位, string 部門, string 分部)
+        {
+            var max編號 = await _context.承租人檔
+                .Where(x => x.事業 == 事業 &&
+                            x.單位 == 單位 &&
+                            x.部門 == 部門 &&
+                            x.分部 == 分部)
+                .Select(x => x.承租人編號)
+                .OrderByDescending(x => x)
+                .FirstOrDefaultAsync();
 
+            int next;
+
+            if (!string.IsNullOrEmpty(max編號) && int.TryParse(max編號, out int last))
+            {
+                next = last + 1;
+            }
+            else
+            {
+                next = 1;
+            }
+
+            return next.ToString("D5"); // 補滿五位數：00001、00002、...、12345
+        }
+        #endregion
+        #region 自訂義驗證
         private IActionResult ModelStateInvalidResult(string context, bool 驗證前)
         {
             string sourceLabel = 驗證前 ? "ViewModel驗證" : "Validator驗證";
@@ -273,109 +302,8 @@ namespace TR5MidTerm.Controllers
                 data = ModelState.ToErrorInfos()
             });
         }
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //[ProcUseRang(ProcNo, ProcUseRang.Add)]
-        //public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,承租人編號,承租人,身分別編號,統一編號,行動電話,電子郵件,刪除註記,修改人,修改時間")] 承租人檔VM postData)
-        //{
-        //    //以下不驗證欄位值是否正確，請視欄位自行刪減
-        //    ModelState.Remove($"欄位1");
-        //    ModelState.Remove($"欄位2");
-        //    ModelState.Remove($"欄位3");
-        //    ModelState.Remove($"upd_usr");
-        //    ModelState.Remove($"upd_dt");
-
-        //    if (ModelState.IsValid == false)
-        //        return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-
-        //    /*
-        //     *  Put Your Code Here.
-        //     */
-
-        //    承租人檔 filledData = _mapper.Map<承租人檔VM, 承租人檔>(postData);
-        //    _context.Add(filledData);
-
-        //    try
-        //    {
-        //        var opCount = await _context.SaveChangesAsync();
-        //        if (opCount > 0)
-        //            return Ok(new ReturnData(ReturnState.ReturnCode.OK)
-        //            {
-        //                data = postData
-        //            });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR)
-        //        {
-        //            message = ex.Message
-        //        });
-        //    }
-
-        //    return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-        //}
-
-        [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public IActionResult CreateMulti()
-        {
-            return PartialView();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateMulti(List<承租人檔DisplayViewModel> postData)
-        {
-            //以下不驗證欄位值是否正確，請視欄位自行刪減
-            for (int idx = 0; idx < postData.Count; idx++)
-            {
-                ModelState.Remove($"postData[{idx}].欄位1");
-                ModelState.Remove($"postData[{idx}].欄位2");
-                ModelState.Remove($"postData[{idx}].欄位3");
-
-                //.....
-                //...
-
-                ModelState.Remove($"postData[{idx}].upd_usr");
-                ModelState.Remove($"postData[{idx}].upd_dt");
-            }
-
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-
-            foreach (var item in postData)
-            {
-                /*
-                 *  Put Your Code Here.
-                 */
-                承租人檔 filledData = _mapper.Map<承租人檔DisplayViewModel, 承租人檔>(item);
-                _context.Add(filledData);
-            }
-
-            try
-            {
-                var opCount = await _context.SaveChangesAsync();
-                if (opCount > 0)
-                    return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.OK)
-                    {
-                        data = postData
-                    });
-            }
-            catch (Exception ex)
-            {
-                return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR)
-                {
-                    message = ex.Message
-                });
-            }
-
-
-            return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-        }
-
-        //[ProcUseRang(ProcNo, ProcUseRang.Update)]
-
+        #endregion
+        #region 修
         public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 承租人編號)
         {
             //Debug.WriteLine('hello');
@@ -439,17 +367,11 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit([Bind("事業,單位,部門,分部,承租人編號,承租人明文,身分別編號,統一編號明文,行動電話明文,電子郵件明文,刪除註記")] 承租人檔EditViewModel postData)
+        public async Task<IActionResult> Edit([Bind("事業,單位,部門,分部,承租人編號,承租人明文,身分別編號,統一編號明文,行動電話明文,電子郵件明文")] 承租人檔EditViewModel postData)
         {
-            //if (false)
-            //{
-            //    return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            //}
 
             if (!ModelState.IsValid)
                 return ModelStateInvalidResult("Edit", false);
-            //if (ModelState.IsValid == false)
-            //    return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
 
             if (!ModelState.IsValid)
             {
@@ -489,7 +411,7 @@ namespace TR5MidTerm.Controllers
 
                 //設定系統欄位（如修改人、修改時間）
                 var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-                entity.修改人 = ua.UserNo;
+                entity.修改人 = ua.UserNo + '_' + ua.UserName;
                 entity.修改時間 = DateTime.Now;
 
                 _context.Update(entity);
@@ -510,82 +432,87 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
-
-        [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> Delete()
+        #endregion
+        #region 刪
+        public async Task<IActionResult> Delete(string 事業, string 單位, string 部門, string 分部, string 承租人編號)
         {
-            if (false)
+            if (string.IsNullOrEmpty(事業) || string.IsNullOrEmpty(單位) ||
+        string.IsNullOrEmpty(部門) || string.IsNullOrEmpty(分部) || string.IsNullOrEmpty(承租人編號))
             {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-            }
-            
-            var result = await _context.承租人檔.FindAsync();
-            if (result == null)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
+                return BadRequest("必要的主鍵參數缺漏：請確認事業、單位、部門、分部與承租人編號均已提供。");
             }
 
-            return PartialView(result);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var viewModel = await GetBaseQuery()
+                .Where(x =>
+             x.事業 == 事業 &&
+             x.單位 == 單位 &&
+             x.部門 == 部門 &&
+             x.分部 == 分部 &&
+             x.承租人編號 == 承租人編號)
+                .SingleOrDefaultAsync();
+
+            if (viewModel == null)
+            {
+                return NotFound($"找不到符合條件的承租人資料（事業={事業}, 單位={單位}, 部門={部門}, 分部={分部}, 編號={承租人編號}）。");
+            }
+
+            var 承租人資料明文 = _context.承租人檔
+                .Select(x => new {
+                    承租人明文 = Encoding.Unicode.GetString(_context.DecryptByKey(viewModel.承租人)),
+                    統一編號明文 = Encoding.Unicode.GetString(_context.DecryptByKey(viewModel.統一編號)),
+                    行動電話明文 = Encoding.Unicode.GetString(_context.DecryptByKey(viewModel.行動電話)),
+                    電子郵件明文 = Encoding.Unicode.GetString(_context.DecryptByKey(viewModel.電子郵件))
+                }).First(); ;
+            viewModel.承租人明文 = 承租人資料明文.承租人明文;
+            viewModel.統一編號明文 = 承租人資料明文.統一編號明文;
+            viewModel.行動電話明文 = 承租人資料明文.行動電話明文;
+            viewModel.電子郵件明文 = 承租人資料明文.電子郵件明文;
+            viewModel.刪除註記顯示 = viewModel.刪除註記 ? "是" : "否";
+            viewModel.修改人 = ua.UserNo + '_' + ua.UserName; 
+            viewModel.修改時間 = DateTime.Now;
+ 
+
+            return PartialView(viewModel);
         }
 
-        //[HttpPost, ActionName("Delete")]
-        //[ValidateAntiForgeryToken]
-        //[ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        //public async Task<IActionResult> DeleteConfirmed()
-        //{
-        //    if (ModelState.IsValid == false)
-        //        return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-        //    var result = await _context.承租人檔.FindAsync();
-        //    if (result == null)
-        //        return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-        //    _context.承租人檔.Remove(result);
-            
-        //    try
-        //    {
-        //        var opCount = await _context.SaveChangesAsync();
-        //        if (opCount > 0)
-        //            return Ok(new ReturnData(ReturnState.ReturnCode.OK));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-        //    }
-
-        //    return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-        //}
-
-
-        [ProcUseRang(ProcNo, ProcUseRang.Export)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Export([FromBody] QueryConditions qc)
+        [ProcUseRang(ProcNo, ProcUseRang.Delete)]
+        public async Task<IActionResult> DeleteConfirmed([Bind("事業,單位,部門,分部,承租人編號")] 承租人檔DisplayViewModel postData)
         {
-            var sql = (from s in _context.承租人檔
-                      select s).AsNoTracking().ProjectTo<承租人檔DisplayViewModel>(_config);;
+            if (ModelState.IsValid == false)
+                return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
-            sql = sql.Where(qc.searchBy).PermissionFilter();
+            //var result = await _context.承租人檔.FindAsync();3
+            var result = await _context.承租人檔
+                .Where(x =>
+                    x.事業 == postData.事業 &&
+                    x.單位 == postData.單位 &&
+                    x.部門 == postData.部門 &&
+                    x.分部 == postData.分部 &&
+                    x.承租人編號 == postData.承租人編號
+                    )
+                .SingleOrDefaultAsync();
+            if (result == null)
+                return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
-            bool hasSortKey = string.IsNullOrEmpty(qc.sortBy) == false;
+            _context.承租人檔.Remove(result);
 
-            if (hasSortKey && qc.isDesc)
+            try
             {
-                sql = sql.OrderByDescending(qc.sortBy);
+                var opCount = await _context.SaveChangesAsync();
+                if (opCount > 0)
+                    return Ok(new ReturnData(ReturnState.ReturnCode.OK));
             }
-            else if (hasSortKey)
+            catch (Exception ex)
             {
-                sql = sql.OrderBy(qc.sortBy);
+                return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
 
-            DataTable dt = sql.ToDataTable();
-            GenerateSheets gs = new GenerateSheets();
-            MemoryStream memory = gs.DataTableToMemoryStream(dt);
-            byte[] byteContent = memory.ToArray();
-            memory.Close();
-
-            return File(byteContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
+        #endregion
 
         public bool isMasterKeyExist()
         {
