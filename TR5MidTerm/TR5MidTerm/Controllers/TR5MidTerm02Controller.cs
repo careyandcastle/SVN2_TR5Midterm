@@ -69,9 +69,7 @@ namespace TR5MidTerm.Controllers
         }).ToListAsync();
 
             var 單位清單 = new List<SelectListItem>();
-
             var 部門清單 = new List<SelectListItem>();
-
             var 分部清單 = new List<SelectListItem>();
 
             ViewBag.事業選單 = 事業清單;
@@ -87,8 +85,10 @@ namespace TR5MidTerm.Controllers
         [NeglectActionFilter]
         public async Task<IActionResult> GetData([FromBody] QueryConditions qc)
         {
-            var sql = (from s in _context.水電總表檔
-                      select s).AsNoTracking().ProjectTo<水電總表檔DisplayViewModel>(_config);
+            //var sql = (from s in _context.水電總表檔
+            //          select s).AsNoTracking().ProjectTo<水電總表檔DisplayViewModel>(_config);
+
+            IQueryable<水電總表檔DisplayViewModel> sql = GetBaseQuery();
 
             PaginatedList<水電總表檔DisplayViewModel> queryedData = null;
             queryedData = await PaginatedList<水電總表檔DisplayViewModel>.CreateAsync(sql, qc);
@@ -99,6 +99,55 @@ namespace TR5MidTerm.Controllers
                 total = queryedData.TotalCount
             });
         }
+        private IQueryable<水電總表檔DisplayViewModel> GetBaseQuery()
+        {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+            return (from m in _context.水電總表檔
+                        .Include(m => m.計量表種類編號Navigation)
+                    join biz in _context.事業 on m.事業 equals biz.事業1
+                    join dep in _context.單位 on m.單位 equals dep.單位1
+                    join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
+                    join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    //where m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo
+                    select new 水電總表檔DisplayViewModel
+                    {
+                        #region 組織
+                        事業 = m.事業,
+                        事業顯示 = biz.事業名稱,
+
+                        單位 = m.單位,
+                        單位顯示 = dep.單位名稱,
+
+                        部門 = m.部門,
+                        部門顯示 = sec.部門名稱,
+                        分部 = m.分部,
+
+                        分部顯示 = sub.分部名稱,
+                        總表號 = m.總表號,
+                        案號 = m.案號,
+                        計量對象 = m.計量對象,
+
+                        計量表種類編號 = m.計量表種類編號,
+                        計量表種類 = m.計量表種類編號Navigation.計量表種類,
+                        #endregion
+                        //身分別編號 = m.身分別編號,
+                        //身分別名稱 = m.身分別編號Navigation.身分別,
+                        #region 解密
+                         
+                        //電子郵件 = m.電子郵件,
+                        //電子郵件明文 = CustomSqlFunctions.DecryptToString(m.電子郵件),
+                        #endregion
+                        #region 註記
+                        //刪除註記 = m.刪除註記,
+                        //刪除註記顯示 = m.刪除註記 ? "是" : "否",
+                        #endregion
+                        #region 修改人與修改時間
+                        修改人 = m.修改人,
+                        修改時間 = m.修改時間
+                        #endregion
+                    }).AsNoTracking();
+        }
 
         #endregion
         #region 新增主檔
@@ -106,7 +155,7 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
-            //var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
             
             // ✅ 載入下拉選單：計量表種類
@@ -118,23 +167,24 @@ namespace TR5MidTerm.Controllers
                     Text = $"{x.計量表種類編號} - {x.計量表種類}"
                 }).ToList();
 
-             
+            // ✅ 初始化 ViewModel
+            var viewModel = new 水電總表檔CreateViewModel
+            {
+                事業 = ua.BusinessNo,
+                單位 = ua.DepartmentNo,
+                部門 = ua.DivisionNo,
+                分部 = ua.BranchNo,
 
+            };
             return PartialView();
         }
+        #endregion
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,總表號,案號,計量表種類編號,計量對象,修改人,修改時間")] 水電總表檔DisplayViewModel postData)
+        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,總表號,案號,計量表種類編號,計量對象")] 水電總表檔DisplayViewModel postData)
         {
-            //以下不驗證欄位值是否正確，請視欄位自行刪減
-            ModelState.Remove($"欄位1");
-            ModelState.Remove($"欄位2");
-            ModelState.Remove($"欄位3");
-            ModelState.Remove($"upd_usr");
-            ModelState.Remove($"upd_dt");
-
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
 
@@ -165,7 +215,7 @@ namespace TR5MidTerm.Controllers
             return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
 
-        #endregion
+         
         #region 新增多筆
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult CreateMulti()
@@ -751,6 +801,38 @@ namespace TR5MidTerm.Controllers
                 canClickEditOrDelete = true
             });
         }
+
+        private IActionResult ModelStateInvalidResult(string context, bool 驗證前)
+        {
+            string sourceLabel = 驗證前 ? "ViewModel驗證" : "Validator驗證";
+            Debug.WriteLine($"[{context}] [ERROR] ModelState 無效（{sourceLabel}）");
+
+            foreach (var kv in ModelState.ToErrorInfos())
+            {
+                foreach (var msg in kv.Value)
+                    Debug.WriteLine($"        ↳ 欄位：{kv.Key}，錯誤：{msg}");
+            }
+
+            // 根據 context 自動選對 ReturnCode
+            var code = context.ToLower() switch
+            {
+                "Create" => ReturnState.ReturnCode.CREATE_ERROR,
+                "Edit" => ReturnState.ReturnCode.EDIT_ERROR,
+                "Delete" => ReturnState.ReturnCode.DELETE_ERROR,
+                "ApproveConfirmed" => ReturnState.ReturnCode.EDIT_ERROR,
+                "CreateDetail" => ReturnState.ReturnCode.CREATE_ERROR,
+                "EditDetail" => ReturnState.ReturnCode.EDIT_ERROR,
+                "DeleteDetail" => ReturnState.ReturnCode.DELETE_ERROR,
+                _ => ReturnState.ReturnCode.ERROR
+            };
+
+            return Ok(new ReturnData(code)
+            {
+                data = ModelState.ToErrorInfos()
+            });
+        }
+
+
         #endregion
     }
 }

@@ -148,7 +148,7 @@ namespace TR5MidTerm.Controllers
                     }).AsNoTracking();
         }
         #endregion
-        #region 增
+        #region 新增主檔
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public async Task<IActionResult> Create()
         {
@@ -333,7 +333,7 @@ namespace TR5MidTerm.Controllers
             });
         }
         #endregion
-        #region 修
+        #region 修改主檔
         public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 承租人編號)
         {
             //Debug.WriteLine('hello');
@@ -466,7 +466,7 @@ namespace TR5MidTerm.Controllers
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
         #endregion
-        #region 刪
+        #region 刪除主檔
         public async Task<IActionResult> Delete(string 事業, string 單位, string 部門, string 分部, string 承租人編號)
         {
             if (string.IsNullOrEmpty(事業) || string.IsNullOrEmpty(單位) ||
@@ -615,7 +615,6 @@ namespace TR5MidTerm.Controllers
 
 
         #endregion
-
         #region 檢驗
         private void ValidateUserHasOrgPermission(string 主檔事業, string 主檔單位, string 主檔部門, string 主檔分部)
         {

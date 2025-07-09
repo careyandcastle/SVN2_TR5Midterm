@@ -13,7 +13,7 @@
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
 
-        <div class="form-group">
+        @*<div class="form-group">
             <label asp-for="事業"></label>
             <input asp-for="事業" class="form-control" />
         </div>
@@ -31,7 +31,7 @@
         <div class="form-group">
             <label asp-for="分部"></label>
             <input asp-for="分部" class="form-control" />
-        </div>
+        </div>*@
 
         <div class="form-group">
             <label asp-for="總表號"></label>
@@ -54,6 +54,11 @@
             <label asp-for="計量對象"></label>
             <input asp-for="計量對象" class="form-control" />
         </div>
+        @* 隱藏欄位（必要主鍵） *@
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
 
         <div class="form-group text-right mt-3">
             <button type="submit" class="btn btn-primary">儲存</button>

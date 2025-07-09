@@ -14,17 +14,30 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
     {
 
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 事業 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 單位 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 部門 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 分部 { get; set; }
+
+        [DisplayName("事業")]
+        public string 事業顯示 { get; set; }
+        [DisplayName("單位")]
+        public string 單位顯示 { get; set; }
+        [DisplayName("部門")]
+        public string 部門顯示 { get; set; }
+        [DisplayName("分部")]
+        public string 分部顯示 { get; set; }
         [Key]
         //[StringLength(20)]
         public string 總表號 { get; set; }
@@ -32,7 +45,10 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 案號 { get; set; }
         //[Required]
         //[StringLength(2)]
+        [HiddenForView]
         public string 計量表種類編號 { get; set; }
+        //[DisplayName("計量表種類")]
+        public string 計量表種類 { get; set; }
         //[Required]
         //[StringLength(20)]
         public string 計量對象 { get; set; }

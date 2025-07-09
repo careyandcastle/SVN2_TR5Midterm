@@ -12,5 +12,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
     public partial class 水電總表檔CreateViewModel : 水電總表檔BaseViewModel
     {
+        //[HiddenForView]
+        //[DisplayName("計量表種類")]
+        //public string 計量表種類 { get; set; }
     }
 }
