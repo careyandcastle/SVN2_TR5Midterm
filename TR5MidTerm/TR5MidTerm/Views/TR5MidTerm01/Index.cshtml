@@ -120,6 +120,7 @@
     <script>
         (function () {
             //#region 主檔
+            //#region 主檔資料定義
             //主檔 Table 欄位名稱中文定義
             const _mTableFieldDesc = @masterTableDescHTML;
 
@@ -177,8 +178,8 @@
                     return [];
                 }
             }
-
-            //點擊時發生呼叫事件
+            //#endregion
+            //#region 點擊主檔
             const _onMasterRowSelect = function (rowData) {
                 var selectParam = {
                     事業: null,
@@ -187,31 +188,30 @@
                     分部: null,
                     承租人編號: null,
                 };
-
-
-
                 if (rowData.length > 0) {
                     let data = rowData[0];
+                    //#region 自定義:填值
                     selectParam.事業 = this.事業 = data.事業;
                     selectParam.單位 = this.單位 = data.單位;
                     selectParam.部門 = this.部門 = data.部門;
                     selectParam.分部 = this.分部 = data.分部;
                     selectParam.承租人編號 = this.承租人編號 = data.承租人編號;
                     this.selectedMasterRow.params = selectParam;
-
-                    //傳送給server時, 轉ISO時間
+                    //#endregion
+                    //#region 傳送給server時, 轉ISO時間
                     Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
                         let dateLocalestring = data[propName];
                         if (selectParam.hasOwnProperty(propName) && data.hasOwnProperty(propName) && dateLocalestring) {
                             selectParam[propName] = this[propName] = Date.parse_zhTW_string(dateLocalestring).toISOString();
                         }
                     });
-
+                    //#endregion
+                    //#region 自定義:按鈕判斷
                     Vue.set(params.data, 'isBusy', true);
                     console.log("是否busy?", params.data.isBusy);
                     this.$forceUpdate();
 
-                    axios.post('/TR5MidTerm01/CheckButtonPermissions', params)
+                    axios.post('/TR5MidTerm01/CheckButtonPermissions', selectParam)
                         .then(res => {
                             // ✅ 將所有權限狀態灌入畫面綁定來源
                             Object.entries(res.data).forEach(([key, val]) => {
@@ -237,9 +237,9 @@
                     console.log("busy?", this.isBusy);
                 }
 
-
+                //#endregion
                 }
-
+            //#endregion
             //#endregion
             //#region 匯出ods
             const _onDataExport = async function () {

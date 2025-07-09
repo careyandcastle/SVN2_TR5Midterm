@@ -519,9 +519,6 @@ namespace TR5MidTerm.Controllers
 
             if (ModelState.IsValid == false)
                 return ModelStateInvalidResult("Delete", false);
-            //return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-            //var result = await _context.承租人檔.FindAsync();3
             var result = await _context.承租人檔
                 .Where(x =>
                     x.事業 == postData.事業 &&
@@ -642,7 +639,7 @@ namespace TR5MidTerm.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CheckButtonPermissions([FromBody] 承租人檔DisplayViewModel key) //###
+        public async Task<IActionResult> CheckButtonPermissions([FromBody] 承租人檔DisplayViewModel key) 
         {
             var today = DateTime.Today;
             Debug.WriteLine("📌【CheckButtonPermissions】啟動");

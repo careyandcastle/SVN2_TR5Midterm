@@ -18,6 +18,7 @@ using TscLibCore.Modules;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TscLibCore.Authority;
 using TR5MidTerm.PC;
+using System.Diagnostics;
 
 namespace TR5MidTerm.Controllers
 {
@@ -25,6 +26,7 @@ namespace TR5MidTerm.Controllers
     [TypeFilter(typeof(BaseActionFilter))]
     public class TR5MidTerm02Controller : Controller
     {
+        #region 初始化
         private readonly TRDBContext _context;
         private const string ProcNo = "TR5MidTerm";
 
@@ -46,12 +48,37 @@ namespace TR5MidTerm.Controllers
 
             _mapper ??= _config.CreateMapper();
         }
-
-        public IActionResult Index()
+        #endregion
+        #region index
+        public async Task<IActionResult> IndexAsync()
         {
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<水電總表檔DisplayViewModel, 水電分表檔DisplayViewModel>();
+            #region query下拉式清單 
+            var 已使用事業代碼 = await _context.水電總表檔
+       .Select(x => x.事業)
+       .Distinct()
+       .ToListAsync();
 
+            var 事業清單 = await _context.事業
+        .Where(d => 已使用事業代碼.Contains(d.事業1))
+        .Select(d => new SelectListItem
+        {
+            Value = d.事業1,
+            Text = d.事業1 + "_" + d.事業名稱
+        }).ToListAsync();
+
+            var 單位清單 = new List<SelectListItem>();
+
+            var 部門清單 = new List<SelectListItem>();
+
+            var 分部清單 = new List<SelectListItem>();
+
+            ViewBag.事業選單 = 事業清單;
+            ViewBag.單位選單 = 單位清單;
+            ViewBag.部門選單 = 部門清單;
+            ViewBag.分部選單 = 分部清單;
+            #endregion
             return View();
         }
 
@@ -72,6 +99,9 @@ namespace TR5MidTerm.Controllers
                 total = queryedData.TotalCount
             });
         }
+
+        #endregion
+        #region 新增主檔
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
@@ -135,6 +165,8 @@ namespace TR5MidTerm.Controllers
             return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
 
+        #endregion
+        #region 新增多筆
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult CreateMulti()
         {
@@ -209,6 +241,8 @@ namespace TR5MidTerm.Controllers
 
             return PartialView(result);
         }
+        #endregion
+        #region 編輯主檔
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -260,7 +294,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
-
+        #endregion
+        #region 刪除主檔
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> Delete(string 事業, string 單位, string 部門, string 分部, string 總表號)
         {
@@ -306,6 +341,8 @@ namespace TR5MidTerm.Controllers
             return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
 
+        #endregion
+        #region 匯出主檔
 
         [ProcUseRang(ProcNo, ProcUseRang.Export)]
         [HttpPost]
@@ -336,11 +373,69 @@ namespace TR5MidTerm.Controllers
 
             return File(byteContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
-
-        public bool isMasterKeyExist(string 事業, string 單位, string 部門, string 分部, string 總表號)
+        #endregion
+        #region 提供index使用
+        [HttpGet]
+        public async Task<IActionResult> GetDepartmentSelectList(string Biz)
         {
-            return (_context.水電總表檔.Any(m => m.事業 == 事業 && m.單位 == 單位 && m.部門 == 部門 && m.分部 == 分部 && m.總表號 == 總表號) == false);
+            var 已使用單位代碼 = await _context.水電總表檔
+        .Where(x => x.事業 == Biz)
+        .Select(x => x.單位)
+        .Distinct()
+        .ToListAsync();
+
+            var 單位清單 = await _context.單位
+                .Where(d => 已使用單位代碼.Contains(d.單位1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.單位1,
+                    Text = d.單位1 + "_" + d.單位名稱
+                }).ToListAsync();
+
+            return Json(單位清單);
         }
+        public async Task<IActionResult> GetDivisionSelectList(string Biz, string DepNo)
+        {
+            var 已使用部門代碼 = await _context.水電總表檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo)
+        .Select(x => x.部門)
+        .Distinct()
+        .ToListAsync();
+
+            var 部門清單 = await _context.部門
+                .Where(d => d.單位 == DepNo && 已使用部門代碼.Contains(d.部門1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.部門1,
+                    Text = d.部門1 + "_" + d.部門名稱
+                }).ToListAsync();
+
+            return Json(部門清單);
+        }
+
+        //[HttpGet]
+        public async Task<IActionResult> GetBranchSelectList(string Biz, string DepNo, string DivNo)
+        {
+            var 已使用分部代碼 = await _context.水電總表檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo && x.部門 == DivNo)
+        .Select(x => x.分部)
+        .Distinct()
+        .ToListAsync();
+
+            var 分部清單 = await _context.分部
+                .Where(d => d.單位 == DepNo && d.部門 == DivNo && 已使用分部代碼.Contains(d.分部1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.分部1,
+                    Text = d.分部1 + "_" + d.分部名稱
+                }).ToListAsync();
+
+            return Json(分部清單);
+        }
+
+
+        #endregion
+
 
 
         //=================================================================================================//
@@ -348,6 +443,8 @@ namespace TR5MidTerm.Controllers
         /*
          * Details
          */
+
+        #region 查詢明細
 
         [HttpPost, ActionName("GetDetailDataPost")]
         [ValidateAntiForgeryToken]
@@ -391,8 +488,8 @@ namespace TR5MidTerm.Controllers
             });
         }
 
-
-
+#endregion
+        #region 建立明細
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號)
         {
@@ -486,7 +583,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(CreateMultiDetails), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
-
+#endregion
+        #region 編輯明細
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
         public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號) 
         {
@@ -541,7 +639,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
-
+#endregion
+        #region 刪除明細
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號)
         {
@@ -594,10 +693,64 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
+#endregion
+         
 
-        public bool isDetailKeyExist(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號)
+        #region 檢驗
+        private void ValidateUserHasOrgPermission(string 主檔事業, string 主檔單位, string 主檔部門, string 主檔分部)
         {
-            return (_context.水電分表檔.Any(m => m.事業 == 事業 && m.單位 == 單位 && m.部門 == 部門 && m.分部 == 分部 && m.總表號 == 總表號 && m.分表號 == 分表號) == false);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            if (主檔事業 != ua.BusinessNo)
+            {
+                ModelState.AddModelError("", $"無權操作該事業資料（登入事業為 {ua.BusinessName}）");
+            }
+            else if (主檔單位 != ua.DepartmentNo)
+            {
+                ModelState.AddModelError("", $"無權操作該單位資料（登入單位為 {ua.DepartmentName}）");
+            }
+            else if (主檔部門 != ua.DivisionNo)
+            {
+                ModelState.AddModelError("", $"無權操作該部門資料（登入部門為 {ua.DivisionName}）");
+            }
+            else if (主檔分部 != ua.BranchNo)
+            {
+                ModelState.AddModelError("", $"無權操作該分部資料（登入分部為 {ua.BranchNo}）");
+            }
         }
+
+        [HttpPost]
+        public IActionResult CheckButtonPermissions([FromBody] 水電總表檔DisplayViewModel key)
+        {
+            var today = DateTime.Today;
+            Debug.WriteLine("📌【CheckButtonPermissions】啟動");
+
+
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+
+            if (key.事業 != ua.BusinessNo || key.單位 != ua.DepartmentNo || key.部門 != ua.DivisionNo || key.分部 != ua.BranchNo)
+            {
+                Debug.WriteLine("❌ 不是登入者可操作之組織");
+                return Ok(new
+                {
+                    canClickEditOrDelete = false,
+                    //canClickEditOrDelete = false,
+                    reasons = new
+                    {
+                        edit = "不是登入者可操作之組織",
+                        delete = "不是登入者可操作之組織",
+                    }
+                });
+            }
+
+            //bool canClickEditOrDelete = canEditOrDelete;
+
+
+            return Ok(new
+            {
+                canClickEditOrDelete = true
+            });
+        }
+        #endregion
     }
 }
