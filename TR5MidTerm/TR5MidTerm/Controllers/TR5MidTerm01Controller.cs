@@ -56,7 +56,7 @@ namespace TR5MidTerm.Controllers
                     Text = x.事業1 + "_" + x.事業名稱
                 }).ToListAsync();
 
-            // 🔹 單位清單（限定在使用者所屬事業下）
+            // 🔹 單位清單（所有單位）
             var 單位清單 = await _context.單位
                 .Select(x => new SelectListItem
                 {
@@ -118,7 +118,7 @@ namespace TR5MidTerm.Controllers
                     join dep in _context.單位 on m.單位 equals dep.單位1
                     join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
                     join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
-                    where m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo
+                    //where m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo
                     select new 承租人檔DisplayViewModel
                     {
                         #region 組織
@@ -188,7 +188,7 @@ namespace TR5MidTerm.Controllers
                 事業 = ua.BusinessNo,
                 單位 = ua.DepartmentNo,
                 部門 = ua.DivisionNo,
-                分部 = ua.DivisionNo,
+                分部 = ua.BranchNo,
                  
                 // 👉 預設值（若有）
                 刪除註記 = false,
