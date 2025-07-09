@@ -23,6 +23,7 @@ namespace TR5MidTerm.Controllers
     [TypeFilter(typeof(BaseActionFilter))]
     public class TR5MidTerm04Controller : Controller
     {
+        #region 初始化
         private readonly TRDBContext _context;
         private const string ProcNo = "TR5MidTerm";
 
@@ -44,7 +45,8 @@ namespace TR5MidTerm.Controllers
 
             _mapper ??= _config.CreateMapper();
         }
-
+        #endregion
+        #region index
         public IActionResult Index()
         {
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
@@ -70,6 +72,8 @@ namespace TR5MidTerm.Controllers
                 total = queryedData.TotalCount
             });
         }
+        #endregion
+        #region Create
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
@@ -176,7 +180,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
-
+        #endregion
+        #region Edit
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
         public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 案號)
         {
@@ -235,7 +240,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
-
+        #endregion
+        #region Delete
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> Delete(string 事業, string 單位, string 部門, string 分部, string 案號)
         {
@@ -280,7 +286,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
-
+        #endregion
+        #region Export
 
         [ProcUseRang(ProcNo, ProcUseRang.Export)]
         [HttpPost]
@@ -311,19 +318,20 @@ namespace TR5MidTerm.Controllers
 
             return File(byteContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
-
+        #endregion
+        #region other
         public bool isMasterKeyExist(string 事業, string 單位, string 部門, string 分部, string 案號)
         {
             return (_context.租約主檔.Any(m => m.事業 == 事業 && m.單位 == 單位 && m.部門 == 部門 && m.分部 == 分部 && m.案號 == 案號) == false);
         }
 
-
+        #endregion
         //=================================================================================================//
 
         /*
          * Details
          */
-
+        #region Detail
         [HttpPost, ActionName("GetDetailDataPost")]
         [ValidateAntiForgeryToken]
         [NeglectActionFilter]
@@ -343,8 +351,8 @@ namespace TR5MidTerm.Controllers
                 data = await query.ToListAsync()
             });
         }
-
-
+        #endregion
+        #region CreateDetail
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
@@ -439,6 +447,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(CreateMultiDetails), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
+        #endregion
+        #region EditDetail
 
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
         public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
@@ -494,6 +504,8 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
+        #endregion
+        #region DeleteDetail
 
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteDetail(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
@@ -547,10 +559,12 @@ namespace TR5MidTerm.Controllers
 
             return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
-
+        #endregion
+        #region other
         public bool isDetailKeyExist(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
         {
             return (_context.租約明細檔.Any(m => m.事業 == 事業 && m.單位 == 單位 && m.部門 == 部門 && m.分部 == 分部 && m.案號 == 案號 && m.商品編號 == 商品編號) == false);
         }
+        #endregion
     }
 }
