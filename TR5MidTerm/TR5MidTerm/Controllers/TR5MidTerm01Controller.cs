@@ -190,6 +190,9 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> Create(承租人檔CreateViewModel model)
         {
             #region 驗證
+            // 🔐 權限檢查
+            ValidateUserHasOrgPermission(model.事業, model.單位, model.部門, model.分部);
+
             if (!ModelState.IsValid)
                 return ModelStateInvalidResult("Create", false);
             #endregion
@@ -397,8 +400,11 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> Edit([Bind("事業,單位,部門,分部,承租人編號,承租人明文,身分別編號,統一編號明文,行動電話明文,電子郵件明文")] 承租人檔EditViewModel postData)
         {
 
-            if (!ModelState.IsValid)
-                return ModelStateInvalidResult("Edit", false);
+            // 🔐 權限檢查
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+
+            //if (!ModelState.IsValid)
+            //    return ModelStateInvalidResult("Edit", false);
 
             if (!ModelState.IsValid)
             {
@@ -508,8 +514,12 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteConfirmed([Bind("事業,單位,部門,分部,承租人編號")] 承租人檔DisplayViewModel postData)
         {
+            // 🔐 權限檢查
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+
             if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
+                return ModelStateInvalidResult("Delete", false);
+            //return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
             //var result = await _context.承租人檔.FindAsync();3
             var result = await _context.承租人檔
@@ -607,6 +617,63 @@ namespace TR5MidTerm.Controllers
         }
 
 
+        #endregion
+
+        #region 檢驗
+        private void ValidateUserHasOrgPermission(string 主檔事業, string 主檔單位, string 主檔部門, string 主檔分部)
+        {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            if (主檔事業 != ua.BusinessNo)
+            {
+                ModelState.AddModelError("", $"無權操作該事業資料（登入事業為 {ua.BusinessName}）");
+            }
+            else if(主檔單位 != ua.DepartmentNo)
+            {
+                ModelState.AddModelError("", $"無權操作該單位資料（登入單位為 {ua.DepartmentName}）");
+            }
+            else if (主檔部門 != ua.DivisionNo)
+            {
+                ModelState.AddModelError("", $"無權操作該部門資料（登入部門為 {ua.DivisionName}）");
+            }
+            else if (主檔分部 != ua.BranchNo)
+            {
+                ModelState.AddModelError("", $"無權操作該分部資料（登入分部為 {ua.BranchNo}）");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CheckButtonPermissions([FromBody] 承租人檔DisplayViewModel key) //###
+        {
+            var today = DateTime.Today;
+            Debug.WriteLine("📌【CheckButtonPermissions】啟動");
+
+
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+ 
+            
+            if (key.事業 != ua.BusinessNo || key.單位 != ua.DepartmentNo || key.部門 != ua.DivisionNo || key.分部 != ua.BranchNo)  
+            {
+                Debug.WriteLine("❌ 不是登入者可操作之組織");
+                return Ok(new
+                {
+                    canClickEditOrDelete = false,
+                    //canClickEditOrDelete = false,
+                    reasons = new
+                    {
+                        edit = "不是登入者可操作之組織",
+                        delete = "不是登入者可操作之組織",
+                    }
+                }) ;
+            }
+ 
+            //bool canClickEditOrDelete = canEditOrDelete;
+             
+
+            return Ok(new
+            {
+                canClickEditOrDelete = true
+            });
+        }
         #endregion
     }
 }
