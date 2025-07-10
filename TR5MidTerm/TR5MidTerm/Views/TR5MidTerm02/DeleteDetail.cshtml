@@ -1,0 +1,66 @@
+﻿@using TR5MidTerm.Models.TR5MidTermViewModels
+@model 水電分表檔DisplayViewModel
+
+@{
+    ViewData["Title"] = "刪除水電分表資料";
+}
+
+<h1 class="mt-2 text-danger">@ViewData["Title"]</h1>
+
+<h3 class="text-warning">請確認是否刪除此筆水電分表資料？</h3>
+
+<div class="text-danger">
+    @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "text-danger" })
+</div>
+
+<dl class="row">
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.事業顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.事業顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.單位顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.單位顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.部門顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.部門顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.分部顯示)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.分部顯示)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.總表號)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.總表號)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.分表號)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.分表號)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.備註)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.備註)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.上期度數)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.上期度數)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.本期度數)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.本期度數)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.目前使用度數)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.目前使用度數)</dd>
+
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.修改人)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.修改人)</dd>
+</dl>
+
+<form asp-action="DeleteDetailConfirmed">
+    @Html.AntiForgeryToken()
+
+    @* 主鍵隱藏欄位 *@
+    <input type="hidden" asp-for="事業" />
+    <input type="hidden" asp-for="單位" />
+    <input type="hidden" asp-for="部門" />
+    <input type="hidden" asp-for="分部" />
+    <input type="hidden" asp-for="總表號" />
+    <input type="hidden" asp-for="分表號" />
+
+    <div class="form-group">
+        <input type="submit" value="確認刪除" class="btn btn-danger" /> |
+        <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+    </div>
+</form>

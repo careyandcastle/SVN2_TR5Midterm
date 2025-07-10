@@ -1,0 +1,64 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.水電分表檔CreateViewModel
+
+@{
+    ViewData["Title"] = "新增水電分表資料";
+}
+
+<h1 class="mt-2">@ViewData["Title"]</h1>
+
+<div>
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        @* 錯誤訊息區塊 *@
+        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+            <ul></ul>
+        </div>
+
+        @* 隱藏主鍵欄位（從主檔或Session傳入） *@
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
+        @Html.HiddenFor(m => m.總表號)
+        @Html.HiddenFor(m => m.上期度數)
+
+        <div class="form-group">
+            <label asp-for="分表號"></label>
+            <input asp-for="分表號" class="form-control" />
+            <span asp-validation-for="分表號" class="text-danger"></span>
+        </div>
+
+        @*<div class="form-group">
+                <label asp-for="備註"></label>
+                <input asp-for="備註" class="form-control" />
+                <span asp-validation-for="備註" class="text-danger"></span>
+            </div>*@
+        <div class="form-group">
+            <label asp-for="備註"></label>
+            <textarea asp-for="備註" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="備註" class="text-danger"></span>
+        </div>
+
+
+        @*<div class="form-group">
+                <label asp-for="上期度數"></label>
+                <input asp-for="上期度數" class="form-control" />
+                <span asp-validation-for="上期度數" class="text-danger"></span>
+            </div>*@
+
+        <div class="form-group">
+            <label asp-for="本期度數"></label>
+            <input asp-for="本期度數" class="form-control" />
+            <span asp-validation-for="本期度數" class="text-danger"></span>
+        </div>
+
+        <div class="form-group text-right mt-3">
+            <button type="submit" class="btn btn-primary">儲存</button>
+            <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

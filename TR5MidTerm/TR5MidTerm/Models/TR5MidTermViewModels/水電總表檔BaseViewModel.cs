@@ -30,6 +30,14 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [HiddenForView]
         //[StringLength(2)]
         public string 分部 { get; set; }
+        //[DisplayName("事業")]
+        //public string 事業顯示 { get; set; }
+        //[DisplayName("單位")]
+        //public string 單位顯示 { get; set; }
+        //[DisplayName("部門")]
+        //public string 部門顯示 { get; set; }
+        //[DisplayName("分部")]
+        //public string 分部顯示 { get; set; }
         [Key]
         //[StringLength(20)]
         [CTRequired]

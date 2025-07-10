@@ -45,12 +45,18 @@ namespace TR5MidTerm.Controllers
                 cfg.CreateMap<水電總表檔, 水電總表檔CreateViewModel>();
                 cfg.CreateMap<水電總表檔CreateViewModel, 水電總表檔>();
 
-                cfg.CreateMap<水電分表檔DisplayViewModel, 水電分表檔>();
-                cfg.CreateMap<水電分表檔, 水電分表檔DisplayViewModel>();
 
                 cfg.CreateMap<水電總表檔EditViewModel, 水電總表檔>();
                 cfg.CreateMap<水電總表檔, 水電總表檔EditViewModel>();
 
+                cfg.CreateMap<水電分表檔CreateViewModel, 水電分表檔>();
+                cfg.CreateMap<水電分表檔, 水電分表檔CreateViewModel>();
+
+                cfg.CreateMap<水電分表檔DisplayViewModel, 水電分表檔>();
+                cfg.CreateMap<水電分表檔, 水電分表檔DisplayViewModel>();
+
+                cfg.CreateMap<水電分表檔EditViewModel, 水電分表檔>();
+                cfg.CreateMap<水電分表檔, 水電分表檔EditViewModel>();
 
             });
 
@@ -468,48 +474,58 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
 
-            //var query = from s in _context.水電分表檔
-            //            where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.總表號 == keys.總表號
-            //            select s;
-
-            var query = from s in _context.水電分表檔
-                        where s.事業 == keys.事業 &&
-                              s.單位 == keys.單位 &&
-                              s.部門 == keys.部門 &&
-                              s.分部 == keys.分部 &&
-                              s.總表號 == keys.總表號
-                        select new 水電分表檔DisplayViewModel
-                        {
-                            事業 = s.事業,
-                            單位 = s.單位,
-                            部門 = s.部門,
-                            分部 = s.分部,
-                            總表號 = s.總表號,
-                            分表號 = s.分表號,
-                            備註 = s.備註,
-                            上期度數 = s.上期度數,
-                            本期度數 = s.本期度數,
-                            修改人 = s.修改人,
-                            修改時間 = s.修改時間,
-                            目前使用度數 = s.本期度數 - s.上期度數,
-                        };
-
+            var query = GetDetailsBaseQuery(keys.事業, keys.單位, keys.部門, keys.分部, keys.總表號);
             return CreatedAtAction(nameof(GetDetails), new ReturnData(ReturnState.ReturnCode.OK)
             {
                 data = await query.ToListAsync()
             });
         }
+        private IQueryable<水電分表檔DisplayViewModel> GetDetailsBaseQuery(string 主檔事業, string 主檔單位, string 主檔部門, string 主檔分部, string 主檔總表號)
+        {
+            return (from s in _context.水電分表檔
+                    join biz in _context.事業 on s.事業 equals biz.事業1
+                    join dep in _context.單位 on s.單位 equals dep.單位1
+                    join sec in _context.部門 on new { s.單位, s.部門 } equals new { sec.單位, 部門 = sec.部門1 }
+                    join sub in _context.分部 on new { s.單位, s.部門, s.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    where s.事業 == 主檔事業 &&
+                          s.單位 == 主檔單位 &&
+                          s.部門 == 主檔部門 &&
+                          s.分部 == 主檔分部 &&
+                          s.總表號 == 主檔總表號
+                    select new 水電分表檔DisplayViewModel
+                    {
+                        事業 = s.事業,
+                        事業顯示 = biz.事業名稱,
+                        單位 = s.單位,
+                        單位顯示 = dep.單位名稱,
+                        部門 = s.部門,
+                        部門顯示 = sec.部門名稱,
+                        分部 = s.分部,
+                        分部顯示 = sub.分部名稱,
+                        總表號 = s.總表號,
+                        分表號 = s.分表號,
+                        備註 = s.備註,
+                        上期度數 = s.上期度數,
+                        本期度數 = s.本期度數,
+                        修改人 = s.修改人,
+                        修改時間 = s.修改時間,
+                        目前使用度數 = s.本期度數 - s.上期度數,
+                    }).AsNoTracking();
+        }
 
-#endregion
+        #endregion
         #region 建立明細
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號)
+        //public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號)
+        public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號)
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號== null)
+            //if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號== null)
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
-            var item = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號, 分表號);
+            //var item = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號, 分表號);
+            var item = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
 
             if (item == null)
             {
@@ -522,16 +538,22 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,總表號,分表號,備註,上期度數,本期度數,修改人,修改時間")] 水電分表檔DisplayViewModel postData)
+        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,總表號,分表號,備註,上期度數 ,本期度數")] 水電分表檔DisplayViewModel postData)
         {
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
 
             /*
              *  Put Your Code Here.
              */
-
+            
             水電分表檔 filledData = _mapper.Map<水電分表檔DisplayViewModel, 水電分表檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            filledData.備註 ??= "";
+            filledData.修改人 = ua.BranchNo + '_' + ua.UserName;
+            filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
 
             try
@@ -598,7 +620,7 @@ namespace TR5MidTerm.Controllers
 #endregion
         #region 編輯明細
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號) 
+        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號) 
         {
             if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號== null)
             {
@@ -606,30 +628,40 @@ namespace TR5MidTerm.Controllers
             }
 
             var result = await _context.水電分表檔.FindAsync(事業, 單位, 部門, 分部, 總表號, 分表號);
+ 
             if (result == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            return PartialView(result);
+            var viewModel = _mapper.Map<水電分表檔, 水電分表檔EditViewModel>(result);
+
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號, [Bind("事業,單位,部門,分部,總表號,分表號,備註,上期度數,本期度數,修改人,修改時間")] 水電分表檔DisplayViewModel postData)
+        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號, [Bind("事業,單位,部門,分部,總表號,分表號,備註, 上期度數, 本期度數")] 水電分表檔DisplayViewModel postData)
         {
+
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+
             if (ModelState.IsValid == false)
                 return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
 
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號== null)
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號 == null)
                 return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-
-            /*
-             *  Put Your Code Here.
-             */
+              
 
             水電分表檔 filledData = _mapper.Map<水電分表檔DisplayViewModel, 水電分表檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+            filledData.備註 ??= "";
+            filledData.修改人 = ua.UserNo + '_' + ua.UserName;
+            filledData.修改時間 = DateTime.Now;
+
+
             _context.Update(filledData);
 
             try
@@ -654,21 +686,28 @@ namespace TR5MidTerm.Controllers
 #endregion
         #region 刪除明細
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號)
+        public async Task<IActionResult> DeleteDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號)
         {
             if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號== null)
             {
                 return NotFound();
             }
-
-            var result = await _context.水電分表檔.FindAsync(事業, 單位, 部門, 分部, 總表號, 分表號);
-
-            if (result == null)
+             
+            var viewModel = await GetDetailsBaseQuery(事業, 單位, 部門, 分部, 總表號)
+               .Where(x =>
+            x.事業 == 事業 &&
+            x.單位 == 單位 &&
+            x.部門 == 部門 &&
+            x.分部 == 分部 &&
+            x.總表號 == 總表號&&
+            x.分表號 == 分表號)
+               .SingleOrDefaultAsync();
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            return PartialView(result);
+            return PartialView(viewModel);
         }
 
         [HttpPost, ActionName("DeleteDetail")]

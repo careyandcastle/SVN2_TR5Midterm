@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using TR5MidTerm.Attributes;
 using TscLibCore.Attribute;
 
 #nullable disable
@@ -28,13 +29,15 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         //[StringLength(20)]
         public string 總表號 { get; set; }
         [Key]
+        [CTRequired]
         public int 分表號 { get; set; }
-        [Required]
+        //[Required]
         //[StringLength(20)]
         public string 備註 { get; set; }
         //[Column(TypeName = "decimal(18, 0)")]
         public decimal 上期度數 { get; set; }
         //[Column(TypeName = "decimal(18, 0)")]
+        [CTRequired]
         public decimal 本期度數 { get; set; }
         //[Required]
         //[StringLength(10)]

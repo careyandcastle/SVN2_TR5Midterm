@@ -524,6 +524,37 @@
             }
 
             //#endregion
+            //#region 自定義:明細按鈕
+            const getMasterTableActionButtonConfig = function (rowData) {
+                return [
+                    {
+                        text: '按鈕1',
+                        willShow: false,
+                        variant: 'outline-detail1',
+                        eventHandler: () => { alert('btn 1'); }
+                    },
+                    {
+                        text: '按鈕2',
+                        willShow: true,
+                        variant: 'outline-detail1',
+                        eventHandler: () => { alert('btn 2'); }
+                    },
+                    {
+                        text: '按鈕3',
+                        willShow: true,
+                        variant: 'outline-detail1',
+                        eventHandler: () => { alert('btn 3'); }
+                    },
+                    {
+                        text: '按鈕4',
+                        willShow: true,
+                        variant: 'outline-detail1',
+                        eventHandler: () => { alert('btn 4'); }
+                    }
+                ];
+            }
+            //#endregion
+
             //#region 注入data
             let _opPermiss = { canCreate: @canCreate, canUpdate: @canUpdate, canDelete: @canDelete, canQuery: @canQuery, canExport: @canExport };
             const params = { data: null, methods: null };

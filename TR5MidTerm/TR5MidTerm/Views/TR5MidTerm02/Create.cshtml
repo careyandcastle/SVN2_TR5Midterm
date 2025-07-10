@@ -1,15 +1,6 @@
 ﻿@model TR5MidTerm.Models.TR5MidTermViewModels.水電總表檔CreateViewModel
-@*@{
-    Layout = null;
-}*@
-<!-- ✅ Vue 掛載區塊 -->
-
+ 
 <div>
-    @*<div id="app">
-        <p>🔥 Vue 測試訊息：{{ message }}</p>
-    </div>*@
-
-    <!-- ✅ Razor + ASP.NET MVC 的表單 -->
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
         @* 全域錯誤訊息區塊 *@
@@ -55,7 +46,7 @@
     </form>
 
 
-    <script>
+    @*<script>
         $(document).ready(function () {
 
             new Vue({
@@ -69,7 +60,7 @@
             });
  
         });
-    </script>
+    </script>*@
 </div>
  
 

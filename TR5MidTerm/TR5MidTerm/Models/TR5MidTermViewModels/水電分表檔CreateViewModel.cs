@@ -10,7 +10,7 @@ using TscLibCore.Attribute;
 
 namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
-    public partial class 水電分表檔CreateViewModel:水電總表檔BaseViewModel
+    public partial class 水電分表檔CreateViewModel:水電分表檔BaseViewModel
     { 
     }
 }
