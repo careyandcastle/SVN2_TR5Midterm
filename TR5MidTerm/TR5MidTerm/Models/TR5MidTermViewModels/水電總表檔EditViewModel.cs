@@ -12,7 +12,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
     public partial class 水電總表檔EditViewModel:水電總表檔BaseViewModel
     {
- 
 
+        public string 計量表種類 { get; set; }
     }
 }

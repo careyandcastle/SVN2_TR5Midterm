@@ -5,54 +5,42 @@
 <!-- ✅ Vue 掛載區塊 -->
 
 <div>
-    <div id="app">
+    @*<div id="app">
         <p>🔥 Vue 測試訊息：{{ message }}</p>
-    </div>
+    </div>*@
 
     <!-- ✅ Razor + ASP.NET MVC 的表單 -->
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
-
-        @*<div class="form-group">
-            <label asp-for="事業"></label>
-            <input asp-for="事業" class="form-control" />
+        @* 全域錯誤訊息區塊 *@
+        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+            <ul></ul>
         </div>
-
-        <div class="form-group">
-            <label asp-for="單位"></label>
-            <input asp-for="單位" class="form-control" />
-        </div>
-
-        <div class="form-group">
-            <label asp-for="部門"></label>
-            <input asp-for="部門" class="form-control" />
-        </div>
-
-        <div class="form-group">
-            <label asp-for="分部"></label>
-            <input asp-for="分部" class="form-control" />
-        </div>*@
 
         <div class="form-group">
             <label asp-for="總表號"></label>
             <input asp-for="總表號" class="form-control" />
+            <span asp-validation-for="總表號" class="text-danger"></span>
         </div>
 
         <div class="form-group">
             <label asp-for="案號"></label>
             <input asp-for="案號" class="form-control" />
+            <span asp-validation-for="案號" class="text-danger"></span>
         </div>
 
         <div class="form-group">
             <label asp-for="計量表種類編號"></label>
             <select asp-for="計量表種類編號" asp-items="ViewBag.計量表種類選項" class="form-control">
-                <option value="">請選擇</option>
+                <option value="" disabled selected>請選擇</option>
             </select>
+            <span asp-validation-for="計量表種類編號" class="text-danger"></span>
         </div>
 
         <div class="form-group">
             <label asp-for="計量對象"></label>
             <input asp-for="計量對象" class="form-control" />
+            <span asp-validation-for="計量對象" class="text-danger"></span>
         </div>
         @* 隱藏欄位（必要主鍵） *@
         @Html.HiddenFor(m => m.事業)
@@ -79,23 +67,10 @@
                     console.log("✅ Vue 成功掛載");
                 }
             });
-
-            //app.mount('#app');
+ 
         });
-
-
-                    //this.$on('fetched-page-modal::ready', (modalId) => {
-
-
-
-
-                    //});
-
     </script>
-
 </div>
-
-
-<!-- ✅ Vue 掛載腳本 -->
+ 
 
 

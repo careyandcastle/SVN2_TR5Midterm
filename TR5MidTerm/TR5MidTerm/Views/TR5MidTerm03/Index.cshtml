@@ -81,8 +81,8 @@
                     <!--Master OP Page-->
                     <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
-                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.param" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
-                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.param" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
+                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.params" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
+                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.params" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
                     <query-page-modal id="master-table-query-modal" title="進階查詢" :queryfields="slot.data.mTableFields" :is_filtered="slot.data.isFiltered"></query-page-modal>
                 </b-col>
             </b-row>

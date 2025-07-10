@@ -1,0 +1,49 @@
+﻿@using TR5MidTerm.Models.TR5MidTermViewModels
+@model 水電總表檔EditViewModel
+
+<div>
+    <div class="row">
+        <div class="col">
+            <form asp-action="Edit">
+                <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+                    <ul></ul>
+                </div>
+
+                @* 主鍵欄位，隱藏傳值用 *@
+                <input asp-for="事業" type="hidden" />
+                <input asp-for="單位" type="hidden" />
+                <input asp-for="部門" type="hidden" />
+                <input asp-for="分部" type="hidden" />
+                <input asp-for="總表號" type="hidden" />
+
+                <div class="form-group">
+                    <label asp-for="案號" class="control-label"></label>
+                    <input asp-for="案號" class="form-control" />
+                    <span asp-validation-for="案號" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="計量表種類編號" class="control-label"></label>
+                    <select asp-for="計量表種類編號" class="form-control" asp-items="ViewBag.計量表種類選項"></select>
+                    <span asp-validation-for="計量表種類編號" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="計量對象" class="control-label"></label>
+                    <input asp-for="計量對象" class="form-control" />
+                    <span asp-validation-for="計量對象" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="計量表種類" class="control-label"></label>
+                    <input asp-for="計量表種類" class="form-control" readonly />
+                    <span asp-validation-for="計量表種類" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="送出" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

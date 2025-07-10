@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using TR5MidTerm.Attributes;
 using TscLibCore.Attribute;
 
 #nullable disable
@@ -31,15 +32,18 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 分部 { get; set; }
         [Key]
         //[StringLength(20)]
+        [CTRequired]
         public string 總表號 { get; set; }
         //[StringLength(5)]
         public string 案號 { get; set; }
         //[Required]
         //[StringLength(2)]
+        [CTRequired]
         [DisplayName("計量表種類")]
         public string 計量表種類編號 { get; set; }
         //[Required]
         //[StringLength(20)]
+        [CTRequired]
         public string 計量對象 { get; set; }
         //[Required]
         //[StringLength(10)]

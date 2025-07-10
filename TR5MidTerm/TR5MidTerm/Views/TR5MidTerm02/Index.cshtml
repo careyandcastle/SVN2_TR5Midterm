@@ -82,30 +82,26 @@
             <!--OP Button-->
             <b-row class="mb-2">
                 <b-col>
-                    @*<b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
-                    @*<b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">編輯</b-button>
-        <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>*@
-                <b-button v-if="slot.data.operatePermissions.canEdit" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
-                    <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
-                        <b-spinner small type="border" class="custom-spinner"></b-spinner>
-                    </span>編輯
-                </b-button>
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
+                        <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                            <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                        </span>編輯
+                    </b-button>
                     <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
                         <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
                             <b-spinner small type="border" class="custom-spinner"></b-spinner>
                         </span>刪除
                     </b-button>
-                    @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
                     <!--Master OP Page-->
                     @*<fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>*@
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
-                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.param" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
-                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.param" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
+                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.params" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
+                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.params" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
                     <query-page-modal id="master-table-query-modal" title="進階查詢" :queryfields="slot.data.mTableFields" :is_filtered="slot.data.isFiltered"></query-page-modal>
                     <!--Detail OP Page-->
-                    <fetched-page-modal url="CreateDetail" :param="slot.data.selectedMasterRow?.param"
+                    <fetched-page-modal url="CreateDetail" :param="slot.data.selectedMasterRow?.params"
                                         id="detail-table-create-modal" title="新增明細檔"></fetched-page-modal>
                     <fetched-page-modal url="EditDetail" :param="slot.data.selectedDetailRow?.param"
                                         id="detail-table-edit-modal" title="更新資料"></fetched-page-modal>
@@ -125,7 +121,7 @@
                 </b-col>
             </b-row>
         </template>
-         
+
     </table-component>
 </div>
 
@@ -254,7 +250,10 @@
                     selectParam.部門 = this.部門 = data.部門;
                     selectParam.分部 = this.分部 = data.分部;
                     selectParam.總表號 = this.總表號 = data.總表號;
+                    this.selectedMasterRow.param = selectParam;
+                    @*debugger;*@
                     this.selectedMasterRow.params = selectParam;
+                    debugger;
 
                     //傳送給server時, 轉ISO時間
                     Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
@@ -333,7 +332,6 @@
             //#endregion
 
             //#region 匯出
-            //匯出ods
             const _onDataExport = async function () {
                 let response = await axios.post('@Url.Action("Export","TR5MidTermController")', dsMasterProviderParams, {
                     responseType: 'blob',
@@ -352,8 +350,7 @@
                 link.click();
             }
             //#endregion
-
-            //#region filter
+            //#region 預設filter(有加上了鈞凱的ShowValidateResult)
             //覆寫欄位尋找與清除事件
             const _onFilterValueUpdate = function (event) {
                 const keyCodeAllowRegExp = /\b(8|4[6-9]|5[0-7]|6[5-9]|[7|8]\d|90|9[6-9]|10[0-5]|10[7-9]|11[0-1]|18[7-9]|13)\b/;
@@ -394,6 +391,7 @@
             }
 
             const _serverReturned = function (retData) {
+                ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
                 console.log("serverReturned customize: ", retData);
             }
 
@@ -407,7 +405,7 @@
             }
 
             //#endregion
-            //#region 自訂query
+            //#region 自定義:query
             const _querySelectOptions = Vue.reactive({
 
                 事業: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.事業選單)),
@@ -419,7 +417,6 @@
                      { text: '是', value: "true"},
                      { text: '否', value: "false"}],*@
             });
-
             const _querySchema = [
                 { key: '事業', label: '事業', type: 'select' },
                 { key: '單位', label: '單位', type: 'select' },
@@ -428,14 +425,13 @@
                 @*{ key: '刪除註記', label: '刪除註記', type: 'radio', useBoostrapButtons: true }, // slot 會自訂成 button group*@
 
             ];
-            //#region 連動選單onChanged
+
             const _queryChanged = function (key, value) {
-               
+
                 if (key == '事業') {
                     onBizSelectChanged();
                 }
                 else if (key == '單位') {
-                    // 當單位變更時，可以更新部門選項
                     onDepSelectChanged();
                 }
                 else if (key == '部門') {
@@ -443,7 +439,6 @@
                 }
             };
             const onBizSelectChanged = function () {
-                debugger;
     $.get('@Url.Action("GetDepartmentSelectList", "TR5MidTerm02")',
         { Biz: _queryData.事業 },
         (data) => {
@@ -482,21 +477,14 @@
             _queryData.分部 = '';
         }
     );
-};
-            //#endregion
-
-
-            //當按下查詢按鈕
-            const _queryFilterClicked = function () {
+            };
+            const _queryFilterClicked = function () {//當按下查詢按鈕
                 _onAdvanceSearch.call(this, getQueryCondits.call(this));
             };
-
             const getQueryCondits = function () {
                 let filterDataObj = {};
-
                 this.params.data.querySchema.forEach((item) => {
                     let val = this.params.data.queryData[item.key];
-                    @*debugger;*@
                     if (val === null || val === '' || val === '%' || val === 'TS' || val.length === 0) {
                         return;
                     }
@@ -505,36 +493,42 @@
                 });
                 return filterDataObj;
             }
-            //按下清除鈕會觸發的function。清除下拉選單內容、回復預設選項，並重新讀取資料。
-            const _queryResetAll = function () {
+            const _queryResetAll = function () {//按下清除鈕會觸發的function。清除下拉選單內容、回復預設選項，並重新讀取資料。
                 _queryData.事業 = '';
                 _queryData.單位 = '';
                 _queryData.部門 = '';
                 _queryData.分部 = '';
-                @*_queryData.刪除註記 = '%';*@
-
+                @* _queryData.刪除註記 = '%';*@
                 _onAdvanceSearch.call(this, getQueryCondits.call(this));
             }
-            //給default value
-            const _queryData = Vue.reactive({
+            const _queryData = Vue.reactive({//給default value
                 事業: '',
                 單位: '',
                 部門: '',
                 分部: '',
-                @*刪除註記: '%',*@
+                @* 刪除註記: '%',*@
 
             });
-
+            //#endregion
+            //#region 自定義:顏色
+            const _getClassForDetailContent = function (rowData) {
+                const item = rowData.item;
+                @*debugger;*@
+                console.log(item);
+                if (item['目前使用度數'] >= 500) {
+                    return 'text-danger'; // 紅
+                }
+                else {
+                    return '';
+                }
+            }
 
             //#endregion
-
             //#region 注入data
-
-            //要注入的自訂參數
             let _opPermiss = { canCreate: @canCreate, canUpdate: @canUpdate, canDelete: @canDelete, canQuery: @canQuery, canExport: @canExport };
             const params = { data: null, methods: null };
             params.data = {
-                //#region codeGenerator
+                // codeGenerator
                 mTableFieldDesc: _mTableFieldDesc,
                 dTableFieldDesc: _dTableFieldDesc,
                 operatePermissions: _opPermiss,
@@ -545,18 +539,17 @@
                 部門: '',
                 分部: '',
                 總表號: '',
-                //#endregion
-                //#region 自定義query注入
+
+                //自定義:query注入
                 querySchema: _querySchema,
                 querySelectOptions: _querySelectOptions,
                 queryData: _queryData,
-                //#endregion
-                //#region 自訂義按鈕判斷
+
+                //自定義:按鈕判斷
                 isBusy: false,
                 anClickEditOrDelete: false,
-                //#endregion
-            }
 
+            }
             //#endregion
             //#region 注入method
             params.methods = {
@@ -575,11 +568,12 @@
                 onAdvanceSearch: _onAdvanceSearch,
                 onCleanFilter: _onCleanFilter,
                 onDataExport: _onDataExport,
-                //#region 自定義query注入
+                //自定義:query注入
                 queryChanged: _queryChanged,
                 queryResetAll: _queryResetAll,
                 queryFilterClicked: _queryFilterClicked,
-                //#endregion
+                //自定義:顏色設定
+                getClassForDetailContent : _getClassForDetailContent,
             };
             //#endregion
             //掛載Table

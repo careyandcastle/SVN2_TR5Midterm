@@ -63,25 +63,23 @@
             <!--OP Button-->
             <b-row class="mb-2">
                 <b-col>
-                    <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>
                     <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
-                    <b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
-                        <b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">
-                            <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
-                                <b-spinner small type="border" class="custom-spinner"></b-spinner>
-                            </span>編輯
-                        </b-button>
+                    <b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">
+                        <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                            <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                        </span>編輯
+                    </b-button>
                     <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
-                    <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
-                        <b-spinner small type="border" class="custom-spinner"></b-spinner>
-                        </span>刪除</b-button>
-                    @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
+                        <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                            <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                        </span>刪除
+                    </b-button>
+
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
                     <!--Master OP Page-->
-                    <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
-                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.param" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
-                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.param" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
+                    <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.params" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
+                    <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.params" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
                     <query-page-modal id="master-table-query-modal" title="進階查詢" :queryfields="slot.data.mTableFields" :is_filtered="slot.data.isFiltered"></query-page-modal>
                 </b-col>
             </b-row>
@@ -97,24 +95,7 @@
                 </b-col>
             </b-row>
         </template>
-        <!--<template #filter-row="slot">
-            <b-row class="mb-2">-->
-        @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-        <!--<b-col style="max-width:14em;"
-                       v-for="field in slot.data.mTableFields" :key="field.key"
-                       v-if="['m-table-actions', '__rowIndex__', '承租人','身分別編號','統一編號','行動電話','電子郵件','刪除註記','修改人','修改時間','承租人顯示','統一編號顯示','行動電話顯示','電子郵件顯示','刪除註記顯示','身分別名稱'].some(item => item === field.key) === false">
-                    <b-input :placeholder="field.label"
-                             :name="field.key"
-                             v-b-tooltip.bottom.v-secondary="field.label"
-                             @@keyup="slot.data.onFilterValueUpdate"
-                             :ref="'filter_input_' + field.key">
-                    </b-input>
-                </b-col>
-                <b-col>
-                    <b-button @@click="slot.data.onCleanFilter" style="max-height:62px;" class="float-right" variant="detail3" :disabled="!slot.data.isFiltered">清除過濾</b-button>
-                </b-col>
-            </b-row>
-        </template>-->
+
     </table-component>
 </div>
 

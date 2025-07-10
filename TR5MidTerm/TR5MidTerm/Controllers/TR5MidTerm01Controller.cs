@@ -41,7 +41,7 @@ namespace TR5MidTerm.Controllers
         }
 
         #region 首頁
-        public async Task<IActionResult> IndexAsync()
+        public async Task<IActionResult> Index()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             Debug.WriteLine($"[InitInventoryDefaultValues] ✅ 從 Session 取得使用者：UserNo={ua.UserNo}, BusinessNo={ua.BusinessNo}, DepartmentNo={ua.DepartmentNo}, DivisionNo={ua.DivisionNo}, BranchNo={ua.BranchNo}"); ;
@@ -196,8 +196,6 @@ namespace TR5MidTerm.Controllers
             if (!ModelState.IsValid)
                 return ModelStateInvalidResult("Create", false);
             #endregion
-
-
             #region 資料解密
             var SymmKey = _context.SymmetricKeyName;
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));

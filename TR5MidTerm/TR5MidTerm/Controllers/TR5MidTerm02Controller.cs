@@ -41,8 +41,16 @@ namespace TR5MidTerm.Controllers
                 cfg.CreateProjection<水電總表檔, 水電總表檔DisplayViewModel>();
                 cfg.CreateMap<水電總表檔DisplayViewModel, 水電總表檔>();
                 cfg.CreateMap<水電總表檔, 水電總表檔DisplayViewModel>();
+
+                cfg.CreateMap<水電總表檔, 水電總表檔CreateViewModel>();
+                cfg.CreateMap<水電總表檔CreateViewModel, 水電總表檔>();
+
                 cfg.CreateMap<水電分表檔DisplayViewModel, 水電分表檔>();
                 cfg.CreateMap<水電分表檔, 水電分表檔DisplayViewModel>();
+
+                cfg.CreateMap<水電總表檔EditViewModel, 水電總表檔>();
+                cfg.CreateMap<水電總表檔, 水電總表檔EditViewModel>();
+
 
             });
 
@@ -50,7 +58,7 @@ namespace TR5MidTerm.Controllers
         }
         #endregion
         #region index
-        public async Task<IActionResult> IndexAsync()
+        public async Task<IActionResult> Index()
         {
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<水電總表檔DisplayViewModel, 水電分表檔DisplayViewModel>();
@@ -129,7 +137,7 @@ namespace TR5MidTerm.Controllers
                         計量對象 = m.計量對象,
 
                         計量表種類編號 = m.計量表種類編號,
-                        計量表種類 = m.計量表種類編號Navigation.計量表種類,
+                        計量表種類 = m.計量表種類編號+ '_' + m.計量表種類編號Navigation.計量表種類,
                         #endregion
                         //身分別編號 = m.身分別編號,
                         //身分別名稱 = m.身分別編號Navigation.身分別,
@@ -155,10 +163,7 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
-            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-
-            
-            // ✅ 載入下拉選單：計量表種類
+            #region 載入下拉選單（計量表種類）
             ViewBag.計量表種類選項 = _context.計量表種類檔
                 .OrderBy(x => x.計量表種類編號)
                 .Select(x => new SelectListItem
@@ -166,35 +171,42 @@ namespace TR5MidTerm.Controllers
                     Value = x.計量表種類編號,
                     Text = $"{x.計量表種類編號} - {x.計量表種類}"
                 }).ToList();
-
-            // ✅ 初始化 ViewModel
+            #endregion
+            #region 初始化表單預設資料
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             var viewModel = new 水電總表檔CreateViewModel
             {
                 事業 = ua.BusinessNo,
                 單位 = ua.DepartmentNo,
                 部門 = ua.DivisionNo,
                 分部 = ua.BranchNo,
-
             };
-            return PartialView();
+            #endregion
+            return PartialView(viewModel);
         }
-        #endregion
+        
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,總表號,案號,計量表種類編號,計量對象")] 水電總表檔DisplayViewModel postData)
+        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,總表號,案號,計量表種類編號,計量對象")] 水電總表檔CreateViewModel postData)
         {
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+            #region 驗證
+            if (!ModelState.IsValid)
+            {
+                return ModelStateInvalidResult("Create", false);
+            }
+            #endregion
+            #region 資料準備+加入追蹤區     
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            水電總表檔 filledData = _mapper.Map<水電總表檔CreateViewModel, 水電總表檔>(postData);
 
-            /*
-             *  Put Your Code Here.
-             */
+            filledData.修改人 = ua.UserNo + '_' + ua.UserName;
+            filledData.修改時間 = DateTime.Now;
 
-            水電總表檔 filledData = _mapper.Map<水電總表檔DisplayViewModel, 水電總表檔>(postData);
             _context.Add(filledData);
-
+            #endregion
+            #region	資料庫儲存+回傳處理
             try
             {
                 var opCount = await _context.SaveChangesAsync();
@@ -211,126 +223,68 @@ namespace TR5MidTerm.Controllers
                     message = ex.Message
                 });
             }
-
+            #endregion
             return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
-
-         
-        #region 新增多筆
-        [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public IActionResult CreateMulti()
-        {
-            return PartialView();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateMulti(List<水電總表檔DisplayViewModel> postData)
-        {
-            //以下不驗證欄位值是否正確，請視欄位自行刪減
-            for (int idx = 0; idx < postData.Count; idx++)
-            {
-                ModelState.Remove($"postData[{idx}].欄位1");
-                ModelState.Remove($"postData[{idx}].欄位2");
-                ModelState.Remove($"postData[{idx}].欄位3");
-                
-                //.....
-                //...
-
-                ModelState.Remove($"postData[{idx}].upd_usr");
-                ModelState.Remove($"postData[{idx}].upd_dt");
-            }
-            
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-
-            foreach (var item in postData)
-            {
-                /*
-                 *  Put Your Code Here.
-                 */
-                水電總表檔 filledData = _mapper.Map<水電總表檔DisplayViewModel, 水電總表檔>(item);
-                _context.Add(filledData);
-            }
-
-            try
-            {
-                var opCount = await _context.SaveChangesAsync();
-                if (opCount > 0)
-                    return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.OK)
-                    {
-                        data = postData
-                    });
-            }
-            catch (Exception ex)
-            {
-                return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR)
-                {
-                    message = ex.Message
-                });
-            }
-
-
-            return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-        }
-
+        #endregion
+ 
+        #region 編輯主檔
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 總表號) 
+        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 總表號)
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
-
-            var result = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
+            #region 依主鍵查詢資料model+轉為viewModel
+            //var result = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
+            var result = await _context.水電總表檔
+    .Include(x => x.計量表種類編號Navigation)
+    .FirstOrDefaultAsync(x =>
+        x.事業 == 事業 &&
+        x.單位 == 單位 &&
+        x.部門 == 部門 &&
+        x.分部 == 分部 &&
+        x.總表號 == 總表號);
             if (result == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
+            var viewModel = _mapper.Map<水電總表檔, 水電總表檔EditViewModel>(result);
+            viewModel.計量表種類 = result.計量表種類編號 + '_' + result.計量表種類編號Navigation.計量表種類;
+            #endregion
+            #region 載入下拉選單（計量表種類）
+            ViewBag.計量表種類選項 = _context.計量表種類檔
+                .OrderBy(x => x.計量表種類編號)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.計量表種類編號,
+                    Text = $"{x.計量表種類編號} - {x.計量表種類}"
+                }).ToList();
+            #endregion
 
-            return PartialView(result);
+            return PartialView(viewModel);
         }
-        #endregion
-        #region 編輯主檔
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 總表號, [Bind("事業,單位,部門,分部,總表號,案號,計量表種類編號,計量對象,修改人,修改時間")] 水電總表檔DisplayViewModel postData)
+        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 總表號, [Bind("事業,單位,部門,分部,總表號,案號,計量表種類編號,計量對象")] 水電總表檔EditViewModel postData)
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
-
-            if (事業 != postData.事業 || 單位 != postData.單位 || 部門 != postData.部門 || 分部 != postData.分部 || 總表號 != postData.總表號)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
-
-            //if (ModelState.IsValid == false)
-            //    return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            //await ValidateForEdit(postData);
-
+            #region 驗證
             if (!ModelState.IsValid)
             {
-                return Ok(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR)
-                {
-                    data = ModelState.ToErrorInfos()
-                });
+                return ModelStateInvalidResult("Edit", false);
             }
+            #endregion
+            #region 資料準備+加入追蹤區     
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            水電總表檔 filledData = _mapper.Map<水電總表檔EditViewModel, 水電總表檔>(postData);
 
+            filledData.修改人 = ua.UserNo + '_' + ua.UserName;
+            filledData.修改時間 = DateTime.Now;
+
+            _context.Update(filledData);
+            #endregion
+            #region	資料庫儲存+回傳處理
             try
             {
-                /*
-                *  Put Your Code Here.
-                */
-
-                水電總表檔 filledData = _mapper.Map<水電總表檔DisplayViewModel, 水電總表檔>(postData);
-                _context.Update(filledData);
                 var opCount = await _context.SaveChangesAsync();
-
                 if (opCount > 0)
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                     {
@@ -339,9 +293,12 @@ namespace TR5MidTerm.Controllers
             }
             catch (Exception ex)
             {
-                return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+                return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR)
+                {
+                    message = ex.Message
+                });
             }
-
+            #endregion
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
         }
         #endregion
@@ -353,25 +310,33 @@ namespace TR5MidTerm.Controllers
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
-            
-            var result = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
-            if (result == null)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-            }
+
+            //var result = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
+            var result = await GetBaseQuery()
+               .Where(x =>
+            x.事業 == 事業 &&
+            x.單位 == 單位 &&
+            x.部門 == 部門 &&
+            x.分部 == 分部 &&
+            x.總表號 == 總表號)
+               .SingleOrDefaultAsync();
+            //var viewModel = _mapper.Map<水電總表檔, 水電總表檔DisplayViewModel>(result);
 
             return PartialView(result);
         }
 
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteConfirmed(string 事業, string 單位, string 部門, string 分部, string 總表號)
+        public async Task<IActionResult> DeleteConfirmed([Bind("事業,單位,部門,分部,總表號")] 水電總表檔DisplayViewModel postData)
         {
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-            var result = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
+            #region 驗證
+            if (!ModelState.IsValid)
+            {
+                return ModelStateInvalidResult("Delete", false);
+            }
+            #endregion
+            var result = await _context.水電總表檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.總表號);
             if (result == null)
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
@@ -425,7 +390,6 @@ namespace TR5MidTerm.Controllers
         }
         #endregion
         #region 提供index使用
-        [HttpGet]
         public async Task<IActionResult> GetDepartmentSelectList(string Biz)
         {
             var 已使用單位代碼 = await _context.水電總表檔
@@ -462,8 +426,6 @@ namespace TR5MidTerm.Controllers
 
             return Json(部門清單);
         }
-
-        //[HttpGet]
         public async Task<IActionResult> GetBranchSelectList(string Biz, string DepNo, string DivNo)
         {
             var 已使用分部代碼 = await _context.水電總表檔
