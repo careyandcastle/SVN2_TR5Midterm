@@ -219,7 +219,7 @@ namespace TR5MidTerm.Controllers
                 if (opCount > 0)
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                     {
-                        data = postData
+                        data = filledData
                     });
             }
             catch (Exception ex)
@@ -336,6 +336,7 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteConfirmed([Bind("事業,單位,部門,分部,總表號")] 水電總表檔DisplayViewModel postData)
         {
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
             #region 驗證
             if (!ModelState.IsValid)
             {
@@ -526,32 +527,44 @@ namespace TR5MidTerm.Controllers
             }
             //var item = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號, 分表號);
             var item = await _context.水電總表檔.FindAsync(事業, 單位, 部門, 分部, 總表號);
-
-            if (item == null)
+            var viewModel = new 水電分表檔CreateViewModel
+            {
+                事業 = item.事業,
+                單位 = item.單位,
+                部門 = item.部門,
+                分部 = item.分部,
+                總表號 = item.總表號,
+                上期度數 = 0m
+            };
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            return PartialView();
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,總表號,分表號,備註,上期度數 ,本期度數")] 水電分表檔DisplayViewModel postData)
+        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,總表號,分表號,備註,上期度數 ,本期度數")] 水電分表檔CreateViewModel postData)
         {
             ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
 
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+            if (!ModelState.IsValid)
+            {
+                return ModelStateInvalidResult("CreateDetail", false);
+            }   //    return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+
 
             /*
              *  Put Your Code Here.
              */
-            
-            水電分表檔 filledData = _mapper.Map<水電分表檔DisplayViewModel, 水電分表檔>(postData);
+
+            水電分表檔 filledData = _mapper.Map<水電分表檔CreateViewModel, 水電分表檔>(postData);
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             filledData.備註 ??= "";
+            filledData.上期度數 = 0m;
             filledData.修改人 = ua.BranchNo + '_' + ua.UserName;
             filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
@@ -642,19 +655,20 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號, [Bind("事業,單位,部門,分部,總表號,分表號,備註, 上期度數, 本期度數")] 水電分表檔DisplayViewModel postData)
+        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號, [Bind("事業,單位,部門,分部,總表號,分表號,備註, 上期度數, 本期度數")] 水電分表檔EditViewModel postData)
         {
 
             ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
-
-            if (ModelState.IsValid == false)
-                return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            if (!ModelState.IsValid)
+            {
+                return ModelStateInvalidResult("EditDetail", false);
+            }
 
             if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號 == null)
                 return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
               
 
-            水電分表檔 filledData = _mapper.Map<水電分表檔DisplayViewModel, 水電分表檔>(postData);
+            水電分表檔 filledData = _mapper.Map<水電分表檔EditViewModel, 水電分表檔>(postData);
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
             filledData.備註 ??= "";
@@ -710,15 +724,19 @@ namespace TR5MidTerm.Controllers
             return PartialView(viewModel);
         }
 
-        [HttpPost, ActionName("DeleteDetail")]
+        [HttpPost, ActionName("DeleteDetailConfirmed")]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 總表號, int 分表號)
+        public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 總表號, int? 分表號, [Bind("事業,單位,部門,分部,總表號,分表號,備註, 上期度數, 本期度數")] 水電分表檔DisplayViewModel postData)
         {
-            if (ModelState.IsValid == false)
-                return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號== null)
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+            #region 驗證
+            if (!ModelState.IsValid)
+            {
+                return ModelStateInvalidResult("DeleteDetail", false);
+            }
+            #endregion
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 總表號 == null || 分表號 == null)
                 return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
 
@@ -753,19 +771,19 @@ namespace TR5MidTerm.Controllers
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             if (主檔事業 != ua.BusinessNo)
             {
-                ModelState.AddModelError("", $"無權操作該事業資料（登入事業為 {ua.BusinessName}）");
+                ModelState.AddModelError("欄位名稱", $"無權操作該事業資料（登入事業為 {ua.BusinessName}）");
             }
             else if (主檔單位 != ua.DepartmentNo)
             {
-                ModelState.AddModelError("", $"無權操作該單位資料（登入單位為 {ua.DepartmentName}）");
+                ModelState.AddModelError("欄位名稱", $"無權操作該單位資料（登入單位為 {ua.DepartmentName}）");
             }
             else if (主檔部門 != ua.DivisionNo)
             {
-                ModelState.AddModelError("", $"無權操作該部門資料（登入部門為 {ua.DivisionName}）");
+                ModelState.AddModelError("欄位名稱", $"無權操作該部門資料（登入部門為 {ua.DivisionName}）");
             }
             else if (主檔分部 != ua.BranchNo)
             {
-                ModelState.AddModelError("", $"無權操作該分部資料（登入分部為 {ua.BranchNo}）");
+                ModelState.AddModelError("欄位名稱", $"無權操作該分部資料（登入分部為 {ua.BranchNo}）");
             }
         }
 
@@ -793,9 +811,6 @@ namespace TR5MidTerm.Controllers
                     }
                 });
             }
-
-            //bool canClickEditOrDelete = canEditOrDelete;
-
 
             return Ok(new
             {
