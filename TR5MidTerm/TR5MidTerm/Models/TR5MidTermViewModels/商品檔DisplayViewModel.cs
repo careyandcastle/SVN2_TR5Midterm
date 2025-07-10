@@ -47,7 +47,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 商品名稱 { get; set; }
         //[Required]
         //[StringLength(2)]
-        [HiddenForView]
+        //[HiddenForView]
         public string 商品類別編號 { get; set; }
 
         public string 商品類別 { get; set; }

@@ -294,6 +294,7 @@
             }
 
             const _serverReturned = function (retData) {
+                ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
                 console.log("serverReturned customize: ", retData);
             }
 

@@ -18,6 +18,7 @@ using TscLibCore.Modules;
 using TscLibCore.Authority;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Diagnostics;
+using TR5MidTerm.PC;
 
 namespace TR5MidTerm.Controllers
 {
@@ -40,13 +41,20 @@ namespace TR5MidTerm.Controllers
                 cfg.CreateProjection<商品檔, 商品檔DisplayViewModel>();
                 cfg.CreateMap<商品檔DisplayViewModel, 商品檔>();
                 cfg.CreateMap<商品檔, 商品檔DisplayViewModel>();
+
+                cfg.CreateMap<商品檔CreateViewModel, 商品檔>();
+                cfg.CreateMap<商品檔, 商品檔CreateViewModel>();
+
+                cfg.CreateMap<商品檔EditViewModel, 商品檔>();
+                cfg.CreateMap<商品檔, 商品檔EditViewModel>();
+
             });
 
             _mapper ??= _config.CreateMapper();
         }
         #endregion
         #region 首頁
-        public async Task<IActionResult> IndexAsync()
+        public async Task<IActionResult> Index()
         {
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<商品檔DisplayViewModel>();
@@ -210,30 +218,62 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
-            return PartialView();
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var viewModel = new 商品檔CreateViewModel
+            {
+                事業 = ua.BusinessNo,
+                單位 = ua.DepartmentNo,
+                部門 = ua.DivisionNo,
+                分部 = ua.BranchNo,
+                單價 = 0
+            };
+            ViewBag.商品類別選項 = _context.商品類別檔
+                .OrderBy(x => x.商品類別編號)
+                .Select(x => new SelectListItem
+                {
+                    Text = $"{x.商品類別編號}_{x.商品類別}",
+                    Value = x.商品類別編號
+                }).ToList();
+            //            ViewBag.建物資料清單 = _context.建物主檔
+            ////.Where(x => x.組織符合條件)
+            //.Where(x =>
+            //        x.事業 == ua.BusinessNo &&
+            //        x.單位 == ua.DepartmentNo &&
+            //        x.部門 == ua.DivisionNo &&
+            //        x.分部 == ua.BranchName)
+            //.Select(x => new SelectListItem
+            //{
+            //    Value = x.建物編號,
+            //    Text = $"{x.建物編號} - {x.建物名稱}"
+            //}).ToList();
+            ViewBag.建物資料清單 = new List<SelectListItem>
+{
+    new SelectListItem { Value = "B001", Text = "建物：B001 - 台北大樓" },
+    new SelectListItem { Value = "B002", Text = "建物：B002 - 新竹倉庫" },
+    new SelectListItem { Value = "B003", Text = "建物：B003 - 高雄宿舍" },
+    new SelectListItem { Value = "R101", Text = "租賃住宅：R101 - 台中公寓A" },
+    new SelectListItem { Value = "R102", Text = "租賃住宅：R102 - 台中公寓B" },
+};
+
+            return PartialView(viewModel);
         }
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,商品編號,商品名稱,商品類別編號,物件編號,單價,修改人,修改時間")] 商品檔DisplayViewModel postData)
+        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,商品編號,商品名稱,商品類別編號,物件編號,單價")] 商品檔CreateViewModel postData)
         {
-            //以下不驗證欄位值是否正確，請視欄位自行刪減
-            ModelState.Remove($"欄位1");
-            ModelState.Remove($"欄位2");
-            ModelState.Remove($"欄位3");
-            ModelState.Remove($"upd_usr");
-            ModelState.Remove($"upd_dt");
-
-            if (ModelState.IsValid == false)
+            if (!ModelState.IsValid)
+            {
+                ModelStateInvalidResult("Create", false);
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
-
+            } 
             /*
              *  Put Your Code Here.
              */
 
-            商品檔 filledData = _mapper.Map<商品檔DisplayViewModel, 商品檔>(postData);
+            商品檔 filledData = _mapper.Map<商品檔CreateViewModel, 商品檔>(postData);
             _context.Add(filledData);
 
             try
@@ -382,8 +422,17 @@ namespace TR5MidTerm.Controllers
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
-            
-            var result = await _context.商品檔.FindAsync(事業, 單位, 部門, 分部, 商品編號);
+
+            //var result = await _context.商品檔.FindAsync(事業, 單位, 部門, 分部, 商品編號);
+            //var viewModel = _mapper.Map<商品檔, 商品檔DisplayViewModel>(result);
+            var result = await GetBaseQuery()
+               .Where(x =>
+            x.事業 == 事業 &&
+            x.單位 == 單位 &&
+            x.部門 == 部門 &&
+            x.分部 == 分部 &&
+            x.商品編號 == 商品編號)
+               .SingleOrDefaultAsync();
             if (result == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
@@ -395,12 +444,12 @@ namespace TR5MidTerm.Controllers
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteConfirmed(string 事業, string 單位, string 部門, string 分部, string 商品編號)
+        public async Task<IActionResult> DeleteConfirmed( [Bind("事業,單位,部門,分部,商品編號")] 商品檔DisplayViewModel postData)
         {
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
-            var result = await _context.商品檔.FindAsync(事業, 單位, 部門, 分部, 商品編號);
+            var result = await _context.商品檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.商品編號);
             if (result == null)
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
@@ -511,6 +560,37 @@ namespace TR5MidTerm.Controllers
             return Ok(new
             {
                 canClickEditOrDelete = true
+            });
+        }
+        #endregion
+        #region 自訂義驗證
+        private IActionResult ModelStateInvalidResult(string context, bool 驗證前)
+        {
+            string sourceLabel = 驗證前 ? "ViewModel驗證" : "Validator驗證";
+            Debug.WriteLine($"[{context}] [ERROR] ModelState 無效（{sourceLabel}）");
+
+            foreach (var kv in ModelState.ToErrorInfos())
+            {
+                foreach (var msg in kv.Value)
+                    Debug.WriteLine($"        ↳ 欄位：{kv.Key}，錯誤：{msg}");
+            }
+
+            // 根據 context 自動選對 ReturnCode
+            var code = context.ToLower() switch
+            {
+                "Create" => ReturnState.ReturnCode.CREATE_ERROR,
+                "Edit" => ReturnState.ReturnCode.EDIT_ERROR,
+                "Delete" => ReturnState.ReturnCode.DELETE_ERROR,
+                "ApproveConfirmed" => ReturnState.ReturnCode.EDIT_ERROR,
+                "CreateDetail" => ReturnState.ReturnCode.CREATE_ERROR,
+                "EditDetail" => ReturnState.ReturnCode.EDIT_ERROR,
+                "DeleteDetail" => ReturnState.ReturnCode.DELETE_ERROR,
+                _ => ReturnState.ReturnCode.ERROR
+            };
+
+            return Ok(new ReturnData(code)
+            {
+                data = ModelState.ToErrorInfos()
             });
         }
         #endregion
