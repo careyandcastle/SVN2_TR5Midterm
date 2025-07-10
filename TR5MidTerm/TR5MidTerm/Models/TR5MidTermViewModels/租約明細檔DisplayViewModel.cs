@@ -13,29 +13,40 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
     public partial class 租約明細檔DisplayViewModel
     {
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 事業 { get; set; }
+
+        [DisplayName("事業")]
+        public string 事業顯示 { get; set; }
+
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 單位 { get; set; }
+
+        [DisplayName("單位")]
+        public string 單位顯示 { get; set; }
+
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 部門 { get; set; }
+
+        [DisplayName("部門")]
+        public string 部門顯示 { get; set; }
+
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 分部 { get; set; }
+
+        [DisplayName("分部")]
+        public string 分部顯示 { get; set; }
+
         [Key]
-        //[StringLength(5)]
         public string 案號 { get; set; }
         [Key]
-        //[StringLength(5)]
+        [DisplayName("商品名稱")]//
         public string 商品編號 { get; set; }
-        //[Column(TypeName = "decimal(18, 0)")]
         public decimal 數量 { get; set; }
-        //[Required]
-        //[StringLength(50)]
         public string 修改人 { get; set; }
-        //[Column(TypeName = "datetime")]
         public DateTime 修改時間 { get; set; }
     }
 }
