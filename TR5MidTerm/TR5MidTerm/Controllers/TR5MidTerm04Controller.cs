@@ -714,8 +714,8 @@ namespace TR5MidTerm.Controllers
                 return NotFound();
             }
 
-            var result = await _context.租約明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 商品編號);
-
+            //var result = await _context.租約明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 商品編號);
+            var result = GetDetailsBaseQuery().Where(m => m.事業 == 事業 && m.單位 == 單位 && m.部門 == 部門 && m.分部 == 分部).FirstOrDefault();
             if (result == null)
             {
                 return NotFound();
@@ -724,10 +724,11 @@ namespace TR5MidTerm.Controllers
             return PartialView(result);
         }
 
-        [HttpPost, ActionName("DeleteDetail")]
+        //[HttpPost, ActionName("DeleteDetail")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
+        public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號, [Bind("事業,單位,部門,分部,案號,商品編號")] 租約明細檔DisplayViewModel postData)
         {
             if (ModelState.IsValid == false)
                 return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
