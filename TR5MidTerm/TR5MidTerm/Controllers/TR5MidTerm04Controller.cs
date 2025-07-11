@@ -139,10 +139,13 @@ namespace TR5MidTerm.Controllers
 
                         #region naviagtion
                         // 📌 顯示用欄位（從 Navigation 或對照表取）
-                        租賃方式顯示 = CustomSqlFunctions.ConcatCodeAndName(m.租賃方式編號Navigation.租賃方式編號, m.租賃方式編號Navigation.租賃方式)
+                        租賃方式顯示 = CustomSqlFunctions.ConcatCodeAndName(m.租賃方式編號Navigation.租賃方式編號, m.租賃方式編號Navigation.租賃方式),
                         //m.租賃方式編號Navigation.租賃方式編號  // 要 Include 或 join 對應資料
                         #endregion
-
+                        #region 修改人與修改時間
+                        修改人 = m.修改人,
+                        修改時間 = m.修改時間
+                        #endregion
 
 
                     }
@@ -489,14 +492,63 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
 
-            var query = from s in _context.租約明細檔
-                        where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.案號 == keys.案號
-                        select s;
+            //var query = from s in _context.租約明細檔
+            //            where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.案號 == keys.案號
+            //            select s;
+            //var query = GetDetailsBaseQuery();
+            var query = GetDetailsBaseQuery().Where(s =>
+    s.事業 == keys.事業 &&
+    s.單位 == keys.單位 &&
+    s.部門 == keys.部門 &&
+    s.分部 == keys.分部 &&
+    s.案號 == keys.案號
+);
 
             return CreatedAtAction(nameof(GetDetails), new ReturnData(ReturnState.ReturnCode.OK)
             {
                 data = await query.ToListAsync()
             });
+        }
+
+        private IQueryable<租約明細檔DisplayViewModel> GetDetailsBaseQuery()
+        {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            return (from m in _context.租約明細檔
+                    join biz in _context.事業 on m.事業 equals biz.事業1
+                    join dep in _context.單位 on m.單位 equals dep.單位1
+                    join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
+                    join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    join p in _context.商品檔 on m.商品編號 equals p.商品編號
+                    select new 租約明細檔DisplayViewModel
+                    {
+                        #region 組織資料
+                        事業 = m.事業,
+                        事業顯示 = CustomSqlFunctions.ConcatCodeAndName(m.事業, biz.事業名稱),
+
+                        單位 = m.單位,
+                        單位顯示 = CustomSqlFunctions.ConcatCodeAndName(m.單位, dep.單位名稱),
+
+                        部門 = m.部門,
+                        部門顯示 = CustomSqlFunctions.ConcatCodeAndName(m.部門, sec.部門名稱),
+
+                        分部 = m.分部,
+                        分部顯示 = CustomSqlFunctions.ConcatCodeAndName(m.分部, sub.分部名稱),
+                        #endregion
+
+                        #region 主欄位
+                        案號 = m.案號,
+                        商品編號 = m.商品編號,
+                        商品名稱顯示 = CustomSqlFunctions.ConcatCodeAndName(p.商品編號, p.商品名稱),
+                        數量 = m.數量,
+                        #endregion
+                        #region 修改人與修改時間
+                        修改人 = m.修改人,
+                        修改時間 = m.修改時間
+                        #endregion
+
+
+                    }
+                );
         }
         #endregion
         #region CreateDetail
