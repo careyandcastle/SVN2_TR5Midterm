@@ -1,0 +1,49 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.租約明細檔CreateViewModel
+
+@{
+    ViewData["Title"] = "新增租約明細資料";
+}
+
+<h1 class="mt-2">@ViewData["Title"]</h1>
+
+<div>
+    <form asp-action="CreateDetail" method="post">
+        @Html.AntiForgeryToken()
+
+        @* 錯誤訊息區塊 *@
+        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+            <ul></ul>
+        </div>
+
+        @* ✅ 隱藏主鍵欄位（從主檔或 Session 傳入） *@
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
+        @Html.HiddenFor(m => m.案號)
+
+        @* ✅ 商品編號（可選擇輸入或下拉） *@
+    <div class="form-group">
+        <label asp-for="商品編號"></label>
+        @*<input asp-for="商品編號" class="form-control" />*@
+        <select asp-for="商品編號" asp-items="ViewBag.商品選單" class="form-control"></select>
+        <span asp-validation-for="商品編號" class="text-danger"></span>
+    </div>
+
+        @* ✅ 數量輸入欄位 *@
+        <div class="form-group">
+            <label asp-for="數量"></label>
+            <input asp-for="數量" class="form-control" />
+            <span asp-validation-for="數量" class="text-danger"></span>
+        </div>
+
+        <div class="form-group text-right mt-3">
+            <button type="submit" class="btn btn-primary">儲存</button>
+            <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

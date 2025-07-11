@@ -10,7 +10,7 @@ using TscLibCore.Attribute;
 
 namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
-    public partial class 租約明細檔CreateViewModel: 租約明細檔BaseViewModel
+    public partial class 租約明細檔EditViewModel : 租約明細檔BaseViewModel
     {
        
 

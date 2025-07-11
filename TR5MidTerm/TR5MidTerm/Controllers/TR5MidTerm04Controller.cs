@@ -41,6 +41,16 @@ namespace TR5MidTerm.Controllers
                 cfg.CreateProjection<租約主檔, 租約主檔DisplayViewModel>();
                 cfg.CreateMap<租約主檔DisplayViewModel, 租約主檔>();
                 cfg.CreateMap<租約主檔, 租約主檔DisplayViewModel>();
+                cfg.CreateMap<租約主檔EditViewModel, 租約主檔>();
+                cfg.CreateMap<租約主檔, 租約主檔EditViewModel>();
+                cfg.CreateMap<租約主檔CreateViewModel, 租約主檔>();
+                cfg.CreateMap<租約主檔, 租約主檔CreateViewModel>();
+
+
+                cfg.CreateMap<租約明細檔EditViewModel, 租約明細檔>();
+                cfg.CreateMap<租約明細檔, 租約明細檔EditViewModel>();
+                cfg.CreateMap<租約明細檔CreateViewModel, 租約明細檔>();
+                cfg.CreateMap<租約明細檔, 租約明細檔CreateViewModel>();
                 cfg.CreateMap<租約明細檔DisplayViewModel, 租約明細檔>();
                 cfg.CreateMap<租約明細檔, 租約明細檔DisplayViewModel>();
 
@@ -225,7 +235,7 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,案號,案名,承租人編號,租賃方式編號,租賃用途,租約起始日期,租期月數,計租週期月數,繳款期限天數,租約終止日期,備註,修改人,修改時間")] 租約主檔DisplayViewModel postData)
+        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,案號,案名,承租人編號,租賃方式編號,租賃用途,租約起始日期,租期月數,計租週期月數,繳款期限天數,租約終止日期,備註,修改人,修改時間")] 租約主檔CreateViewModel postData)
         {
             //以下不驗證欄位值是否正確，請視欄位自行刪減
             ModelState.Remove($"欄位1");
@@ -241,7 +251,10 @@ namespace TR5MidTerm.Controllers
              *  Put Your Code Here.
              */
 
-            租約主檔 filledData = _mapper.Map<租約主檔DisplayViewModel, 租約主檔>(postData);
+            租約主檔 filledData = _mapper.Map<租約主檔CreateViewModel, 租約主檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
 
             try
@@ -343,7 +356,7 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 案號, [Bind("事業,單位,部門,分部,案號,案名,承租人編號,租賃方式編號,租賃用途,租約起始日期,租期月數,計租週期月數,繳款期限天數,租約終止日期,備註,修改人,修改時間")] 租約主檔DisplayViewModel postData)
+        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 案號, [Bind("事業,單位,部門,分部,案號,案名,承租人編號,租賃方式編號,租賃用途,租約起始日期,租期月數,計租週期月數,繳款期限天數,租約終止日期,備註")] 租約主檔EditViewModel postData)
         {
             if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null)
             {
@@ -361,10 +374,14 @@ namespace TR5MidTerm.Controllers
             try
             {
                 /*
-                *  Put Your Code Here.
+                *  Put Your Code Here.(ua.UserNo, ua.UserName);
                 */
 
-                租約主檔 filledData = _mapper.Map<租約主檔DisplayViewModel, 租約主檔>(postData);
+                租約主檔 filledData = _mapper.Map<租約主檔EditViewModel, 租約主檔>(postData);
+                var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+                filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
+                filledData.修改時間 = DateTime.Now;
+
                 _context.Update(filledData);
                 var opCount = await _context.SaveChangesAsync();
 
@@ -380,7 +397,7 @@ namespace TR5MidTerm.Controllers
             }
 
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-        }
+        } 
         #endregion
         #region Delete
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
@@ -554,26 +571,76 @@ namespace TR5MidTerm.Controllers
         #region CreateDetail
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
+        public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 案號)
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 商品編號 == null)
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
-            var item = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號, 商品編號);
+            //var item = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var viewModel = new 租約明細檔CreateViewModel
+            {
+                事業 = 事業,
+                單位 = 單位,
+                部門 = 部門,
+                分部 = 分部,
+                案號 = 案號
+            };
 
-            if (item == null)
+            // ✅ 查詢所有租期未結束的商品（可自行改用 today > 租約起始日期）
+            var 租用中商品 = _context.租約明細檔
+    .Join(_context.租約主檔,
+        m => new { m.事業, m.單位, m.部門, m.分部, m.案號 },
+        h => new { h.事業, h.單位, h.部門, h.分部, h.案號 },
+        (m, h) => new
+        {
+            m.商品編號,
+            h.租約起始日期,
+            h.租期月數,
+            租約終止日期 = h.租約終止日期 ?? h.租約起始日期.AddMonths(h.租期月數)
+        })
+    .Where(x =>
+        x.租約起始日期 <= DateTime.Now &&
+        x.租約終止日期 >= DateTime.Now)
+    .AsEnumerable() // ← 關鍵：讓後面 GroupBy 用 C# 執行
+    .GroupBy(x => x.商品編號)
+    .ToDictionary(g => g.Key, g => g.Max(x => x.租約終止日期));
+
+
+            ViewBag.商品選單 = _context.商品檔
+                .Where(x =>
+                x.事業 == 事業 &&
+                x.單位 == 單位 &&
+                x.部門 == 部門 &&
+                x.分部 == 分部)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.商品編號,
+                    Text = 租用中商品.ContainsKey(x.商品編號)
+            ? $"{x.商品編號} - {x.商品名稱} ⚠已租至 {租用中商品[x.商品編號]:yyyy/MM/dd}"
+            : $"{x.商品編號} - {x.商品名稱}",
+                    Disabled = 租用中商品.ContainsKey(x.商品編號) // ← 如不想禁止選擇請改為 false
+                })
+    .ToList();
+            //var item = await _context.租約明細檔
+            //    .Where(m=> m.事業 == 事業 &&
+            //    m.單位 == 單位 &&
+            //    m.部門 == 部門 &&
+            //    m.分部 == 分部 &&
+            //    ).Select new 
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            return PartialView();
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,案號,商品編號,數量,修改人,修改時間")] 租約明細檔DisplayViewModel postData)
+        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,案號,商品編號,數量,修改人,修改時間")] 租約明細檔CreateViewModel postData)
         {
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
@@ -582,7 +649,10 @@ namespace TR5MidTerm.Controllers
              *  Put Your Code Here.
              */
 
-            租約明細檔 filledData = _mapper.Map<租約明細檔DisplayViewModel, 租約明細檔>(postData);
+            租約明細檔 filledData = _mapper.Map<租約明細檔CreateViewModel, 租約明細檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
 
             try
@@ -658,18 +728,19 @@ namespace TR5MidTerm.Controllers
             }
 
             var result = await _context.租約明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 商品編號);
-            if (result == null)
+            var viewModel = _mapper.Map<租約明細檔, 租約明細檔EditViewModel>(result);
+            if (viewModel == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            return PartialView(result);
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號, [Bind("事業,單位,部門,分部,案號,商品編號,數量,修改人,修改時間")] 租約明細檔DisplayViewModel postData)
+        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號, [Bind("事業,單位,部門,分部,案號,商品編號,數量")] 租約明細檔EditViewModel postData)
         {
             if (ModelState.IsValid == false)
                 return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
@@ -681,7 +752,10 @@ namespace TR5MidTerm.Controllers
              *  Put Your Code Here.
              */
 
-            租約明細檔 filledData = _mapper.Map<租約明細檔DisplayViewModel, 租約明細檔>(postData);
+            租約明細檔 filledData = _mapper.Map<租約明細檔EditViewModel, 租約明細檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改時間 = DateTime.Now;
             _context.Update(filledData);
 
             try
@@ -795,6 +869,13 @@ namespace TR5MidTerm.Controllers
             {
                 data = ModelState.ToErrorInfos()
             });
+        }
+        #endregion
+        #region
+        //concatCodeAndName只能由SQL使用，因此，我這裡設個這個
+        public static string CombineCodeAndName(string code, string name)
+        {
+            return string.IsNullOrEmpty(name) ? code : $"{code}_{name}";
         }
         #endregion
     }

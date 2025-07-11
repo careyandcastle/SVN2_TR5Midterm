@@ -1,0 +1,51 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.租約明細檔EditViewModel
+
+@{
+    ViewData["Title"] = "編輯租約明細資料";
+}
+
+<h1 class="mt-2">@ViewData["Title"]</h1>
+
+<div>
+    <form asp-action="EditDetail" method="post">
+        @Html.AntiForgeryToken()
+
+        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+            <ul></ul>
+        </div>
+
+        @* ✅ 主鍵欄位隱藏 *@
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
+        @Html.HiddenFor(m => m.案號)
+        @Html.HiddenFor(m => m.商品編號)
+
+        @* ✅ 顯示用欄位（供使用者參考） *@
+        <div class="form-group">
+            <label asp-for="商品編號"></label>
+            <input asp-for="商品編號" class="form-control" readonly />
+        </div>
+        @*<div class="form-group">
+            <label asp-for="商品名稱顯示"></label>
+            <input asp-for="商品名稱顯示" class="form-control" readonly />
+        </div>*@
+
+        @* ✅ 數量欄位 *@
+        <div class="form-group">
+            <label asp-for="數量"></label>
+            <input asp-for="數量" class="form-control" />
+            <span asp-validation-for="數量" class="text-danger"></span>
+        </div>
+
+        <div class="form-group text-right mt-3">
+            <button type="submit" class="btn btn-primary">儲存變更</button>
+            <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
