@@ -15,7 +15,10 @@ using System.Data;
 using TscLibCore.FileTool;
 using System.IO;
 using TscLibCore.Modules;
-
+using TscLibCore.Authority;
+using System.Diagnostics;
+using TR5MidTerm.PC;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TR5MidTerm.Controllers
 {
@@ -47,11 +50,33 @@ namespace TR5MidTerm.Controllers
         }
         #endregion
         #region index
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<租約主檔DisplayViewModel, 租約明細檔DisplayViewModel>();
+            #region query下拉式清單 
+            var 已使用事業代碼 = await _context.租約主檔
+       .Select(x => x.事業)
+       .Distinct()
+       .ToListAsync();
 
+            var 事業清單 = await _context.事業
+        .Where(d => 已使用事業代碼.Contains(d.事業1))
+        .Select(d => new SelectListItem
+        {
+            Value = d.事業1,
+            Text = d.事業1 + "_" + d.事業名稱
+        }).ToListAsync();
+
+            var 單位清單 = new List<SelectListItem>();
+            var 部門清單 = new List<SelectListItem>();
+            var 分部清單 = new List<SelectListItem>();
+
+            ViewBag.事業選單 = 事業清單;
+            ViewBag.單位選單 = 單位清單;
+            ViewBag.部門選單 = 部門清單;
+            ViewBag.分部選單 = 分部清單;
+            #endregion
             return View();
         }
 
@@ -60,8 +85,9 @@ namespace TR5MidTerm.Controllers
         [NeglectActionFilter]
         public async Task<IActionResult> GetData([FromBody] QueryConditions qc)
         {
-            var sql = (from s in _context.租約主檔
-                       select s).AsNoTracking().ProjectTo<租約主檔DisplayViewModel>(_config);
+            IQueryable<租約主檔DisplayViewModel> sql = GetBaseQuery().AsNoTracking();
+            //string rawSql = sql.ToQueryString();
+            //Debug.WriteLine(rawSql); // ✅ 或 Console.WriteLine(rawSql);
 
             PaginatedList<租約主檔DisplayViewModel> queryedData = null;
             queryedData = await PaginatedList<租約主檔DisplayViewModel>.CreateAsync(sql, qc);
@@ -72,7 +98,119 @@ namespace TR5MidTerm.Controllers
                 total = queryedData.TotalCount
             });
         }
+        private IQueryable<租約主檔DisplayViewModel> GetBaseQuery()
+        {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            return (from m in _context.租約主檔
+                    join biz in _context.事業 on m.事業 equals biz.事業1
+                    join dep in _context.單位 on m.單位 equals dep.單位1
+                    join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
+                    join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    select new 租約主檔DisplayViewModel
+                    {
+                        #region 組織資料
+                        事業 = m.事業,
+                        事業顯示 = CustomSqlFunctions.ConcatCodeAndName(m.事業, biz.事業名稱),
+
+                        單位 = m.單位,
+                        單位顯示 = CustomSqlFunctions.ConcatCodeAndName(m.單位, dep.單位名稱),
+
+                        部門 = m.部門,
+                        部門顯示 = CustomSqlFunctions.ConcatCodeAndName(m.部門, sec.部門名稱),
+
+                        分部 = m.分部,
+                        分部顯示 = CustomSqlFunctions.ConcatCodeAndName(m.分部, sub.分部名稱),
+                        #endregion
+
+                        #region 主欄位
+                        案號 = m.案號,
+                        案名 = m.案名,
+                        承租人編號 = m.承租人編號,
+                        //租賃方式編號 = m.租賃方式編號,
+                        租賃方式編號 = m.租賃方式編號,  // 要 Include 或 join 對應資料
+                        租賃用途 = m.租賃用途,
+                        租約起始日期 = m.租約起始日期,
+                        租期月數 = m.租期月數,
+                        計租週期月數 = m.計租週期月數,
+                        繳款期限天數 = m.繳款期限天數,
+                        租約終止日期 = m.租約終止日期,
+                        備註 = m.備註,
+                        #endregion
+
+                        #region naviagtion
+                        // 📌 顯示用欄位（從 Navigation 或對照表取）
+                        租賃方式顯示 = CustomSqlFunctions.ConcatCodeAndName(m.租賃方式編號Navigation.租賃方式編號, m.租賃方式編號Navigation.租賃方式)
+                        //m.租賃方式編號Navigation.租賃方式編號  // 要 Include 或 join 對應資料
+                        #endregion
+
+
+
+                    }
+                );
+        }
         #endregion
+        #region 提供index使用
+        //[HttpGet]
+        public async Task<IActionResult> GetDepartmentSelectList(string Biz)
+        {
+            var 已使用單位代碼 = await _context.商品檔
+        .Where(x => x.事業 == Biz)
+        .Select(x => x.單位)
+        .Distinct()
+        .ToListAsync();
+
+            var 單位清單 = await _context.單位
+                .Where(d => 已使用單位代碼.Contains(d.單位1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.單位1,
+                    Text = d.單位1 + "_" + d.單位名稱
+                }).ToListAsync();
+
+            return Json(單位清單);
+        }
+        public async Task<IActionResult> GetDivisionSelectList(string Biz, string DepNo)
+        {
+            var 已使用部門代碼 = await _context.商品檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo)
+        .Select(x => x.部門)
+        .Distinct()
+        .ToListAsync();
+
+            var 部門清單 = await _context.部門
+                .Where(d => d.單位 == DepNo && 已使用部門代碼.Contains(d.部門1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.部門1,
+                    Text = d.部門1 + "_" + d.部門名稱
+                }).ToListAsync();
+
+            return Json(部門清單);
+        }
+
+        //[HttpGet]
+        public async Task<IActionResult> GetBranchSelectList(string Biz, string DepNo, string DivNo)
+        {
+            var 已使用分部代碼 = await _context.商品檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo && x.部門 == DivNo)
+        .Select(x => x.分部)
+        .Distinct()
+        .ToListAsync();
+
+            var 分部清單 = await _context.分部
+                .Where(d => d.單位 == DepNo && d.部門 == DivNo && 已使用分部代碼.Contains(d.分部1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.分部1,
+                    Text = d.分部1 + "_" + d.分部名稱
+                }).ToListAsync();
+
+            return Json(分部清單);
+        }
+
+
+        #endregion
+
         #region Create
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
@@ -249,8 +387,15 @@ namespace TR5MidTerm.Controllers
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
-
-            var result = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
+             
+            var result = await GetBaseQuery()
+               .Where(x =>
+            x.事業 == 事業 &&
+            x.單位 == 單位 &&
+            x.部門 == 部門 &&
+            x.分部 == 分部 &&
+            x.案號 == 案號 )
+               .SingleOrDefaultAsync();
             if (result == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
@@ -266,6 +411,8 @@ namespace TR5MidTerm.Controllers
         {
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
+
+            ModelStateInvalidResult("Delete", false);
 
             var result = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
             if (result == null)
@@ -564,6 +711,37 @@ namespace TR5MidTerm.Controllers
         public bool isDetailKeyExist(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號)
         {
             return (_context.租約明細檔.Any(m => m.事業 == 事業 && m.單位 == 單位 && m.部門 == 部門 && m.分部 == 分部 && m.案號 == 案號 && m.商品編號 == 商品編號) == false);
+        }
+        #endregion
+        #region 自訂義驗證
+        private IActionResult ModelStateInvalidResult(string context, bool 驗證前)
+        {
+            string sourceLabel = 驗證前 ? "ViewModel驗證" : "Validator驗證";
+            Debug.WriteLine($"[{context}] [ERROR] ModelState 無效（{sourceLabel}）");
+
+            foreach (var kv in ModelState.ToErrorInfos())
+            {
+                foreach (var msg in kv.Value)
+                    Debug.WriteLine($"        ↳ 欄位：{kv.Key}，錯誤：{msg}");
+            }
+
+            // 根據 context 自動選對 ReturnCode
+            var code = context.ToLower() switch
+            {
+                "Create" => ReturnState.ReturnCode.CREATE_ERROR,
+                "Edit" => ReturnState.ReturnCode.EDIT_ERROR,
+                "Delete" => ReturnState.ReturnCode.DELETE_ERROR,
+                "ApproveConfirmed" => ReturnState.ReturnCode.EDIT_ERROR,
+                "CreateDetail" => ReturnState.ReturnCode.CREATE_ERROR,
+                "EditDetail" => ReturnState.ReturnCode.EDIT_ERROR,
+                "DeleteDetail" => ReturnState.ReturnCode.DELETE_ERROR,
+                _ => ReturnState.ReturnCode.ERROR
+            };
+
+            return Ok(new ReturnData(code)
+            {
+                data = ModelState.ToErrorInfos()
+            });
         }
         #endregion
     }

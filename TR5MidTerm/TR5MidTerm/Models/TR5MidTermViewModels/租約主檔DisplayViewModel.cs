@@ -43,10 +43,14 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [Key]
         public string 案號 { get; set; }
         public string 案名 { get; set; }
-        [DisplayName("承租人名")]//
+        //[DisplayName("承租人名")]//
+        //[HiddenForView]
         public string 承租人編號 { get; set; }
-        [DisplayName("承租方式")]
+        //[DisplayName("承租方式")]
+        //[HiddenForView]
         public string 租賃方式編號 { get; set; }
+        [DisplayName("租賃方式")]
+        public string 租賃方式顯示 { get; set; } //自定義欄位
         public string 租賃用途 { get; set; }
         //[Column(TypeName = "date")]
         public DateTime 租約起始日期 { get; set; }

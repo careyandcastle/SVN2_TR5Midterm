@@ -82,11 +82,11 @@
             <!--OP Button-->
             <b-row class="mb-2">
                 <b-col>
-                    <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>
+                    @*<b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
                     <b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">編輯</b-button>
                     <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>
-                    <b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>
+                    @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
                     <!--Master OP Page-->
                     <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
@@ -103,11 +103,22 @@
                                         id="detail-table-del-modal" title="刪除操作"></fetched-page-modal>
                 </b-col>
             </b-row>
-        </template>
-        <template #filter-row="slot">
             <b-row class="mb-2">
+                <b-col>
+                    <multi-input :schema="slot.data.params.data.querySchema"
+                                 :select-options="slot.data.params.data.querySelectOptions"
+                                 :value-obj="slot.data.params.data.queryData"
+                                 v-on:field-change="slot.data.queryChanged"
+                                 v-on:reset-all="slot.data.queryResetAll"
+                                 v-on:filter-click="slot.data.queryFilterClicked">
+                    </multi-input>
+                </b-col>
+            </b-row>
+        </template>
+        <!--<template #filter-row="slot">
+            <b-row class="mb-2">-->
                 @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-                <b-col style="max-width:14em;"
+                <!--<b-col style="max-width:14em;"
                        v-for="field in slot.data.mTableFields" :key="field.key"
                        v-if="['m-table-actions', '__rowIndex__', '案名','承租人編號','租賃方式編號','租賃用途','租約起始日期','租期月數','計租週期月數','繳款期限天數','租約終止日期','備註','修改人','修改時間'].some(item => item === field.key) === false">
                     <b-input :placeholder="field.label"
@@ -121,13 +132,14 @@
                     <b-button @@click="slot.data.onCleanFilter" style="max-height:62px;" class="float-right" variant="detail3" :disabled="!slot.data.isFiltered">清除過濾</b-button>
                 </b-col>
             </b-row>
-        </template>
+        </template>-->
     </table-component>
 </div>
 
 @section Scripts {
     <script>
         (function () {
+            //#region codeGeneartor生成預設內容
             //主檔 Table 欄位名稱中文定義
             const _mTableFieldDesc = @masterTableDescHTML;
 
@@ -177,7 +189,6 @@
 
                     return latestData;
                 } catch (error) {
-                    debugger;
                     console.log(error);
                     return [];
                 }
@@ -232,7 +243,9 @@
                     return [];
                 }
             }
+            //#endregion
             //點擊時發生呼叫事件
+            //#region 選擇主檔
             const _onMasterRowSelect = function (rowData) {
                 var selectParam = {
                     事業: null,
@@ -250,6 +263,7 @@
                     selectParam.分部 = this.分部 = data.分部;
                     selectParam.案號 = this.案號 = data.案號;
                     this.selectedMasterRow.param = selectParam;
+                    @*this.selectedMasterRow.params = selectParam;*@
 
                     //傳送給server時, 轉ISO時間
                     Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
@@ -260,7 +274,8 @@
                     });
                 }
             }
-
+            //#endregion
+            //#region 選擇明細
             const _onDetailRowSelect = function (rowData) {
                 var selectParam = {};
                 let data = rowData[0];
@@ -271,7 +286,7 @@
                 selectParam.案號 = this.案號 = data.案號;
                 selectParam.商品編號 = this.商品編號 = data.商品編號;
                 this.selectedDetailRow.param = selectParam;
-
+                @*this.selectedDetailRow.params = selectParam;*@
                 //傳送給server時, 轉ISO時間
                 Object.entries(dateTimePropertyName[TableType.DetailTable]).forEach(([propName, dateType]) => {
                     let dateLocalestring = data[propName];
@@ -284,47 +299,152 @@
             const _onToggleRowDetail = function (event, row) {
                  row.selectRow();
             }
+
             const _assignFilter = function (filterData) {
                 let shouldRefresh = this.isFiltered || (filterData && Object.keys(filterData).length > 0);
                 this.isFiltered = !!filterData && Object.keys(filterData).length > 0;
                 dsMasterProviderParams.searchBy = filterData;
                 shouldRefresh && this.refreshMasterTable();
             }
+            //#endregion
+             
+            //#region 自訂query
+            const _querySelectOptions = Vue.reactive({
 
-            //匯出ods
-            const _onDataExport = async function () {
-                let response = await axios.post('@Url.Action("Export","TR5MidTermController")', dsMasterProviderParams, {
-                    responseType: 'blob',
-                    headers: {
-                        RequestVerificationToken: "@requestToken"
-                    },
+                事業: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.事業選單)),
+                單位: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.單位選單)),
+                部門: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.部門選單)),
+                分部: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.分部選單)),
+                @*刪除註記: [
+                    { text: '不限', value: '%' },
+                     { text: '是', value: "true"},
+                     { text: '否', value: "false"}],*@
+            });
+
+            const _querySchema = [
+                { key: '事業', label: '事業', type: 'select' },
+                { key: '單位', label: '單位', type: 'select' },
+                { key: '部門', label: '部門', type: 'select' },
+                { key: '分部', label: '分部', type: 'select' },
+                @*{ key: '刪除註記', label: '刪除註記', type: 'radio', useBoostrapButtons: true }, // slot 會自訂成 button group*@
+
+            ];
+            //#region 連動選單onChanged
+            const _queryChanged = function (key, value) {
+
+                if (key == '事業') {
+                    onBizSelectChanged();
+                }
+                else if (key == '單位') {
+                    // 當單位變更時，可以更新部門選項
+                    onDepSelectChanged();
+                }
+                else if (key == '部門') {
+                    onBranchSelectChanged();
+                }
+            };
+            const onBizSelectChanged = function () {
+                @*debugger;*@
+    $.get('@Url.Action("GetDepartmentSelectList", "TR5MidTerm02")',
+        { Biz: _queryData.事業 },
+        (data) => {
+            _querySelectOptions.單位 = ConvertSelectListItemsToBFormSelectOptions(data);
+            _queryData.單位 = '';
+            _querySelectOptions.部門 = [];
+            _queryData.部門 = '';
+            _querySelectOptions.分部 = [];
+            _queryData.分部 = '';
+        }
+    );
+};
+            const onDepSelectChanged = function () {
+    $.get('@Url.Action("GetDivisionSelectList", "TR5MidTerm02")',
+        {
+            Biz: _queryData.事業,
+            DepNo: _queryData.單位
+        },
+        (data) => {
+            _querySelectOptions.部門 = ConvertSelectListItemsToBFormSelectOptions(data);
+            _queryData.部門 = '';
+            _querySelectOptions.分部 = [];
+            _queryData.分部 = '';
+        }
+    );
+};
+            const onBranchSelectChanged = function () {
+    $.get('@Url.Action("GetBranchSelectList", "TR5MidTerm02")',
+        {
+            Biz: _queryData.事業,
+            DepNo: _queryData.單位,
+            DivNo: _queryData.部門
+        },
+        (data) => {
+            _querySelectOptions.分部 = ConvertSelectListItemsToBFormSelectOptions(data);
+            _queryData.分部 = '';
+        }
+    );
+};
+            //#endregion
+
+
+            //當按下查詢按鈕
+            const _queryFilterClicked = function () {
+                _onAdvanceSearch.call(this, getQueryCondits.call(this));
+            };
+
+            const getQueryCondits = function () {
+                let filterDataObj = {};
+
+                this.params.data.querySchema.forEach((item) => {
+                    let val = this.params.data.queryData[item.key];
+                    @*debugger;*@
+                    if (val === null || val === '' || val === '%' || val === 'TS' || val.length === 0) {
+                        return;
+                    }
+
+                    filterDataObj[item.key] = { condit: 'eq', value: val };
                 });
-
-                const url = window.URL.createObjectURL(new Blob([response.data], {
-                    type: response.headers['content-type']
-                }));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'TR5MidTermController.ods');
-                document.body.appendChild(link);
-                link.click();
+                return filterDataObj;
             }
+            //按下清除鈕會觸發的function。清除下拉選單內容、回復預設選項，並重新讀取資料。
+            const _queryResetAll = function () {
+                _queryData.事業 = '';
+                _queryData.單位 = '';
+                _queryData.部門 = '';
+                _queryData.分部 = '';
+                @*_queryData.刪除註記 = '%';*@
 
+                _onAdvanceSearch.call(this, getQueryCondits.call(this));
+            }
+            //給default value
+            const _queryData = Vue.reactive({
+                事業: '',
+                單位: '',
+                部門: '',
+                分部: '',
+                @*刪除註記: '%',*@
+
+            });
+
+
+            //#endregion
+            //#region filter
             //覆寫欄位尋找與清除事件
+            
             const _onFilterValueUpdate = function (event) {
                 const keyCodeAllowRegExp = /\b(8|4[6-9]|5[0-7]|6[5-9]|[7|8]\d|90|9[6-9]|10[0-5]|10[7-9]|11[0-1]|18[7-9]|13)\b/;
-                if (typeof(event) == 'KeyboardEvent' && keyCodeAllowRegExp.test(event.keyCode.toString()) == false) return;
+                if (typeof (event) == 'KeyboardEvent' && keyCodeAllowRegExp.test(event.keyCode.toString()) == false) return;
                 let filterDataObj = {};
                 for (let inputRef in this.$parent.$refs) {
                     let [inputInst, val] = [this.$parent.$refs[inputRef][0], ""];
                     if (inputRef.includes('filter_input_') && (val = inputInst.vModelValue).length > 0) {
-                        filterDataObj[inputInst.name] = { condit: 'eq', value: val};
+                        filterDataObj[inputInst.name] = { condit: 'eq', value: val };
                     }
                 }
                 _assignFilter.call(this, filterDataObj);
             }
 
-            const _onAdvanceSearch = function(qParams) {
+            const _onAdvanceSearch = function (qParams) {
                 let filterDataObj = {};
                 for (const [key, searchParam] of Object.entries(qParams)) {
                     console.log(`${key}: ${searchParam.condit},  ${searchParam.value}`);
@@ -350,6 +470,7 @@
             }
 
             const _serverReturned = function (retData) {
+                ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
                 console.log("serverReturned customize: ", retData);
             }
 
@@ -361,7 +482,8 @@
             const _onMounted = function (tableInstance) {
                 console.log("_onMounted customize");
             }
-
+            //#endregion
+            //#region data注入
             //要注入的自訂參數
             let _opPermiss = { canCreate: @canCreate, canUpdate: @canUpdate, canDelete: @canDelete, canQuery: @canQuery, canExport: @canExport };
             const params = { data: null, methods: null };
@@ -376,7 +498,18 @@
                 部門: '',
                 分部: '',
                 案號: '',
+                //#region 自定義query注入
+                querySchema: _querySchema,
+                querySelectOptions: _querySelectOptions,
+                queryData: _queryData,
+                //#endregion
+                //#region 自訂義按鈕判斷
+                isBusy: false,
+                anClickEditOrDelete: false,
+                //#endregion
             }
+            //#endregion
+            //#region methods注入
             params.methods = {
                 //系統覆寫
                 dsMasterProvider: _dsMasterProvider,
@@ -392,8 +525,14 @@
                 onFilterValueUpdate: _onFilterValueUpdate,
                 onAdvanceSearch: _onAdvanceSearch,
                 onCleanFilter: _onCleanFilter,
-                onDataExport: _onDataExport,
+                @*onDataExport: _onDataExport,*@
+                //#region 自定義query注入
+                queryChanged: _queryChanged,
+                queryResetAll: _queryResetAll,
+                queryFilterClicked: _queryFilterClicked,
+                //#endregion
             };
+            //#endregion
             //掛載Table
             TSC_NS.CreateVue(params).$mount('#tr5midtermcontroller-index');
         })();
