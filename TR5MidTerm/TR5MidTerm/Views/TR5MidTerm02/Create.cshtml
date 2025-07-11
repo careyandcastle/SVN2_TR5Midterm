@@ -1,7 +1,7 @@
 ﻿@model TR5MidTerm.Models.TR5MidTermViewModels.水電總表檔CreateViewModel
 <div id="app">
     <div v-if="true" class="alert alert-success">
-        hello {{ message }}
+        A {{ customVariable.message }}
     </div>
 </div>
 <div>
@@ -50,7 +50,16 @@
     </form>
 
     <script>
-        $(document).ready(function () {
+        debugger;
+        this.Afunction = function () { }
+        this.$off('fetched-page-modal::ready')
+            .$on('fetched-page-modal::ready', () => {
+
+                alert("alert");
+
+            });
+        this.$set(this.customVariable, 'message', "hello");
+        @*$(document).ready(function () {
 
             new Vue({
                 el: '#app',
@@ -63,7 +72,7 @@
                     }, 100);
                 }
             });
-        });
+        });*@
     </script>
 </div>
 
