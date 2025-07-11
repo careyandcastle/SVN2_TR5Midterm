@@ -38,11 +38,11 @@
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.商品名稱)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.商品名稱)</dd>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.商品類別編號)</dt>
+        @*<dt class="col-sm-2">@Html.DisplayNameFor(model => model.商品類別編號)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.商品類別編號)</dd>
         
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.商品類別)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.商品類別)</dd>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.商品類別)</dd>*@
 
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.物件編號)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.物件編號)</dd>
@@ -58,6 +58,7 @@
     </dl>
 
     <form asp-action="DeleteConfirmed">
+    @*<form asp-action="Delete">*@
         @Html.AntiForgeryToken()
 
         @* 主鍵與必要欄位：隱藏傳遞 *@
@@ -66,6 +67,8 @@
         @Html.HiddenFor(m => m.部門)
         @Html.HiddenFor(m => m.分部)
         @Html.HiddenFor(m => m.商品編號)
+        @Html.HiddenFor(m => m.商品類別編號)
+        @Html.HiddenFor(m => m.商品類別)
         @*@Html.HiddenFor(m => m.商品類別編號)*@
 
         <div class="form-group">

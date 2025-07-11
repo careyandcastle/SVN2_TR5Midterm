@@ -1,5 +1,9 @@
 ﻿@model TR5MidTerm.Models.TR5MidTermViewModels.水電總表檔CreateViewModel
- 
+<div id="app">
+    <div v-if="true" class="alert alert-success">
+        hello {{ message }}
+    </div>
+</div>
 <div>
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
@@ -55,13 +59,19 @@
                     message: 'Vue 掛載成功 ✅'
                 },
                 mounted: function () {
-                    console.log("✅ Vue 成功掛載");
+                    setTimeout(() => {
+                        console.log("✅ message 值為：", this.message);
+                    }, 100);
                 }
             });
- 
         });
     </script>*@
 </div>
- 
 
 
+
+@*document.querySelectorAll('*').forEach(el => {
+    if (el.__vue__) {
+        console.log('[✅ Vue 實體]', el, el.__vue__);
+    }
+});*@

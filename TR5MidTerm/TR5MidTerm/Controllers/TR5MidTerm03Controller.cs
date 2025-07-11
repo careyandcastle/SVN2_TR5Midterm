@@ -116,41 +116,33 @@ namespace TR5MidTerm.Controllers
                     //where m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo
                     select new 商品檔DisplayViewModel
                     {
-                        #region 組織
+                        #region 組織資料
                         事業 = m.事業,
-                        事業顯示 = biz.事業名稱,
+                        事業顯示 = CustomSqlFunctions.ConcatCodeAndName(m.事業, biz.事業名稱),
 
                         單位 = m.單位,
-                        單位顯示 = dep.單位名稱,
+                        單位顯示 = CustomSqlFunctions.ConcatCodeAndName(m.單位, dep.單位名稱),
 
                         部門 = m.部門,
-                        部門顯示 = sec.部門名稱,
-                        分部 = m.分部,
+                        部門顯示 = CustomSqlFunctions.ConcatCodeAndName(m.部門, sec.部門名稱),
 
-                        分部顯示 = sub.分部名稱,
+                        分部 = m.分部,
+                        分部顯示 = CustomSqlFunctions.ConcatCodeAndName(m.分部, sub.分部名稱),
+                        #endregion
+                        #region 商品資料
                         商品類別編號 = m.商品類別編號,
                         商品名稱 = m.商品名稱,
                         商品編號 = m.商品編號,
                         商品類別 = m.商品類別編號Navigation.商品類別,
+                        商品類別顯示 = CustomSqlFunctions.ConcatCodeAndName(m.商品類別編號, m.商品類別編號Navigation.商品類別),
                         物件編號 = m.物件編號,
                         單價 = m.單價,
-                        #endregion
-                        //身分別編號 = m.身分別編號,
-                        //身分別名稱 = m.身分別編號Navigation.身分別,
-                        #region 解密
-
-                        //承租人 = m.承租人,
-                        //承租人明文 = CustomSqlFunctions.DecryptToString(m.承租人),
-                        #endregion
-                        #region 註記
-                        //刪除註記 = m.刪除註記,
-                        //刪除註記顯示 = m.刪除註記 ? "是" : "否",
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
                         修改時間 = m.修改時間
                         #endregion
-                    }).AsNoTracking();
+                    }); 
         }
         #endregion
         #region 提供index使用
@@ -267,13 +259,13 @@ namespace TR5MidTerm.Controllers
             if (!ModelState.IsValid)
             {
                 ModelStateInvalidResult("Create", false);
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+                //return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
             } 
-            /*
-             *  Put Your Code Here.
-             */
 
             商品檔 filledData = _mapper.Map<商品檔CreateViewModel, 商品檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            filledData.修改人 = $"{ua.UserNo}_{ua.UserName}";
+            filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
 
             try
@@ -363,40 +355,63 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            var result = await _context.商品檔.FindAsync(事業, 單位, 部門, 分部, 商品編號);
-            if (result == null)
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var viewModel = new 商品檔EditViewModel
+            {
+                事業 = ua.BusinessNo,
+                單位 = ua.DepartmentNo,
+                部門 = ua.DivisionNo,
+                分部 = ua.BranchNo,
+                單價 = 0
+            };
+            ViewBag.商品類別選項 = _context.商品類別檔
+                .OrderBy(x => x.商品類別編號)
+                .Select(x => new SelectListItem
+                {
+                    Text = $"{x.商品類別編號}_{x.商品類別}",
+                    Value = x.商品類別編號
+                }).ToList();
+            ViewBag.建物資料清單 = new List<SelectListItem>
+{
+    new SelectListItem { Value = "B001", Text = "建物：B001 - 台北大樓" },
+    new SelectListItem { Value = "B002", Text = "建物：B002 - 新竹倉庫" },
+    new SelectListItem { Value = "B003", Text = "建物：B003 - 高雄宿舍" },
+    new SelectListItem { Value = "R101", Text = "租賃住宅：R101 - 台中公寓A" },
+    new SelectListItem { Value = "R102", Text = "租賃住宅：R102 - 台中公寓B" },
+};
+            //var result = await _context.商品檔.FindAsync(事業, 單位, 部門, 分部, 商品編號);
+            if (viewModel == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            return PartialView(result);
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 商品編號, [Bind("事業,單位,部門,分部,商品編號,商品名稱,商品類別編號,物件編號,單價,修改人,修改時間")] 商品檔EditViewModel postData)
+        public async Task<IActionResult> Edit([Bind("事業,單位,部門,分部,商品編號,商品名稱,商品類別編號,物件編號,單價")] 商品檔EditViewModel postData)
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 商品編號 == null)
+            if (postData.事業 == null || postData.單位 == null || postData.部門 == null || postData.分部 == null || postData.商品編號 == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            if (事業 != postData.事業 || 單位 != postData.單位 || 部門 != postData.部門 || 分部 != postData.分部 || 商品編號 != postData.商品編號)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
 
             if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            {
+                ModelStateInvalidResult("Edit", true);
+                //return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            }
 
             try
             {
-                /*
-                *  Put Your Code Here.
-                */
-
                 商品檔 filledData = _mapper.Map<商品檔EditViewModel, 商品檔>(postData);
+                var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+                filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
+                filledData.修改時間 = DateTime.Now;
                 _context.Update(filledData);
                 var opCount = await _context.SaveChangesAsync();
 
@@ -441,14 +456,20 @@ namespace TR5MidTerm.Controllers
             return PartialView(result);
         }
 
-        [HttpPost, ActionName("Delete")]
+        //[HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteConfirmed( [Bind("事業,單位,部門,分部,商品編號")] 商品檔DisplayViewModel postData)
         {
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
+            ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+
+            if (ModelState.IsValid == false)
+            {
+                ModelStateInvalidResult("Delete", true);
+                //return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
+            } 
             var result = await _context.商品檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.商品編號);
             if (result == null)
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));

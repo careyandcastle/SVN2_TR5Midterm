@@ -47,10 +47,13 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 商品名稱 { get; set; }
         //[Required]
         //[StringLength(2)]
-        //[HiddenForView]
+        [HiddenForView]
         public string 商品類別編號 { get; set; }
 
+        [HiddenForView]
         public string 商品類別 { get; set; }
+        [DisplayName("商品類別")]
+        public string 商品類別顯示 { get; set; }
         //[StringLength(50)]
         public string 物件編號 { get; set; }
         //[Column(TypeName = "decimal(18, 0)")]

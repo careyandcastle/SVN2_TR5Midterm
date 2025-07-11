@@ -1,0 +1,108 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.商品檔EditViewModel
+
+<div>
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+
+        @* 全域錯誤訊息區塊 *@
+        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+            <ul></ul>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="商品編號"></label>
+            <input asp-for="商品編號" class="form-control" />
+            <span asp-validation-for="商品名稱" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="商品名稱"></label>
+            <input asp-for="商品名稱" class="form-control" />
+            <span asp-validation-for="商品名稱" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="商品類別編號"></label>
+            <select asp-for="商品類別編號" asp-items="ViewBag.商品類別選項" class="form-control">
+                <option value="" disabled selected>請選擇</option>
+            </select>
+            <span asp-validation-for="商品類別編號" class="text-danger"></span>
+        </div>
+
+        <div class="form-group" id="建物資料選擇區" style="display:none;">
+            <label class="control-label">請選擇建物或租賃住宅資料</label>
+            <select class="form-control" id="建物資料選單">
+                <option value="">請選擇</option>
+                @* 後端用 ViewBag.建物資料清單 傳遞資料 *@
+                @foreach (var item in ViewBag.建物資料清單 as List<SelectListItem>)
+                {
+                    <option value="@item.Value">@item.Text</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="物件編號"></label>
+            <input asp-for="物件編號" class="form-control" id="物件編號欄位" />
+            <span asp-validation-for="物件編號" class="text-danger"></span>
+        </div>
+
+
+        <div class="form-group">
+            <label asp-for="單價"></label>
+            <input asp-for="單價" class="form-control" />
+            <span asp-validation-for="單價" class="text-danger"></span>
+        </div>
+
+        @* 隱藏主鍵欄位 *@
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
+
+        <div class="form-group text-right mt-3">
+            <button type="submit" class="btn btn-primary">儲存</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        </div>
+    </form>
+</div>
+
+
+<script>
+        $(document).ready(function () {
+        @*this.$on('fetched-page-modal::ready', () => {*@
+            console.log("[Modal Ready] 綁定下拉選單 change 事件");
+            const $類別選單 = $('[name="商品類別編號"]');
+            const $建物資料區 = $('#建物資料選擇區');
+            const $建物資料選單 = $('#建物資料選單');
+            const $物件欄位 = $('#物件編號欄位');
+
+            function 控制欄位狀態() {
+                @*debugger;*@
+                const selectedCode = $類別選單.val();
+                const isSpecial = selectedCode === '01' || selectedCode === '34';
+
+                if (isSpecial) {
+                    $建物資料區.show();
+                    $物件欄位.prop('readonly', true).val('');
+                } else {
+                    $建物資料區.hide();
+                    $物件欄位.prop('readonly', false).val('');
+                }
+            }
+
+            $類別選單.change(function () {
+                控制欄位狀態();
+            });
+
+            $建物資料選單.change(function () {
+                const selected物件 = $(this).val();
+                $物件欄位.val(selected物件);
+            });
+
+            控制欄位狀態(); // 初始化時觸發
+        });
+</script>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
