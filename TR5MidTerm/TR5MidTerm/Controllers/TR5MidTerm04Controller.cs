@@ -622,13 +622,7 @@ namespace TR5MidTerm.Controllers
             : $"{x.商品編號} - {x.商品名稱}",
                     Disabled = 租用中商品.ContainsKey(x.商品編號) // ← 如不想禁止選擇請改為 false
                 })
-    .ToList();
-            //var item = await _context.租約明細檔
-            //    .Where(m=> m.事業 == 事業 &&
-            //    m.單位 == 單位 &&
-            //    m.部門 == 部門 &&
-            //    m.分部 == 分部 &&
-            //    ).Select new 
+    .ToList(); 
             if (viewModel == null)
             {
                 return NotFound();
@@ -727,12 +721,50 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
+            
+
             var result = await _context.租約明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 商品編號);
             var viewModel = _mapper.Map<租約明細檔, 租約明細檔EditViewModel>(result);
             if (viewModel == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
+
+            // ✅ 查詢所有租期未結束的商品（可自行改用 today > 租約起始日期）
+            var 租用中商品 = _context.租約明細檔
+    .Join(_context.租約主檔,
+        m => new { m.事業, m.單位, m.部門, m.分部, m.案號 },
+        h => new { h.事業, h.單位, h.部門, h.分部, h.案號 },
+        (m, h) => new
+        {
+            m.商品編號,
+            h.租約起始日期,
+            h.租期月數,
+            租約終止日期 = h.租約終止日期 ?? h.租約起始日期.AddMonths(h.租期月數)
+        })
+    .Where(x =>
+        x.租約起始日期 <= DateTime.Now &&
+        x.租約終止日期 >= DateTime.Now)
+    .AsEnumerable() // ← 關鍵：讓後面 GroupBy 用 C# 執行
+    .GroupBy(x => x.商品編號)
+    .ToDictionary(g => g.Key, g => g.Max(x => x.租約終止日期));
+
+
+            ViewBag.商品選單 = _context.商品檔
+                .Where(x =>
+                x.事業 == 事業 &&
+                x.單位 == 單位 &&
+                x.部門 == 部門 &&
+                x.分部 == 分部)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.商品編號,
+                    Text = 租用中商品.ContainsKey(x.商品編號)
+            ? $"{x.商品編號} - {x.商品名稱} ⚠已租至 {租用中商品[x.商品編號]:yyyy/MM/dd}"
+            : $"{x.商品編號} - {x.商品名稱}",
+                    Disabled = 租用中商品.ContainsKey(x.商品編號) // ← 如不想禁止選擇請改為 false
+                })
+    .ToList();
 
             return PartialView(viewModel);
         }
@@ -754,7 +786,7 @@ namespace TR5MidTerm.Controllers
 
             租約明細檔 filledData = _mapper.Map<租約明細檔EditViewModel, 租約明細檔>(postData);
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
             filledData.修改時間 = DateTime.Now;
             _context.Update(filledData);
 
