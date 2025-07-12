@@ -579,6 +579,40 @@ namespace TR5MidTerm.Controllers
             }
             //var item = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+
+
+            #region 避免主檔過期時可以新增
+            // ✅ 查詢租約主檔
+            var 租約 = await _context.租約主檔
+                .Where(x => x.事業 == 事業 && x.單位 == 單位 &&
+                            x.部門 == 部門 && x.分部 == 分部 && x.案號 == 案號)
+                .Select(x => new {
+                    x.租約起始日期,
+                    x.租期月數,
+                    x.租約終止日期
+                })
+                .FirstOrDefaultAsync();
+
+            if (租約 == null)
+                return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
+
+            // ✅ 計算終止日期（如未填則用 起始日 + 月數）
+            var 租約結束日 = 租約.租約終止日期 ?? 租約.租約起始日期.AddMonths(租約.租期月數);
+
+            // ✅ 若租約已過期，禁止新增
+            if (租約結束日 < DateTime.Today)
+            {
+                ViewBag.過期主檔 = true;
+                return PartialView();
+                //return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR)
+                //{
+                //    message = $"此租約已於 {租約結束日:yyyy/MM/dd} 結束，不可新增明細。"
+                //});
+            }
+            #endregion
+
+
             var viewModel = new 租約明細檔CreateViewModel
             {
                 事業 = 事業,
@@ -587,6 +621,9 @@ namespace TR5MidTerm.Controllers
                 分部 = 分部,
                 案號 = 案號
             };
+
+
+
 
             // ✅ 查詢所有租期未結束的商品（可自行改用 today > 租約起始日期）
             var 租用中商品 = _context.租約明細檔
