@@ -49,5 +49,9 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public decimal 數量 { get; set; }
         public string 修改人 { get; set; }
         public DateTime 修改時間 { get; set; }
+
+        public bool 可否修改明細 { get; set; }
+        public bool 可否刪除明細 { get; set; }
+        
     }
 }

@@ -117,8 +117,8 @@
         </template>
         <!--<template #filter-row="slot">
             <b-row class="mb-2">-->
-                @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
-                <!--<b-col style="max-width:14em;"
+        @*把不要顯示的欄位名稱放進b-col的v-if陣列中，預設僅顯示主鍵欄位，'table-actions', '__rowIndex__'不可移除*@
+        <!--<b-col style="max-width:14em;"
                        v-for="field in slot.data.mTableFields" :key="field.key"
                        v-if="['m-table-actions', '__rowIndex__', '案名','承租人編號','租賃方式編號','租賃用途','租約起始日期','租期月數','計租週期月數','繳款期限天數','租約終止日期','備註','修改人','修改時間'].some(item => item === field.key) === false">
                     <b-input :placeholder="field.label"
@@ -135,7 +135,40 @@
         </template>-->
     </table-component>
 </div>
+@section Styles {
+    <style>
+        .btn-custom-outline-disabled {
+            color: #999;
+            border-color: #999;
+            background-color: transparent;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
 
+            .btn-custom-outline-disabled:hover {
+                background-color: #ccc;
+                color: #666;
+            }
+
+        .btn-custom-outline-detail {
+            color: #6c757d; /* 自訂灰色風格 */
+            border-color: #6c757d;
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .btn-custom-outline-detail:hover {
+                background-color: #6c757d;
+                color: white;
+            }
+
+            .btn-custom-outline-detail:focus,
+            .btn-custom-outline-detail:active {
+                box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+            }
+    </style>
+
+}
 @section Scripts {
     <script>
         (function () {
@@ -307,8 +340,89 @@
                 shouldRefresh && this.refreshMasterTable();
             }
             //#endregion
-             
-            //#region 自訂query
+            //#region 自定義:明細按鈕
+            const getMasterTableActionButtonConfig = function (rowData) {
+                @*debugger;*@
+                @* console.log(rowData.item.可否展開);*@
+                @* console.log("可否新增:", rowData.item.可否新增);*@
+                return [
+                    {
+                        text: '展開明細',
+                        willShow: true,  // ✅ 控制顯示與否
+                        @* willShow: rowData.item.可否展開,  // ✅ 控制顯示與否*@
+                        @* variant: 'outline-detail1',*@
+                        @* variant: 'custom-outline-detail',*@
+                        variant: rowData.item.可否展開明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                    eventHandler: (event, rowData) => {
+                        if (!rowData.item.可否展開明細) {
+                            alert('查無明細'); // ✅ 顯示理由
+                            return;
+                        }
+                        this._toggleRowDetail(event, rowData);  // ✅ 正確方法
+                    }
+            },
+                {
+                    text: '新增明細',
+                        @* willShow: rowData.item.可否新增,*@
+            willShow: true,
+                        @* variant: 'outline-detail1',*@
+                    variant: rowData.item.可否新增明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                eventHandler: (event, rowData) => {
+                    debugger;
+                    if (!rowData.item.可否新增明細) {
+                        alert('無法新增：組織不符資格'); // ✅ 顯示理由
+                        return;
+                    }
+                    else {
+                        this._createOneDetail(event, rowData);
+                    }
+                }
+        },
+                    @* {
+            text: '按鈕3',
+            willShow: true,
+            variant: 'outline-detail1',
+            eventHandler: () => { alert('btn 3'); }
+        },
+            {
+                text: '按鈕4',
+                willShow: true,
+                variant: 'outline-detail1',
+                eventHandler: () => { alert('btn 4'); }
+            } *@
+                ];
+            }
+            const getDetailTableActionButtonConfig = function (rowData) {
+                return [
+                    {
+                        text: '編輯明細',
+                        willShow: true, // 預設顯示
+                        variant: rowData.item.可否修改明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否修改明細) {
+                                alert('無法編輯：此明細已鎖定或未具編輯權限');
+                                return;
+                            }
+                            this._editOneDetail(event, rowData);
+                        }
+                    },
+                    {
+                        text: '刪除明細',
+                        willShow: true, // 預設顯示
+                        variant: rowData.item.可否刪除明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否刪除明細) {
+                                alert('無法刪除：資料狀態不允許或未具刪除權限');
+                                return;
+                            }
+                            this._deleteOneDetail(event, rowData);
+                        }
+                    }
+                ];
+            };
+
+            //#endregion
+            //#region 自定義:query
             const _querySelectOptions = Vue.reactive({
 
                 事業: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.事業選單)),
@@ -430,7 +544,7 @@
             //#endregion
             //#region filter
             //覆寫欄位尋找與清除事件
-            
+
             const _onFilterValueUpdate = function (event) {
                 const keyCodeAllowRegExp = /\b(8|4[6-9]|5[0-7]|6[5-9]|[7|8]\d|90|9[6-9]|10[0-5]|10[7-9]|11[0-1]|18[7-9]|13)\b/;
                 if (typeof (event) == 'KeyboardEvent' && keyCodeAllowRegExp.test(event.keyCode.toString()) == false) return;
@@ -526,10 +640,14 @@
                 onAdvanceSearch: _onAdvanceSearch,
                 onCleanFilter: _onCleanFilter,
                 @*onDataExport: _onDataExport,*@
-                //#region 自定義query注入
+                //#region 自定義:query注入
                 queryChanged: _queryChanged,
                 queryResetAll: _queryResetAll,
                 queryFilterClicked: _queryFilterClicked,
+                //#endregion
+                //#region 自定義:明細按鈕
+                getMasterTableActionButtonConfig,
+                getDetailTableActionButtonConfig
                 //#endregion
             };
             //#endregion

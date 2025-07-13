@@ -131,7 +131,6 @@ namespace TR5MidTerm.Controllers
                         分部 = m.分部,
                         分部顯示 = CustomSqlFunctions.ConcatCodeAndName(m.分部, sub.分部名稱),
                         #endregion
-
                         #region 主欄位
                         案號 = m.案號,
                         案名 = m.案名,
@@ -146,7 +145,6 @@ namespace TR5MidTerm.Controllers
                         租約終止日期 = m.租約終止日期,
                         備註 = m.備註,
                         #endregion
-
                         #region naviagtion
                         // 📌 顯示用欄位（從 Navigation 或對照表取）
                         租賃方式顯示 = CustomSqlFunctions.ConcatCodeAndName(m.租賃方式編號Navigation.租賃方式編號, m.租賃方式編號Navigation.租賃方式),
@@ -154,12 +152,15 @@ namespace TR5MidTerm.Controllers
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
-                        修改時間 = m.修改時間
+                        修改時間 = m.修改時間,
+                        #endregion
+                        #region 明細按鈕控制
+                        可否新增明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.DivisionNo == m.分部),
+                        可否展開明細 = _context.租約明細檔.Any(s => s.事業 == m.事業 && s.單位 == m.單位 && s.部門 == m.部門 && s.分部 == m.分部 && s.案號 == m.案號)
                         #endregion
 
-
                     }
-                );
+                ) ;
         }
         #endregion
         #region 提供index使用
@@ -560,10 +561,11 @@ namespace TR5MidTerm.Controllers
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
-                        修改時間 = m.修改時間
+                        修改時間 = m.修改時間,
                         #endregion
 
-
+                        可否修改明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.DivisionNo == m.分部),
+                        可否刪除明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.DivisionNo == m.分部)
                     }
                 );
         }
@@ -610,9 +612,9 @@ namespace TR5MidTerm.Controllers
                 //    message = $"此租約已於 {租約結束日:yyyy/MM/dd} 結束，不可新增明細。"
                 //});
             }
+            ViewBag.過期主檔 = false;
+
             #endregion
-
-
             var viewModel = new 租約明細檔CreateViewModel
             {
                 事業 = 事業,
@@ -621,9 +623,6 @@ namespace TR5MidTerm.Controllers
                 分部 = 分部,
                 案號 = 案號
             };
-
-
-
 
             // ✅ 查詢所有租期未結束的商品（可自行改用 today > 租約起始日期）
             var 租用中商品 = _context.租約明細檔

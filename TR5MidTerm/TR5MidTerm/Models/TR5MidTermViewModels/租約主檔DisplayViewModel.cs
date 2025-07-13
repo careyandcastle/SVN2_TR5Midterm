@@ -61,5 +61,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 備註 { get; set; }
         public string 修改人 { get; set; }
         public DateTime 修改時間 { get; set; }
+        public bool 可否展開明細{ get; set; }
+        public bool 可否新增明細{ get; set; }
     }
 }
