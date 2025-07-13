@@ -482,6 +482,7 @@ namespace TR5MidTerm.Controllers
         }
         private IQueryable<水電分表檔DisplayViewModel> GetDetailsBaseQuery(string 主檔事業, string 主檔單位, string 主檔部門, string 主檔分部, string 主檔總表號)
         {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             return (from s in _context.水電分表檔
                     join biz in _context.事業 on s.事業 equals biz.事業1
                     join dep in _context.單位 on s.單位 equals dep.單位1
@@ -510,6 +511,8 @@ namespace TR5MidTerm.Controllers
                         修改人 = s.修改人,
                         修改時間 = s.修改時間,
                         目前使用度數 = s.本期度數 - s.上期度數,
+                        可否刪除明細 = (ua.BusinessNo == s.事業 && ua.DepartmentNo == s.單位 && ua.DivisionNo == s.部門 && ua.BranchNo == s.分部),
+                        可否修改明細 = (ua.BusinessNo == s.事業 && ua.DepartmentNo == s.單位 && ua.DivisionNo == s.部門 && ua.BranchNo == s.分部)
                     }).AsNoTracking();
         }
 

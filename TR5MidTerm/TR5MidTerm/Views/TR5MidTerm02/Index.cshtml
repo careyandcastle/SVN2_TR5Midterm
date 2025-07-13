@@ -611,6 +611,34 @@
                     }*@
                 ];
             }
+            const getDetailTableActionButtonConfig = function (rowData) {
+                return [
+                    {
+                        text: '編輯明細',
+                        willShow: true, // 預設顯示
+                        variant: rowData.item.可否修改明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否修改明細) {
+                                alert('無法編輯：此明細已鎖定或未具編輯權限');
+                                return;
+                            }
+                            this._editOneDetail(event, rowData);
+                        }
+                    },
+                    {
+                        text: '刪除明細',
+                        willShow: true, // 預設顯示
+                        variant: rowData.item.可否刪除明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否刪除明細) {
+                                alert('無法刪除：資料狀態不允許或未具刪除權限');
+                                return;
+                            }
+                            this._deleteOneDetail(event, rowData);
+                        }
+                    }
+                ];
+            };
             //#endregion
 
             //#region 注入data
@@ -663,7 +691,9 @@
                 queryFilterClicked: _queryFilterClicked,
                 //自定義:顏色設定
                 getClassForDetailContent: _getClassForDetailContent,
-                getMasterTableActionButtonConfig
+                //自定義:明細按鈕
+                getMasterTableActionButtonConfig,
+                getDetailTableActionButtonConfig
             };
             //#endregion
             //掛載Table
