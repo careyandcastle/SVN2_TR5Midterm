@@ -28,6 +28,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [Key]
         [StringLength(5)]
         public string 案號 { get; set; }
+        [CTRequired]
         [StringLength(50)]
         public string 案名 { get; set; }
         [CTRequired]

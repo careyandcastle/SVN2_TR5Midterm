@@ -230,21 +230,52 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
-            return PartialView();
+            // 承租人選項
+            ViewBag.承租人選項 = _context.承租人檔
+                .OrderBy(x => x.承租人編號)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.承租人編號,
+                    Text = $"{x.承租人編號} - {CustomSqlFunctions.DecryptToString(x.承租人)}"
+                }).ToList();
+
+            // 租賃方式選項
+            ViewBag.租賃方式選項 = _context.租賃方式檔
+                .OrderBy(x => x.租賃方式編號)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.租賃方式編號,
+                    Text = $"{x.租賃方式編號} - {x.租賃方式}"
+                }).ToList();
+
+            // 租賃用途選項（例如從設定檔或共用表）
+            ViewBag.租賃用途選項 = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "住宅", Text = "住宅" },
+        new SelectListItem { Value = "商業", Text = "商業" },
+        new SelectListItem { Value = "倉儲", Text = "倉儲" },
+    };
+
+            
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var viewModel = new 租約主檔CreateViewModel
+            {
+                事業 = ua.BusinessNo,
+                單位 = ua.DepartmentNo,
+                部門 = ua.DivisionNo,
+                分部 = ua.BranchNo,
+                租約起始日期 = DateTime.Today
+            };
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,案號,案名,承租人編號,租賃方式編號,租賃用途,租約起始日期,租期月數,計租週期月數,繳款期限天數,租約終止日期,備註,修改人,修改時間")] 租約主檔CreateViewModel postData)
+        public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,案號,案名,承租人編號,租賃方式編號,租賃用途,租約起始日期,租期月數,計租週期月數,繳款期限天數,租約終止日期,備註")] 租約主檔CreateViewModel postData)
         {
-            //以下不驗證欄位值是否正確，請視欄位自行刪減
-            ModelState.Remove($"欄位1");
-            ModelState.Remove($"欄位2");
-            ModelState.Remove($"欄位3");
-            ModelState.Remove($"upd_usr");
-            ModelState.Remove($"upd_dt");
-
+            //return new EmptyResult(); // 不回傳任何內容，悄悄中止
+            //return NoContent(); // HTTP 204
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
 
@@ -253,7 +284,25 @@ namespace TR5MidTerm.Controllers
              */
 
             租約主檔 filledData = _mapper.Map<租約主檔CreateViewModel, 租約主檔>(postData);
+
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var max案號 = _context.租約主檔
+    .Where(x => x.事業 == ua.BusinessNo &&
+                x.單位 == ua.DepartmentNo &&
+                x.部門 == ua.DivisionNo &&
+                x.分部 == ua.BranchNo)
+    .Select(x => x.案號)
+    .OrderByDescending(x => x)
+    .FirstOrDefault();
+
+            int nextNumber = 1;
+            if (!string.IsNullOrEmpty(max案號) && int.TryParse(max案號, out var parsed))
+            {
+                nextNumber = parsed + 1;
+            }
+            string next案號 = nextNumber.ToString("D5"); // 補成 5 碼，例如 00001、00002
+
+
             filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
             filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
