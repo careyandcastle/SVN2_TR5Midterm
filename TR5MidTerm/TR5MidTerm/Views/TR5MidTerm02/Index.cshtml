@@ -164,6 +164,7 @@
 
                     this.totalRows = response.data.total;
 
+
                     let latestData = TSCC.Utility.Table.GetDataSource.call(this, masterTableKeys, response, ctx);
 
                     //轉成台灣時間
@@ -526,20 +527,26 @@
             //#endregion
             //#region 自定義:明細按鈕
             const getMasterTableActionButtonConfig = function (rowData) {
+                debugger;
+                console.log(rowData.item.可否展開);
                 return [
                     {
-                        text: '按鈕1',
-                        willShow: false,
+                        text: '展開明細',
+                        willShow: rowData.item.可否展開,  // ✅ 控制顯示與否
                         variant: 'outline-detail1',
-                        eventHandler: () => { alert('btn 1'); }
+                        eventHandler: (event,rowData) => {
+                            this._toggleRowDetail(event, rowData);  // ✅ 正確方法
+                        }
                     },
                     {
-                        text: '按鈕2',
-                        willShow: true,
+                        text: '新增明細',
+                        willShow: rowData.item.可否新增,
                         variant: 'outline-detail1',
-                        eventHandler: () => { alert('btn 2'); }
+                        eventHandler: (event, rowData) => {
+                            this._createOneDetail(event, rowData);
+                        }
                     },
-                    {
+                    @*{
                         text: '按鈕3',
                         willShow: true,
                         variant: 'outline-detail1',
@@ -550,7 +557,7 @@
                         willShow: true,
                         variant: 'outline-detail1',
                         eventHandler: () => { alert('btn 4'); }
-                    }
+                    }*@
                 ];
             }
             //#endregion
@@ -604,7 +611,8 @@
                 queryResetAll: _queryResetAll,
                 queryFilterClicked: _queryFilterClicked,
                 //自定義:顏色設定
-                getClassForDetailContent : _getClassForDetailContent,
+                getClassForDetailContent: _getClassForDetailContent,
+                getMasterTableActionButtonConfig
             };
             //#endregion
             //掛載Table

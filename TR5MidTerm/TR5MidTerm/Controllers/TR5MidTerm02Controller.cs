@@ -129,36 +129,36 @@ namespace TR5MidTerm.Controllers
                         #region 組織
                         事業 = m.事業,
                         事業顯示 = biz.事業名稱,
-
                         單位 = m.單位,
                         單位顯示 = dep.單位名稱,
-
                         部門 = m.部門,
                         部門顯示 = sec.部門名稱,
                         分部 = m.分部,
-
                         分部顯示 = sub.分部名稱,
+                        #endregion
+                        #region 資料
                         總表號 = m.總表號,
                         案號 = m.案號,
                         計量對象 = m.計量對象,
 
                         計量表種類編號 = m.計量表種類編號,
-                        計量表種類 = m.計量表種類編號+ '_' + m.計量表種類編號Navigation.計量表種類,
-                        #endregion
-                        //身分別編號 = m.身分別編號,
-                        //身分別名稱 = m.身分別編號Navigation.身分別,
-                        #region 解密
-                         
-                        //電子郵件 = m.電子郵件,
-                        //電子郵件明文 = CustomSqlFunctions.DecryptToString(m.電子郵件),
-                        #endregion
-                        #region 註記
-                        //刪除註記 = m.刪除註記,
-                        //刪除註記顯示 = m.刪除註記 ? "是" : "否",
+                        計量表種類 = m.計量表種類編號 + '_' + m.計量表種類編號Navigation.計量表種類,
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
-                        修改時間 = m.修改時間
+                        修改時間 = m.修改時間,
+                        #endregion
+                        #region
+                        可否展開 = _context.水電分表檔.Any(d =>
+    d.事業 == m.事業 &&
+    d.單位 == m.單位 &&
+    d.部門 == m.部門 &&
+    d.分部 == m.分部 &&
+    d.總表號 == m.總表號)
+                        ,
+
+                        可否新增 = true,
+                        //可否展開 = true
                         #endregion
                     }).AsNoTracking();
         }
