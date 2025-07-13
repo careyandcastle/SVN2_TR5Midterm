@@ -157,8 +157,7 @@ namespace TR5MidTerm.Controllers
     d.總表號 == m.總表號)
                         ,
 
-                        可否新增 = true,
-                        //可否展開 = true
+                        可否新增 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部),
                         #endregion
                     }).AsNoTracking();
         }

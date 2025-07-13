@@ -124,6 +124,40 @@
 
     </table-component>
 </div>
+@section Styles {
+    <style>
+        .btn-custom-outline-disabled {
+            color: #999;
+            border-color: #999;
+            background-color: transparent;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+            .btn-custom-outline-disabled:hover {
+                background-color: #ccc;
+                color: #666;
+            }
+
+        .btn-custom-outline-detail {
+            color: #6c757d; /* 自訂灰色風格 */
+            border-color: #6c757d;
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .btn-custom-outline-detail:hover {
+                background-color: #6c757d;
+                color: white;
+            }
+
+            .btn-custom-outline-detail:focus,
+            .btn-custom-outline-detail:active {
+                box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+            }
+    </style>
+
+}
 
 @section Scripts {
     <script>
@@ -527,23 +561,40 @@
             //#endregion
             //#region 自定義:明細按鈕
             const getMasterTableActionButtonConfig = function (rowData) {
-                debugger;
-                console.log(rowData.item.可否展開);
+                @*debugger;*@
+                @*console.log(rowData.item.可否展開);*@
+                @*console.log("可否新增:", rowData.item.可否新增);*@
                 return [
                     {
                         text: '展開明細',
-                        willShow: rowData.item.可否展開,  // ✅ 控制顯示與否
-                        variant: 'outline-detail1',
-                        eventHandler: (event,rowData) => {
+                        willShow: true,  // ✅ 控制顯示與否
+                        @*willShow: rowData.item.可否展開,  // ✅ 控制顯示與否*@
+                        @*variant: 'outline-detail1',*@
+                        @*variant: 'custom-outline-detail',*@
+                        variant: rowData.item.可否展開 ? 'outline-detail1' : 'custom-outline-disabled',
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否展開) {
+                                alert('查無明細'); // ✅ 顯示理由
+                                return;
+                            }
                             this._toggleRowDetail(event, rowData);  // ✅ 正確方法
                         }
                     },
                     {
                         text: '新增明細',
-                        willShow: rowData.item.可否新增,
-                        variant: 'outline-detail1',
+                        @*willShow: rowData.item.可否新增,*@
+                        willShow: true,
+                        @*variant: 'outline-detail1',*@
+                        variant: rowData.item.可否新增 ? 'outline-detail1' : 'custom-outline-disabled',
                         eventHandler: (event, rowData) => {
-                            this._createOneDetail(event, rowData);
+                            debugger;
+                            if (!rowData.item.可否新增) {
+                                alert('無法新增：組織不符資格'); // ✅ 顯示理由
+                                return;
+                            }
+                            else {
+                                this._createOneDetail(event, rowData);
+                            }
                         }
                     },
                     @*{
