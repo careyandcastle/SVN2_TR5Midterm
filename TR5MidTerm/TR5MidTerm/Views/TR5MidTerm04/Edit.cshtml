@@ -158,20 +158,36 @@
             const selectedMode = $modeRadios.filter(':checked').val();
 
             if (selectedMode === 'select') {
+                // 💾 記住 input 的內容
+                lastInputValue = $input.val();
+
                 $selectDiv.show();
-                $select.prop('disabled', false);      // ✅ 使能送出
+                $select.prop('disabled', false);
                 $inputDiv.hide();
-                $input.prop('disabled', true);        // ❌ 避免參與表單送出
-                $input.val('');
+                $input.prop('disabled', true);
+
+                // ✅ 還原 select 上次值
+                $select.val(lastSelectValue);
             } else {
+                // 💾 記住 select 的內容
+                lastSelectValue = $select.val();
+
                 $selectDiv.hide();
                 $select.prop('disabled', true);
-                $select.val('');
-
                 $inputDiv.show();
                 $input.prop('disabled', false);
+
+                // ✅ 還原 input 上次值
+                $input.val(lastInputValue);
             }
         }
+
+        $modeRadios.change(function () {
+            切換輸入方式();
+        });
+
+        
+        切換輸入方式();// 初始執行
         //#endregion
         //#region function:計算終止日期(當起始日期或租期月數變動時)
         function 計算終止日期() {
@@ -191,20 +207,14 @@
             const m = (date.getMonth() + 1).toString().padStart(2, '0');
             const d = date.getDate().toString().padStart(2, '0');
             $('#租約終止日期').val(`${y}/${m}/${d}`);
+
         }
-        //#endregion
-
-
-        $modeRadios.change(function () {
-            切換輸入方式();
-        });
-        // 綁定事件
         $('#租約起始日期, #租期月數').on('change keyup', function () {
             計算終止日期();
         });
-        // 初始執行
-        切換輸入方式();
+
         計算終止日期();
+ 
         //#endregion
     });
 </script>
