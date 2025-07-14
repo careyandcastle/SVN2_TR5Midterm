@@ -54,6 +54,12 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 租賃用途 { get; set; }
         //[Column(TypeName = "date")]
         public DateTime 租約起始日期 { get; set; }
+        public int 累計月數 { get; set; }  // 計算從起始日期至今天過了幾個月
+        public int 未繳期數 { get; set; } // 累計應收期數 - 已繳期數
+        public DateTime? 下次收租日期 { get; set; } //
+        public decimal 每期租金含稅 { get; set; }  //  
+        public decimal 累計應收租金含稅 { get; set; }  // 
+        //public decimal 累計金額 { get; set; }  //
         public int 租期月數 { get; set; }
         public int 計租週期月數 { get; set; }
         public int 繳款期限天數 { get; set; }
@@ -61,7 +67,10 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 備註 { get; set; }
         public string 修改人 { get; set; }
         public DateTime 修改時間 { get; set; }
+        [HiddenForView]
         public bool 可否展開明細{ get; set; }
+        [HiddenForView]
         public bool 可否新增明細{ get; set; }
+        
     }
 }

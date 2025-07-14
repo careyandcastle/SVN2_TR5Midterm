@@ -96,11 +96,66 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> GetData([FromBody] QueryConditions qc)
         {
             IQueryable<租約主檔DisplayViewModel> sql = GetBaseQuery().AsNoTracking();
-            //string rawSql = sql.ToQueryString();
-            //Debug.WriteLine(rawSql); // ✅ 或 Console.WriteLine(rawSql);
 
             PaginatedList<租約主檔DisplayViewModel> queryedData = null;
             queryedData = await PaginatedList<租約主檔DisplayViewModel>.CreateAsync(sql, qc);
+
+            foreach (var item in queryedData)
+            {
+                // 每期租金含稅
+                var 每期租金含稅 = (
+                    from d in _context.租約明細檔
+                    join p in _context.商品檔
+                      on new { d.事業, d.單位, d.部門, d.分部, d.商品編號 }
+                      equals new { p.事業, p.單位, p.部門, p.分部, p.商品編號 }
+                    where d.事業 == item.事業 && d.單位 == item.單位 &&
+                          d.部門 == item.部門 && d.分部 == item.分部 && d.案號 == item.案號
+                    select d.數量 * p.單價 * 1.05m
+                ).Sum();
+
+                item.每期租金含稅 = 每期租金含稅;
+
+                // 總期數（至今累計應收幾期）
+                int totalMonthsPassed = (DateTime.Today.Year - item.租約起始日期.Year) * 12
+                                      + (DateTime.Today.Month - item.租約起始日期.Month);
+
+                int monthsPassed = Math.Min(totalMonthsPassed, item.租期月數);
+                int 累計應收期數 = monthsPassed / Math.Max(1, item.計租週期月數);
+                item.累計月數 = monthsPassed;
+
+                // 取已收款的最新年月
+                var latestYm = _context.收款明細檔
+                    .Where(x => x.事業 == item.事業 && x.單位 == item.單位 &&
+                                x.部門 == item.部門 && x.分部 == item.分部 && x.案號 == item.案號)
+                    .OrderByDescending(x => x.計租年月)
+                    .Select(x => x.計租年月)
+                    .FirstOrDefault();
+
+                int paidPeriod = 0;
+                DateTime? 下次收租日 = null;
+
+                if (latestYm != default)
+                {
+                    int paidMonths = (latestYm.Year - item.租約起始日期.Year) * 12
+                                   + (latestYm.Month - item.租約起始日期.Month);
+                    paidPeriod = paidMonths / Math.Max(1, item.計租週期月數);
+
+                    // 推估下次收租日
+                    var latestDate = new DateTime(latestYm.Year, latestYm.Month, item.租約起始日期.Day);
+                    下次收租日 = latestDate.AddMonths(item.計租週期月數);
+                }
+                else
+                {
+                    paidPeriod = 0;
+                    下次收租日 = item.租約起始日期.AddMonths(item.計租週期月數);
+                }
+
+                // 補上欄位
+                item.未繳期數 = Math.Max(0, 累計應收期數 - paidPeriod);
+                item.下次收租日期 = 下次收租日;
+                item.累計應收租金含稅 = item.每期租金含稅 * item.未繳期數;
+            }
+
 
             return Ok(new
             {
@@ -111,6 +166,8 @@ namespace TR5MidTerm.Controllers
         private IQueryable<租約主檔DisplayViewModel> GetBaseQuery()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            var today = DateTime.Today; // ✅ 提前轉換為可轉譯參數
+
             return (from m in _context.租約主檔
                     join biz in _context.事業 on m.事業 equals biz.事業1
                     join dep in _context.單位 on m.單位 equals dep.單位1
@@ -156,11 +213,10 @@ namespace TR5MidTerm.Controllers
                         #endregion
                         #region 明細按鈕控制
                         可否新增明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部),
-                        可否展開明細 = _context.租約明細檔.Any(s => s.事業 == m.事業 && s.單位 == m.單位 && s.部門 == m.部門 && s.分部 == m.分部 && s.案號 == m.案號)
+                        可否展開明細 = _context.租約明細檔.Any(s => s.事業 == m.事業 && s.單位 == m.單位 && s.部門 == m.部門 && s.分部 == m.分部 && s.案號 == m.案號),
                         #endregion
-
                     }
-                ) ;
+                );
         }
         #endregion
         #region 提供index使用
@@ -409,7 +465,7 @@ namespace TR5MidTerm.Controllers
                     Value = x.租賃方式編號,
                     Text = $"{x.租賃方式編號} - {x.租賃方式}"
                 }).ToList();
-            
+
             ViewBag.租賃用途選項 = _context.租賃用途檔
             .OrderBy(x => x.租賃用途編號)
             .Select(x => new SelectListItem
@@ -467,7 +523,7 @@ namespace TR5MidTerm.Controllers
             }
 
             return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-        } 
+        }
         #endregion
         #region Delete
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
@@ -477,14 +533,14 @@ namespace TR5MidTerm.Controllers
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
-             
+
             var result = await GetBaseQuery()
                .Where(x =>
             x.事業 == 事業 &&
             x.單位 == 單位 &&
             x.部門 == 部門 &&
             x.分部 == 分部 &&
-            x.案號 == 案號 )
+            x.案號 == 案號)
                .SingleOrDefaultAsync();
             //var viewModel = _mapper.Map<租約主檔DisplayViewModel, 租約主檔>(result);
             if (result == null)
@@ -630,6 +686,7 @@ namespace TR5MidTerm.Controllers
                         商品編號 = m.商品編號,
                         商品名稱顯示 = CustomSqlFunctions.ConcatCodeAndName(p.商品編號, p.商品名稱),
                         數量 = m.數量,
+                        總金額 = m.數量 * p.單價,
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
@@ -639,7 +696,7 @@ namespace TR5MidTerm.Controllers
                         可否修改明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部),
                         可否刪除明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部)
                     }
-                );
+                ) ;
         }
         #endregion
         #region CreateDetail
@@ -661,7 +718,8 @@ namespace TR5MidTerm.Controllers
             var 租約 = await _context.租約主檔
                 .Where(x => x.事業 == 事業 && x.單位 == 單位 &&
                             x.部門 == 部門 && x.分部 == 分部 && x.案號 == 案號)
-                .Select(x => new {
+                .Select(x => new
+                {
                     x.租約起始日期,
                     x.租期月數,
                     x.租約終止日期
@@ -730,7 +788,7 @@ namespace TR5MidTerm.Controllers
             : $"{x.商品編號} - {x.商品名稱}",
                     Disabled = 租用中商品.ContainsKey(x.商品編號) // ← 如不想禁止選擇請改為 false
                 })
-    .ToList(); 
+    .ToList();
             if (viewModel == null)
             {
                 return NotFound();
@@ -829,7 +887,7 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            
+
 
             var result = await _context.租約明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 商品編號);
             var viewModel = _mapper.Map<租約明細檔, 租約明細檔EditViewModel>(result);

@@ -321,16 +321,10 @@
             //#endregion
             //#region 自定義:明細按鈕
             const getMasterTableActionButtonConfig = function (rowData) {
-                @*debugger;*@
-                @* console.log(rowData.item.可否展開);*@
-                @* console.log("可否新增:", rowData.item.可否新增);*@
                 return [
                     {
                         text: '展開明細',
                         willShow: true,  // ✅ 控制顯示與否
-                        @* willShow: rowData.item.可否展開,  // ✅ 控制顯示與否*@
-                        @* variant: 'outline-detail1',*@
-                        @* variant: 'custom-outline-detail',*@
                         variant: rowData.item.可否展開明細 ? 'outline-detail1' : 'custom-outline-disabled',
                     eventHandler: (event, rowData) => {
                         if (!rowData.item.可否展開明細) {
@@ -342,9 +336,7 @@
             },
                 {
                     text: '新增明細',
-                        @* willShow: rowData.item.可否新增,*@
             willShow: true,
-                        @* variant: 'outline-detail1',*@
                     variant: rowData.item.可否新增明細 ? 'outline-detail1' : 'custom-outline-disabled',
                 eventHandler: (event, rowData) => {
                     debugger;
@@ -356,19 +348,7 @@
                         this._createOneDetail(event, rowData);
                     }
                 }
-        },
-                    @* {
-            text: '按鈕3',
-            willShow: true,
-            variant: 'outline-detail1',
-            eventHandler: () => { alert('btn 3'); }
-        },
-            {
-                text: '按鈕4',
-                willShow: true,
-                variant: 'outline-detail1',
-                eventHandler: () => { alert('btn 4'); }
-            } *@
+        }, 
                 ];
             }
             const getDetailTableActionButtonConfig = function (rowData) {
@@ -382,6 +362,7 @@
                                 alert('無法編輯：此明細已鎖定或未具編輯權限');
                                 return;
                             }
+                            @*this._editOneDetail(event, rowData);*@
                             this._editOneDetail(event, rowData);
                         }
                     },
@@ -399,7 +380,7 @@
                     }
                 ];
             };
-
+ 
             //#endregion
             //#region 自定義:query
             const _querySelectOptions = Vue.reactive({
@@ -625,7 +606,9 @@
                 //#region 自定義:明細按鈕
                 getMasterTableActionButtonConfig,
                 getDetailTableActionButtonConfig,
-                _editOneDetailOfMine(event, row) {
+                //#endregion
+
+                @*_editOneDetail(event, row) {
                     if (!row) return;
 
                     row.unselectRow();
@@ -633,17 +616,21 @@
 
                     this.isNewItemOnTop = false;
 
-                    if (!this.masterTableInst.multiDetails) {
-                        this.masterTableInst.$bvModal.show('detail-table-edit-modal');
+                    if (!this.masterTableInst?.multiDetails) {
+                        this.masterTableInst?.$bvModal?.show('detail-table-edit-modal');
                         return;
                     }
 
-                    this.$parent.editOneDetail(event, row);
-                }
-                //#endregion
+                    // ✅ 你自訂的主表元件需定義 editOneDetail 方法
+                    this.$parent?.editOneDetail?.(event, row);
+                },*@
             };
             //掛載Table
-            TSC_NS.CreateVue(params).$mount('#tr5midtermcontroller-index');
+             TSC_NS.CreateVue(params).$mount('#tr5midtermcontroller-index');
+            @*const vueInstance = TSC_NS.CreateVue(params);*@
+            @*vueInstance.$mount('#tr5midtermcontroller-index');*@
+            // 🔁 補回注入
+            @*vueInstance.getDetailTableActionButtonConfig = createDetailTableButtons(vueInstance);*@
         })();
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
