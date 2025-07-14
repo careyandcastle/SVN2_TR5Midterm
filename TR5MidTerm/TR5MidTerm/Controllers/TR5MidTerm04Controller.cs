@@ -613,6 +613,113 @@ namespace TR5MidTerm.Controllers
             return File(byteContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
         #endregion
+        #region Charge
+        [ProcUseRang(ProcNo, ProcUseRang.Update)]
+        public async Task<IActionResult> Charge(string 事業, string 單位, string 部門, string 分部, string 案號)
+        {
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null)
+            {
+                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            }
+            #region 檢驗:是否有先建立租約主檔
+            var result = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
+            if (result == null)
+            {
+                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
+            }
+            #endregion
+
+            // 📌 計算下次應收年月
+            var latestYm = _context.收款明細檔
+                .Where(x => x.事業 == 事業 && x.單位 == 單位 &&
+                            x.部門 == 部門 && x.分部 == 分部 && x.案號 == 案號)
+                .OrderByDescending(x => x.計租年月)
+                .Select(x => x.計租年月)
+                .FirstOrDefault();
+
+            var 起始日 = result.租約起始日期;
+            var 計租週期 = Math.Max(1, result.計租週期月數);
+
+            var 下次年月 = (latestYm != default)
+                ? latestYm.AddMonths(計租週期)
+                : 起始日.AddMonths(計租週期);
+
+            // 📌 計算每期應收金額（租約明細 × 單價 × 1.05）
+            var 每期租金含稅 = (
+                from d in _context.租約明細檔
+                join p in _context.商品檔 on new { d.事業, d.單位, d.部門, d.分部, d.商品編號 }
+                    equals new { p.事業, p.單位, p.部門, p.分部, p.商品編號 }
+                where d.事業 == 事業 && d.單位 == 單位 &&
+                      d.部門 == 部門 && d.分部 == 分部 && d.案號 == 案號
+                select d.數量 * p.單價 * 1.05m
+            ).Sum();
+
+            var viewModel = new 收款明細檔CreateViewModel
+            {
+                事業 = 事業,
+                單位 = 單位,
+                部門 = 部門,
+                分部 = 分部,
+                案號 = 案號,
+                計租年月 = 下次年月,
+                //金額 = 每期租金含稅,
+                案號名顯示 = 案號 + '_' + result.案名,
+                可收期數上限 = result.租期月數,
+                每期租金含稅 = 每期租金含稅
+            };
+
+            return PartialView(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ProcUseRang(ProcNo, ProcUseRang.Update)]
+        public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月,金額")] 收款明細檔CreateViewModel postData)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+
+            var filledData = _mapper.Map<收款明細檔CreateViewModel, 收款明細檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+            // ✅ 找目前最大流水號
+            var newSerialNo = _context.收款明細檔
+                .Where(x =>
+                    x.事業 == postData.事業 &&
+                    x.單位 == postData.單位 &&
+                    x.部門 == postData.部門 &&
+                    x.分部 == postData.分部 &&
+                    x.案號 == postData.案號)
+                .Select(x => (int?)x.流水號)
+                .Max() ?? 0;
+
+            filledData.流水號 = newSerialNo + 1;
+            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改時間 = DateTime.Now;
+
+            _context.Add(filledData);
+
+            try
+            {
+                var opCount = await _context.SaveChangesAsync();
+                if (opCount > 0)
+                    return Ok(new ReturnData(ReturnState.ReturnCode.OK)
+                    {
+                        data = postData
+                    });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ReturnData(ReturnState.ReturnCode.CREATE_ERROR)
+                {
+                    message = ex.Message
+                });
+            }
+
+            return StatusCode(500, new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+        }
+
+        #endregion
         #region other
         public bool isMasterKeyExist(string 事業, string 單位, string 部門, string 分部, string 案號)
         {

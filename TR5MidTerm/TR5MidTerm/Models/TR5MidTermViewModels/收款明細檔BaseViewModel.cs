@@ -26,7 +26,12 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 分部 { get; set; }
         [Key]
         //[StringLength(5)]
+        [HiddenForView]
         public string 案號 { get; set; }
+        [DisplayName("案名")]
+        public string 案號名顯示 { get; set; }//
+        public int 可收期數上限 { get; set; } // 例如 result.租期月數
+        public decimal 每期租金含稅 { get; set; } // 計算得出
         [Key]
         public int 流水號 { get; set; }
         [Key]

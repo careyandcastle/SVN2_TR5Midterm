@@ -1,0 +1,87 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.收款明細檔CreateViewModel
+
+<form asp-action="Charge" method="post">
+    @Html.AntiForgeryToken()
+
+    @* Hidden 鍵值欄位 *@
+    <input type="hidden" asp-for="事業" />
+    <input type="hidden" asp-for="單位" />
+    <input type="hidden" asp-for="部門" />
+    <input type="hidden" asp-for="分部" />
+    <input type="hidden" asp-for="案號" />
+
+    @* 顯示用：案號 + 案名 *@
+    <div class="form-group">
+        <label asp-for="案號名顯示"></label>
+        <input asp-for="案號名顯示" class="form-control" readonly />
+        <span asp-validation-for="案號名顯示" class="text-danger"></span>
+    </div>
+
+    @* 下次收款年月（可調整） *@
+    @*<div class="form-group">
+        <label asp-for="計租年月">計租年月</label>
+        <input asp-for="計租年月" type="month" class="form-control" />
+        <span asp-validation-for="計租年月" class="text-danger"></span>
+    </div>*@
+
+    @* 顯示：每期租金（不可改） *@
+    <div class="form-group">
+        <label>每期租金（含稅）</label>
+        <input type="text" class="form-control" readonly value="@Model.每期租金含稅" />
+    </div>
+
+     
+    @* 使用者輸入：收幾期 *@
+    <div class="form-group">
+        <label>收款期數（月）</label>
+        <input id="spin-期數" type="number" class="form-control" min="1" max="@Model.可收期數上限" value="1" />
+    </div>
+
+    @* 自動計算：金額 *@
+    <div class="form-group">
+        <label asp-for="金額">本次應收總金額</label>
+        <input asp-for="金額" id="input-金額" class="form-control" readonly />
+        <span asp-validation-for="金額" class="text-danger"></span>
+    </div>
+    @* 隱藏實際送出的計租年月 *@
+    <input type="hidden" id="hidden-計租年月" name="計租年月" value="@Model.計租年月.ToString(" yyyy-MM-01")" />
+
+    @* 顯示用：實際收款截止年月 *@
+    <div class="form-group">
+        <label>計租年月（截止）</label>
+        <input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月.ToString(" yyyy-MM")" readonly />
+    </div>
+
+
+
+    <div class="form-group text-right">
+        <button type="submit" class="btn btn-primary">儲存收款明細</button>
+    </div>
+</form>
+<script>
+    $(document).ready(function () {
+        const 起始年月 = new Date('@Model.計租年月.ToString("yyyy-MM-01")');
+        const 每期租金含稅 = parseFloat('@Model.每期租金含稅');
+
+        // 綁定 spinbutton 的 input 事件
+        $('#spin-期數').on('input', function () {
+            const periodCount = parseInt($(this).val()) || 1;
+
+            // 計算：金額 = 期數 × 每期金額
+            const totalAmount = periodCount * 每期租金含稅;
+            $('#input-金額').val(totalAmount.toFixed(0));
+
+            // 計算：新計租年月 = 起始 + (期數 - 1) 個月
+            let newDate = new Date(起始年月);
+            newDate.setMonth(newDate.getMonth() + periodCount - 1);
+            const y = newDate.getFullYear();
+            const m = (newDate.getMonth() + 1).toString().padStart(2, '0');
+
+            $('#hidden-計租年月').val(`${y}-${m}-01`);
+            $('#text-顯示計租年月').val(`${y}-${m}`);
+        });
+
+        // 初始觸發一次
+        $('#spin-期數').trigger('input');
+    });
+</script>
