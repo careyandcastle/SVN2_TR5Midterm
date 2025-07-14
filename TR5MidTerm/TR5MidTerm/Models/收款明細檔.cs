@@ -25,6 +25,10 @@ namespace TR5MidTerm.Models
         [Key]
         [StringLength(5)]
         public string 案號 { get; set; }
+
+        [Key] // ✅ 新增：流水號也是主鍵一部分
+        public int 流水號 { get; set; }
+
         [Key]
         [Column(TypeName = "date")]
         public DateTime 計租年月 { get; set; }

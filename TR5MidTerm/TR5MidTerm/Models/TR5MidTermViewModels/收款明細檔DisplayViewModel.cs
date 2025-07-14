@@ -13,17 +13,32 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
     public partial class 收款明細檔DisplayViewModel
     {
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 事業 { get; set; }
+
+        [DisplayName("事業")]
+        public string 事業顯示 { get; set; }
+
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 單位 { get; set; }
+
+        [DisplayName("單位")]
+        public string 單位顯示 { get; set; }
+
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 部門 { get; set; }
+
+        [DisplayName("部門")]
+        public string 部門顯示 { get; set; }
+
         [Key]
-        //[StringLength(2)]
+        [HiddenForView]
         public string 分部 { get; set; }
+
+        [DisplayName("分部")]
+        public string 分部顯示 { get; set; }
         [Key]
         //[StringLength(5)]
         public string 案號 { get; set; }
@@ -37,6 +52,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 修改人 { get; set; }
         //[Column(TypeName = "datetime")]
         public DateTime 修改時間 { get; set; }
-         
+        public bool 可否修改明細 { get; set; }
+        public bool 可否刪除明細 { get; set; }
+
     }
 }

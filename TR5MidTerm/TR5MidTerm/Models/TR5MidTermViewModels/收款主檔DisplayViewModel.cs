@@ -40,14 +40,12 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [DisplayName("分部")]
         public string 分部顯示 { get; set; }
         [Key]
-        //[StringLength(5)]
         public string 案號 { get; set; }
-        //[Required]
-        //[StringLength(10)]
         public string 修改人 { get; set; }
-        //[Column(TypeName = "datetime")]
         public DateTime 修改時間 { get; set; }
+        [HiddenForView]
         public bool 可否展開明細 { get; set; }
+        [HiddenForView]
         public bool 可否新增明細 { get; set; }
     }
 }
