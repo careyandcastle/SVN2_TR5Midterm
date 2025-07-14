@@ -131,31 +131,69 @@
 
         //#region function:租賃用途選擇
         console.log("[頁面載入] 初始化租賃用途切換邏輯");
+         
 
         const $selectDiv = $('#租賃用途-select-div');
         const $inputDiv = $('#租賃用途-input-div');
         const $select = $selectDiv.find('select');
         const $input = $inputDiv.find('input');
         const $modeRadios = $('input[name="inputMode"]');
+        // ✅ [1] 宣告記憶變數
+        let lastSelectValue = "";
+        let lastInputValue = "";
 
+        // ✅ [2] 判斷初始值是哪一種
+         const 初始租賃用途 = "@Model.租賃用途";
+        const 選單選項們 = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+        ((IEnumerable<SelectListItem>)ViewBag.租賃用途選項).Select(x => x.Value)
+    ));
+        const 是選單值 = 初始租賃用途 === "" || 選單選項們.includes(初始租賃用途);
+
+
+        if (是選單值) {
+            $('#mode-select').prop('checked', true);
+            $select.val(初始租賃用途);
+        } else {
+            $('#mode-input').prop('checked', true);
+            $input.val(初始租賃用途);
+        }
+
+        // ✅ [3] 初始化記憶值（這行很關鍵）
+        lastSelectValue = $select.val();
+        lastInputValue = $input.val();
         function 切換輸入方式() {
             const selectedMode = $modeRadios.filter(':checked').val();
 
             if (selectedMode === 'select') {
+                // 💾 記住 input 的內容
+                lastInputValue = $input.val();
+
                 $selectDiv.show();
-                $select.prop('disabled', false);      // ✅ 使能送出
+                $select.prop('disabled', false);
                 $inputDiv.hide();
-                $input.prop('disabled', true);        // ❌ 避免參與表單送出
-                $input.val('');
+                $input.prop('disabled', true);
+
+                // ✅ 還原 select 上次值
+                $select.val(lastSelectValue);
             } else {
+                // 💾 記住 select 的內容
+                lastSelectValue = $select.val();
+
                 $selectDiv.hide();
                 $select.prop('disabled', true);
-                $select.val('');
-
                 $inputDiv.show();
                 $input.prop('disabled', false);
+
+                // ✅ 還原 input 上次值
+                $input.val(lastInputValue);
             }
         }
+
+        $modeRadios.change(function () {
+            切換輸入方式();
+        });
+         
+         
         //#endregion
         //#region function:計算終止日期(當起始日期或租期月數變動時)
         function 計算終止日期() {
@@ -176,19 +214,12 @@
             const d = date.getDate().toString().padStart(2, '0');
             $('#租約終止日期').val(`${y}/${m}/${d}`);
         }
-        //#endregion
-
-
-        $modeRadios.change(function () {
-            切換輸入方式();
-        });
-        // 綁定事件
+       
         $('#租約起始日期, #租期月數').on('change keyup', function () {
             計算終止日期();
         });
-        // 初始執行
-        切換輸入方式();
         計算終止日期();
+        
         //#endregion
     });
 </script>
