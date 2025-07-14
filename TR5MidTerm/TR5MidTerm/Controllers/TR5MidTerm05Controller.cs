@@ -15,7 +15,8 @@ using System.Data;
 using TscLibCore.FileTool;
 using System.IO;
 using TscLibCore.Modules;
-
+using TscLibCore.Authority;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TR5MidTerm.Controllers
 {
@@ -61,9 +62,9 @@ namespace TR5MidTerm.Controllers
         [NeglectActionFilter]
         public async Task<IActionResult> GetData([FromBody] QueryConditions qc)
         {
-            var sql = (from s in _context.收款主檔
-                      select s).AsNoTracking().ProjectTo<收款主檔DisplayViewModel>(_config);
-
+            //var sql = (from s in _context.收款主檔
+            //          select s).AsNoTracking().ProjectTo<收款主檔DisplayViewModel>(_config);
+            IQueryable<收款主檔DisplayViewModel> sql = GetBaseQuery().AsNoTracking();
             PaginatedList<收款主檔DisplayViewModel> queryedData = null;
             queryedData = await PaginatedList<收款主檔DisplayViewModel>.CreateAsync(sql, qc);
 
@@ -73,13 +74,79 @@ namespace TR5MidTerm.Controllers
                 total = queryedData.TotalCount
             });
         }
+        private IQueryable<收款主檔DisplayViewModel> GetBaseQuery()
+        {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            return (from m in _context.收款主檔
+                    join biz in _context.事業 on m.事業 equals biz.事業1
+                    join dep in _context.單位 on m.單位 equals dep.單位1
+                    join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
+                    join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    select new 收款主檔DisplayViewModel
+                    {
+                        #region 組織資料
+                        事業 = m.事業,
+                        事業顯示 = CustomSqlFunctions.ConcatCodeAndName(m.事業, biz.事業名稱),
+
+                        單位 = m.單位,
+                        單位顯示 = CustomSqlFunctions.ConcatCodeAndName(m.單位, dep.單位名稱),
+
+                        部門 = m.部門,
+                        部門顯示 = CustomSqlFunctions.ConcatCodeAndName(m.部門, sec.部門名稱),
+
+                        分部 = m.分部,
+                        分部顯示 = CustomSqlFunctions.ConcatCodeAndName(m.分部, sub.分部名稱),
+                        #endregion
+                        #region 主欄位
+                        案號 = m.案號,
+ 
+                        #endregion
+                        #region naviagtion
+                        // 📌 顯示用欄位（從 Navigation 或對照表取）
+                        //租賃方式顯示 = CustomSqlFunctions.ConcatCodeAndName(m.租賃方式編號Navigation.租賃方式編號, m.租賃方式編號Navigation.租賃方式),
+                        #endregion
+                        #region 修改人與修改時間
+                        修改人 = m.修改人,
+                        修改時間 = m.修改時間,
+                        #endregion
+                        #region 明細按鈕控制
+                        可否新增明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.DivisionNo == m.分部),
+                        可否展開明細 = _context.租約明細檔.Any(s => s.事業 == m.事業 && s.單位 == m.單位 && s.部門 == m.部門 && s.分部 == m.分部 && s.案號 == m.案號)
+                        #endregion
+
+                    }
+                );
+        }
         #endregion
         #region Create
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult Create()
         {
-            return PartialView();
+
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            // 租賃用途選項（例如從設定檔或共用表）
+            ViewBag.案號選項 = _context.租約主檔
+                .Where(x => x.事業 == ua.BusinessNo && x.單位 == ua.DepartmentNo &&
+                            x.部門 == ua.DivisionNo && x.分部 == ua.BranchNo)
+            .OrderBy(x => x.案號)
+            .Select(x => new SelectListItem
+            {
+                Value = x.案號,
+                Text = x.案號 + "_" + x.案名
+            })
+            .ToList();
+
+
+            var viewModel = new 收款主檔CreateViewModel
+            {
+                事業 = ua.BusinessNo,
+                單位 = ua.DepartmentNo,
+                部門 = ua.DivisionNo,
+                分部 = ua.BranchNo,
+                //租約起始日期 = DateTime.Today
+            };
+            return PartialView(viewModel);
         }
 
         [HttpPost]

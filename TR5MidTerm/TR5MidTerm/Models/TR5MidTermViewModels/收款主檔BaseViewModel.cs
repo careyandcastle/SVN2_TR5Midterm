@@ -24,6 +24,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [Key]
         //[StringLength(2)]
         public string 分部 { get; set; }
+
+
         [Key]
         //[StringLength(5)]
         public string 案號 { get; set; }

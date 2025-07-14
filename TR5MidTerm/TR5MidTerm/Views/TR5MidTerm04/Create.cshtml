@@ -114,7 +114,10 @@
                 <textarea asp-for="備註" class="form-control" rows="3"></textarea>
             </div>
         </div>
-
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
 
         <div class="col-md-12">
             <!-- 送出 -->

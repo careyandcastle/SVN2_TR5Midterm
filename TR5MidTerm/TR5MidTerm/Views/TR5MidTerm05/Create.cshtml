@@ -1,0 +1,29 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.收款主檔CreateViewModel
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <!-- 案號：下拉選單 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="案號" class="control-label"></label>
+                <select asp-for="案號" class="form-control" asp-items="ViewBag.案號選項">
+                    <option disabled selected value="">-- 請選擇案號 --</option>
+                </select>
+                <span asp-validation-for="案號" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- 顯示：事業、單位、部門、分部 -->
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
+
+        <!-- 記得之後補上：收款日期、發票號碼、金額等欄位 -->
+
+        <div class="col-md-12 mt-3">
+            <input type="submit" value="送出" class="btn btn-primary" />
+        </div>
+    </div>
+</form>
