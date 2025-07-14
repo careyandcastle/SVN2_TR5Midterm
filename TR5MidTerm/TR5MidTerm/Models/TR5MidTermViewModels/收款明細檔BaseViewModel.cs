@@ -28,15 +28,10 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         //[StringLength(5)]
         public string 案號 { get; set; }
         [Key]
-        //[Column(TypeName = "date")]
+        public int 流水號 { get; set; }
+        [Key]
         public DateTime 計租年月 { get; set; }
-        //[Column(TypeName = "decimal(18, 0)")]
         public decimal 金額 { get; set; }
-        //[Required]
-        //[StringLength(10)]
-        //public string 修改人 { get; set; }
-        //[Column(TypeName = "datetime")]
-        //public DateTime 修改時間 { get; set; }
-         
+ 
     }
 }

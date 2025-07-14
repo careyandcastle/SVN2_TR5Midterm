@@ -1,0 +1,56 @@
+﻿@model TR5MidTerm.Models.TR5MidTermViewModels.收款明細檔EditViewModel
+
+@{
+    ViewData["Title"] = "編輯收款明細";
+}
+
+<h1 class="mt-2">@ViewData["Title"]</h1>
+
+<div>
+    <form asp-action="EditDetail" method="post">
+        @Html.AntiForgeryToken()
+
+        <!-- 錯誤訊息區塊 -->
+        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+            <ul></ul>
+        </div>
+
+        <!-- ✅ 隱藏主鍵欄位 -->
+        @Html.HiddenFor(m => m.事業)
+        @Html.HiddenFor(m => m.單位)
+        @Html.HiddenFor(m => m.部門)
+        @Html.HiddenFor(m => m.分部)
+        @Html.HiddenFor(m => m.案號)
+        @Html.HiddenFor(m => m.計租年月)
+        @Html.HiddenFor(m => m.流水號)  <!-- 若有流水號，請一併補上 -->
+        <!-- 計租年月（顯示用，不可改） -->
+        <div class="form-group">
+            <label class="control-label">計租年月</label>
+            <input class="form-control" value="@Model.計租年月.ToString("yyyy-MM")" readonly />
+        </div>
+
+        <!-- 金額（不可修改） -->
+        <div class="form-group">
+            <label asp-for="金額" class="control-label"></label>
+            <input asp-for="金額" class="form-control" readonly />
+            <span asp-validation-for="金額" class="text-danger"></span>
+        </div>
+
+        <!-- 若未來開放可編輯某欄位，例如備註，可加入如下 -->
+        @* <div class="form-group">
+                <label asp-for="備註" class="control-label"></label>
+                <input asp-for="備註" class="form-control" />
+                <span asp-validation-for="備註" class="text-danger"></span>
+            </div> *@
+
+        <!-- ✅ 儲存按鈕 -->
+        <div class="form-group text-right mt-3">
+            <button type="submit" class="btn btn-success">儲存變更</button>
+            <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

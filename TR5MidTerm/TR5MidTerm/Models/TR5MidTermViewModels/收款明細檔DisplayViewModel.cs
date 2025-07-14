@@ -45,7 +45,9 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [Key]
         //[Column(TypeName = "date")]
         public DateTime 計租年月 { get; set; }
+        [Key]
         //[Column(TypeName = "decimal(18, 0)")]
+        public int 流水號 { get; set; }
         public decimal 金額 { get; set; }
         //[Required]
         //[StringLength(10)]

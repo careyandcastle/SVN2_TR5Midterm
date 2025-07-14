@@ -444,9 +444,11 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
 
-            var query = from s in _context.收款明細檔
-                        where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.案號 == keys.案號
-                        select s;
+            //var query = from s in _context.收款明細檔
+            //            where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.案號 == keys.案號
+            //            select s;
+
+            var query = GetDetailsBaseQuery();
 
             return CreatedAtAction(nameof(GetDetails), new ReturnData(ReturnState.ReturnCode.OK)
             {
@@ -496,26 +498,35 @@ namespace TR5MidTerm.Controllers
         #region CreateDetail
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 案號, DateTime 計租年月)
+        public async Task<IActionResult> CreateDetail(string 事業, string 單位, string 部門, string 分部, string 案號)
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月== null)
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null  )
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.ERROR));
             }
-            var item = await _context.收款主檔.FindAsync(事業, 單位, 部門, 分部, 案號, 計租年月);
-
-            if (item == null)
+            var result = await _context.租約明細檔.FindAsync(事業, 單位, 部門, 分部, 案號);
+ 
+            var viewModel = new 收款明細檔CreateViewModel
+            {
+                事業 = 事業,
+                單位 = 單位,
+                部門 = 部門,
+                分部 = 分部,
+                案號 = 案號,
+                //金額 = result.
+            };
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            return PartialView();
+            return PartialView(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,案號,計租年月,金額,修改人,修改時間")] 收款明細檔DisplayViewModel postData)
+        public async Task<IActionResult> CreateDetail([Bind("事業,單位,部門,分部,案號,計租年月,金額")] 收款明細檔CreateViewModel postData)
         {
             if (ModelState.IsValid == false)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
@@ -524,7 +535,24 @@ namespace TR5MidTerm.Controllers
              *  Put Your Code Here.
              */
 
-            收款明細檔 filledData = _mapper.Map<收款明細檔DisplayViewModel, 收款明細檔>(postData);
+            收款明細檔 filledData = _mapper.Map<收款明細檔CreateViewModel, 收款明細檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+            // 建立新明細前，先找目前最大流水號
+            var newSerialNo = _context.收款明細檔
+                .Where(x =>
+                    x.事業 == postData.事業 &&
+                    x.單位 == postData.單位 &&
+                    x.部門 == postData.部門 &&
+                    x.分部 == postData.分部 &&
+                    x.案號 == postData.案號)
+                .Select(x => (int?)x.流水號)  // 轉成 nullable，避免資料為空時拋例外
+                .Max() ?? 0;  // 若沒有資料則從 0 開始
+
+            newSerialNo += 1;
+            filledData.流水號 = newSerialNo;
+            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
 
             try
@@ -591,14 +619,14 @@ namespace TR5MidTerm.Controllers
         #endregion
         #region EditDetail
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, DateTime 計租年月) 
+        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, int? 流水號,  DateTime? 計租年月) 
         {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月== null)
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月== null || 流水號 == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            var result = await _context.收款明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 計租年月);
+            var result = await _context.收款明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 流水號, 計租年月);
             if (result == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
@@ -610,19 +638,22 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, DateTime 計租年月, [Bind("事業,單位,部門,分部,案號,計租年月,金額,修改人,修改時間")] 收款明細檔DisplayViewModel postData)
+        public async Task<IActionResult> EditDetail(string 事業, string 單位, string 部門, string 分部, string 案號, int 流水號, DateTime? 計租年月, [Bind("事業,單位,部門,分部,案號,計租年月,金額,流水號")] 收款明細檔EditViewModel postData)
         {
             if (ModelState.IsValid == false)
                 return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
 
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月== null)
+            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月 == null)
                 return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
 
             /*
              *  Put Your Code Here.
              */
 
-            收款明細檔 filledData = _mapper.Map<收款明細檔DisplayViewModel, 收款明細檔>(postData);
+            收款明細檔 filledData = _mapper.Map<收款明細檔EditViewModel, 收款明細檔>(postData);
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改時間 = DateTime.Now;
             _context.Update(filledData);
 
             try

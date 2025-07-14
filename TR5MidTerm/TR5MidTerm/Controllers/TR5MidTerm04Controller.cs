@@ -606,7 +606,9 @@ namespace TR5MidTerm.Controllers
                     join dep in _context.單位 on m.單位 equals dep.單位1
                     join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
                     join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
-                    join p in _context.商品檔 on m.商品編號 equals p.商品編號
+                    join p in _context.商品檔
+    on new { m.事業, m.單位, m.部門, m.分部, m.商品編號 }
+    equals new { p.事業, p.單位, p.部門, p.分部, p.商品編號 }
                     select new 租約明細檔DisplayViewModel
                     {
                         #region 組織資料

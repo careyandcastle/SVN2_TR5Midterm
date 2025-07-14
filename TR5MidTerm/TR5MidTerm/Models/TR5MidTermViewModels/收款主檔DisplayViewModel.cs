@@ -41,6 +41,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 分部顯示 { get; set; }
         [Key]
         public string 案號 { get; set; }
+ 
         public string 修改人 { get; set; }
         public DateTime 修改時間 { get; set; }
         [HiddenForView]
