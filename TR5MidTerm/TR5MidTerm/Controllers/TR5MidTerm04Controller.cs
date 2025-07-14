@@ -249,14 +249,16 @@ namespace TR5MidTerm.Controllers
                 }).ToList();
 
             // 租賃用途選項（例如從設定檔或共用表）
-            ViewBag.租賃用途選項 = new List<SelectListItem>
-    {
-        new SelectListItem { Value = "住宅", Text = "住宅" },
-        new SelectListItem { Value = "商業", Text = "商業" },
-        new SelectListItem { Value = "倉儲", Text = "倉儲" },
-    };
+            ViewBag.租賃用途選項 = _context.租賃用途檔
+            .OrderBy(x => x.租賃用途編號)
+            .Select(x => new SelectListItem
+            {
+                Value = x.租賃用途,
+                Text = x.租賃用途編號 + "_" + x.租賃用途
+            })
+            .ToList();
 
-            
+
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
             var viewModel = new 租約主檔CreateViewModel
             {
@@ -407,26 +409,16 @@ namespace TR5MidTerm.Controllers
                     Value = x.租賃方式編號,
                     Text = $"{x.租賃方式編號} - {x.租賃方式}"
                 }).ToList();
-            //            ViewBag.租賃方式選項 = new List<SelectListItem>
-            //{
-            //    new SelectListItem { Text = "-- 請選擇 --", Value = "", Disabled = true }
-            //}.Concat(
-            //    _context.租賃方式檔
-            //        .OrderBy(x => x.租賃方式編號)
-            //        .Select(x => new SelectListItem
-            //        {
-            //            Value = x.租賃方式編號,
-            //            Text = $"{x.租賃方式編號} - {x.租賃方式}"
-            //        })
-            //).ToList();
+            
+            ViewBag.租賃用途選項 = _context.租賃用途檔
+            .OrderBy(x => x.租賃用途編號)
+            .Select(x => new SelectListItem
+            {
+                Value = x.租賃用途,
+                Text = x.租賃用途編號 + "_" + x.租賃用途
+            })
+            .ToList();
 
-            // 租賃用途選項（例如從設定檔或共用表）
-            ViewBag.租賃用途選項 = new List<SelectListItem>
-    {
-        new SelectListItem { Value = "住宅", Text = "住宅" },
-        new SelectListItem { Value = "商業", Text = "商業" },
-        new SelectListItem { Value = "倉儲", Text = "倉儲" },
-    };
 
             return PartialView(viewModel);
         }
