@@ -286,23 +286,8 @@ namespace TR5MidTerm.Controllers
             租約主檔 filledData = _mapper.Map<租約主檔CreateViewModel, 租約主檔>(postData);
 
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            var max案號 = _context.租約主檔
-    .Where(x => x.事業 == ua.BusinessNo &&
-                x.單位 == ua.DepartmentNo &&
-                x.部門 == ua.DivisionNo &&
-                x.分部 == ua.BranchNo)
-    .Select(x => x.案號)
-    .OrderByDescending(x => x)
-    .FirstOrDefault();
 
-            int nextNumber = 1;
-            if (!string.IsNullOrEmpty(max案號) && int.TryParse(max案號, out var parsed))
-            {
-                nextNumber = parsed + 1;
-            }
-            string next案號 = nextNumber.ToString("D5"); // 補成 5 碼，例如 00001、00002
-
-
+            filledData.備註 = string.IsNullOrWhiteSpace(postData.備註) ? "" : postData.備註;
             filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
             filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
@@ -394,13 +379,56 @@ namespace TR5MidTerm.Controllers
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
+
+
+
             var result = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
-            if (result == null)
+            var viewModel = _mapper.Map<租約主檔, 租約主檔EditViewModel>(result);
+            if (viewModel == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            return PartialView(result);
+
+            // 承租人選項
+            ViewBag.承租人選項 = _context.承租人檔
+                .OrderBy(x => x.承租人編號)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.承租人編號,
+                    Text = $"{x.承租人編號} - {CustomSqlFunctions.DecryptToString(x.承租人)}"
+                }).ToList();
+
+            // 租賃方式選項
+            ViewBag.租賃方式選項 = _context.租賃方式檔
+                .OrderBy(x => x.租賃方式編號)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.租賃方式編號,
+                    Text = $"{x.租賃方式編號} - {x.租賃方式}"
+                }).ToList();
+            //            ViewBag.租賃方式選項 = new List<SelectListItem>
+            //{
+            //    new SelectListItem { Text = "-- 請選擇 --", Value = "", Disabled = true }
+            //}.Concat(
+            //    _context.租賃方式檔
+            //        .OrderBy(x => x.租賃方式編號)
+            //        .Select(x => new SelectListItem
+            //        {
+            //            Value = x.租賃方式編號,
+            //            Text = $"{x.租賃方式編號} - {x.租賃方式}"
+            //        })
+            //).ToList();
+
+            // 租賃用途選項（例如從設定檔或共用表）
+            ViewBag.租賃用途選項 = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "住宅", Text = "住宅" },
+        new SelectListItem { Value = "商業", Text = "商業" },
+        new SelectListItem { Value = "倉儲", Text = "倉儲" },
+    };
+
+            return PartialView(viewModel);
         }
 
         [HttpPost]
@@ -466,6 +494,7 @@ namespace TR5MidTerm.Controllers
             x.分部 == 分部 &&
             x.案號 == 案號 )
                .SingleOrDefaultAsync();
+            //var viewModel = _mapper.Map<租約主檔DisplayViewModel, 租約主檔>(result);
             if (result == null)
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
@@ -474,7 +503,7 @@ namespace TR5MidTerm.Controllers
             return PartialView(result);
         }
 
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號)
