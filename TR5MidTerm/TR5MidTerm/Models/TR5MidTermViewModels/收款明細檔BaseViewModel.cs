@@ -42,6 +42,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public int 流水號 { get; set; }
         [Key]
         public DateTime 計租年月 { get; set; }
+        public DateTime 計租年月_判斷殘月用 { get; set; }
         public decimal 金額 { get; set; }
  
     }

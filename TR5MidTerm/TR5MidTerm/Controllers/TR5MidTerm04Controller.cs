@@ -627,10 +627,12 @@ namespace TR5MidTerm.Controllers
             var rentMaster = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
             if (rentMaster == null)
             {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR)
-                {
-                    message = "找不到租約主檔"
-                });
+                ViewBag.無租約主檔 = true;
+                return PartialView();
+            }
+            else
+            {
+                ViewBag.無租約主檔 = false;
             }
             #endregion
 
@@ -638,10 +640,11 @@ namespace TR5MidTerm.Controllers
             var chargeMaster = await _context.收款主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
             if (chargeMaster == null)
             {
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR)
-                {
-                    message = "尚未建立收款主檔，無法收租"
-                });
+                ViewBag.無收款主檔 = true;
+                return PartialView();
+            }
+            else{
+                ViewBag.無收款主檔 = false;
             }
             #endregion
 
@@ -699,6 +702,7 @@ namespace TR5MidTerm.Controllers
                 分部 = 分部,
                 案號 = 案號,
                 計租年月 = nextStartYm,
+                計租年月_判斷殘月用 = nextStartYm,
                 案號名顯示 = $"{案號}_{rentMaster.案名}",
                 每期月數 = 計租週期,
                 每月租金含稅 = 每月租金,
@@ -714,7 +718,7 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月, 收幾期")] 收款明細檔CreateViewModel postData)
+        public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月, 計租年月_判斷殘月用,收幾期")] 收款明細檔CreateViewModel postData)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
@@ -743,6 +747,7 @@ namespace TR5MidTerm.Controllers
             ).SumAsync();
 
             var 起算年月 = postData.計租年月;
+            var 起算年月_判斷殘月用 = postData.計租年月_判斷殘月用;
             var maxSerial = await _context.收款明細檔
                 .Where(x =>
                     x.事業 == postData.事業 && x.單位 == postData.單位 &&
@@ -750,7 +755,8 @@ namespace TR5MidTerm.Controllers
                 .MaxAsync(x => (int?)x.流水號) ?? 0;
 
             var 新增筆數 = 0;
-            var currentYm = new DateTime(起算年月.Year, 起算年月.Month, 1);
+            var currentYm_殘月計算 = new DateTime(起算年月_判斷殘月用.Year, 起算年月_判斷殘月用.Month, 1);
+            var currentYm_計租年月標記 = new DateTime(起算年月.Year, 起算年月.Month, 1);
             var 實際月數總計 = 0;
 
             for (int i = 0; i < postData.收幾期; i++)
@@ -758,10 +764,10 @@ namespace TR5MidTerm.Controllers
                 int 本期月數;
 
                 // 判斷是否為尾期
-                var 剩餘月數 = ((終止年月.Year - currentYm.Year) * 12) + (終止年月.Month - currentYm.Month) + 1;
+                var 剩餘月數 = ((終止年月.Year - currentYm_殘月計算.Year) * 12) + (終止年月.Month - currentYm_殘月計算.Month) + 1;
                 if (剩餘月數 <= 0)
                     break;
-
+               
                 if (剩餘月數 < 每期月數)
                 {
                     本期月數 = 剩餘月數; // 尾期
@@ -773,6 +779,10 @@ namespace TR5MidTerm.Controllers
 
                 var 本期金額 = 每月金額 * 本期月數;
 
+                // 跳下期
+                currentYm_殘月計算 = currentYm_殘月計算.AddMonths(本期月數);
+                currentYm_計租年月標記 = currentYm_計租年月標記.AddMonths(本期月數);
+
                 var entity = new 收款明細檔
                 {
                     事業 = postData.事業,
@@ -780,7 +790,7 @@ namespace TR5MidTerm.Controllers
                     部門 = postData.部門,
                     分部 = postData.分部,
                     案號 = postData.案號,
-                    計租年月 = currentYm,
+                    計租年月 = currentYm_計租年月標記,
                     金額 = 本期金額,
                     流水號 = ++maxSerial,
                     修改人 = CombineCodeAndName(ua.UserNo, ua.UserName),
@@ -791,8 +801,7 @@ namespace TR5MidTerm.Controllers
                 新增筆數++;
                 實際月數總計 += 本期月數;
 
-                // 跳下期
-                currentYm = currentYm.AddMonths(每期月數);
+                
             }
 
             // ✅ 更新收款主檔 修改時間
@@ -813,7 +822,7 @@ namespace TR5MidTerm.Controllers
                     data = new
                     {
                         實際月數 = 實際月數總計,
-                        最後截止年月 = currentYm.AddMonths(-1),
+                        最後截止年月 = currentYm_計租年月標記.AddMonths(-1),
                         起始年月 = postData.計租年月
                     }
                 });

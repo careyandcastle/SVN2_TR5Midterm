@@ -1,87 +1,110 @@
 ﻿@model TR5MidTerm.Models.TR5MidTermViewModels.收款明細檔CreateViewModel
 
-<form asp-action="Charge" method="post">
-    @Html.AntiForgeryToken()
-
-    @* Hidden 鍵值欄位 *@
-    <input type="hidden" asp-for="事業" />
-    <input type="hidden" asp-for="單位" />
-    <input type="hidden" asp-for="部門" />
-    <input type="hidden" asp-for="分部" />
-    <input type="hidden" asp-for="案號" />
-
-    @* 顯示用：案號 + 案名 *@
-    <div class="form-group">
-        <label asp-for="案號名顯示"></label>
-        <input asp-for="案號名顯示" class="form-control" readonly />
-        <span asp-validation-for="案號名顯示" class="text-danger"></span>
+@if (ViewBag.無收款主檔)
+{
+    <div class="alert alert-warning" role="alert">
+        ⚠️ 無可用的收款主檔，無法新增收款明細。
     </div>
+}
+else
+{
+   
+        // Razor 頁面中先計算顯示用 firstYm
+        var firstYm = @Model.計租年月;
+        if (Model.剩餘可收月數 >= Model.每期月數)
+        {
+            firstYm = Model.計租年月.AddMonths(Model.每期月數);
+        }
+        else
+        {
+            firstYm = Model.計租年月.AddMonths(Model.剩餘可收月數);
+        }
+    
+    <form asp-action="Charge" method="post">
+        @Html.AntiForgeryToken()
 
-    @* 下次收款年月（可調整） *@
-    @*<div class="form-group">
-            <label asp-for="計租年月">計租年月</label>
-            <input asp-for="計租年月" type="month" class="form-control" />
-            <span asp-validation-for="計租年月" class="text-danger"></span>
-        </div>*@
+        @* Hidden 鍵值欄位 *@
+        <input type="hidden" asp-for="事業" />
+        <input type="hidden" asp-for="單位" />
+        <input type="hidden" asp-for="部門" />
+        <input type="hidden" asp-for="分部" />
+        <input type="hidden" asp-for="案號" />
 
-    @* 顯示：每期租金（不可改） *@
-    <div class="form-group">
-        <label>每期租金（含稅）</label>
-        <input type="text" class="form-control" readonly value="@Model.每期租金含稅" />
-    </div>
+        <div class="row">
+            <div class="col-md-12 form-group">
+                <label asp-for="案號名顯示"></label>
+                <input asp-for="案號名顯示" class="form-control" readonly />
+                <span asp-validation-for="案號名顯示" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 form-group">
+                <label>每期租金（含稅）</label>
+                <input type="text" class="form-control" readonly value="@Model.每期租金含稅" />
+            </div>
+
+            <div class="col-md-6 form-group">
+                <label asp-for="收幾期">收款期數（每期 @Model.每期月數 月）</label>
+                <input asp-for="收幾期" id="spin-期數" type="number" class="form-control" min="1" max="@Model.可收期數上限" />
+                <span asp-validation-for="收幾期" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
+                </small>
+                <div id="partial-month-hint" class="form-text text-warning" style="display:none;"></div>
+            </div>
+
+            <div class="col-md-6 form-group">
+                <label asp-for="金額">本次應收總金額</label>
+                <input asp-for="金額" id="input-金額" class="form-control" readonly />
+                <span asp-validation-for="金額" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label>起算年月（第一筆計租年月）</label>
+                <input type="text"
+                       id="hidden-計租年月"
+                       name="計租年月"
+                       class="form-control"
+                       value="@firstYm.ToString("yyyy-MM-01")"
+                       readonly />
+            </div>
+            <div class="form-group">
+                <label>起算年月（第一筆計租年月）</label>
+                <input type="text"
+                       id="hidden-計租年月"
+                       name="計租年月_判斷殘月用"
+                       class="form-control"
+                       value="@Model.計租年月_判斷殘月用.ToString("yyyy-MM-01")"
+                       readonly />
+            </div>
+            <div class="col-md-6 form-group">
+                <label>計租年月（截止）</label>
+                <input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月.ToString("yyyy-MM")" readonly />
+            </div>
 
 
-    @* 使用者輸入：收幾期 *@
-    @*<div class="form-group">
-            <label asp-for="收幾期">收款期數（月）</label>
-            <input asp-for="收幾期" id="spin-期數" type="number" class="form-control" min="1" max="@Model.可收期數上限" />
-            <span asp-validation-for="收幾期" class="text-danger"></span>
-            <small class="form-text text-muted">請選擇本次要收取的月數，最長為 @Model.可收期數上限 個月。</small>
-        </div>*@
-    @* 使用者輸入：收幾期 *@
-    <div class="form-group">
-        <label asp-for="收幾期">收款期數（每期 @Model.每期月數 月）</label>
-        <input asp-for="收幾期" id="spin-期數" type="number" class="form-control" min="1" max="@Model.可收期數上限" />
-        <span asp-validation-for="收幾期" class="text-danger"></span>
-        <small class="form-text text-muted">
-            請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
-        </small>
-        <div id="partial-month-hint" class="form-text text-warning" style="display:none;"></div>
-    </div>
 
-    @* 自動計算：金額 *@
-    <div class="form-group">
-        <label asp-for="金額">本次應收總金額</label>
-        <input asp-for="金額" id="input-金額" class="form-control" readonly />
-        <span asp-validation-for="金額" class="text-danger"></span>
-    </div>
-    @* 隱藏實際送出的計租年月 *@
-    <input type="hidden" id="hidden-計租年月" name="計租年月" value="@Model.計租年月.ToString("yyyy-MM-01")" />
+            @* Hidden 欄位 *@
+            <!-- 起算年月（傳給後端做 currentYm 起點） -->
+            @*<input type="hidden" id="hidden-起算年月" name="起算年月"
+                value="@Model.計租年月.ToString("yyyy-MM-01")" />*@
+            <input type="hidden" id="hidden-計租年月" name="計租年月" value="@Model.計租年月.ToString("yyyy-MM-01")" />
+            <input type="hidden" id="hidden-計租年月_判斷殘月用" name="計租年月_判斷殘月用" value="@Model.計租年月_判斷殘月用.ToString("yyyy-MM-01")" />
+            <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
+            <input type="hidden" id="每期月數" value="@Model.每期月數" />
 
-    @* 顯示用：實際收款截止年月 *@
-    <div class="form-group">
-        <label>計租年月（截止）</label>
-        <input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月.ToString("yyyy-MM")" readonly />
-    </div>
+            <div class="col-md-12 form-group text-right">
+                <button type="submit" class="btn btn-primary">儲存收款明細</button>
+            </div>
+        </div>
+    </form>
 
-    <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
-    <input type="hidden" id="每期月數" value="@Model.每期月數" />
-
-
-
-
-    <div class="form-group text-right">
-        <button type="submit" class="btn btn-primary">儲存收款明細</button>
-    </div>
-</form>
-<script>
+    <script>
     $(document).ready(function () {
-    const 起始年月 = new Date('@Model.計租年月.ToString("yyyy-MM-01")');
-    const 每期租金含稅 = parseFloat('@Model.每期租金含稅');
+        const 起算年月 = new Date('@Model.計租年月.ToString("yyyy-MM-01")');
+    @*const 每期租金含稅 = parseFloat('@Model.每期租金含稅');*@
     const 每月租金 = parseFloat('@Model.每月租金含稅');
     const 每期月數 = parseInt('@Model.每期月數');
     const 剩餘月 = parseInt('@Model.剩餘可收月數');
-
+    @*const 起算年月 = new Date('@Model.計租年月.ToString("yyyy-MM-01")');*@
     $('#spin-期數').on('input', function () {
         const 收幾期 = parseInt($(this).val()) || 1;
         const 預計收幾個月 = 收幾期 * 每期月數;
@@ -90,11 +113,14 @@
         const totalAmount = 實際收幾個月 * 每月租金;
         $('#input-金額').val(totalAmount.toFixed(0));
 
-        let newDate = new Date(起始年月);
-        newDate.setMonth(newDate.getMonth() + 實際收幾個月 - 1);
-        const y = newDate.getFullYear();
-        const m = (newDate.getMonth() + 1).toString().padStart(2, '0');
-        $('#hidden-計租年月').val(`${y}-${m}-01`);
+
+        // ✅ 顯示截止年月（但送出起算年月）
+        let 截止年月 = new Date(起算年月);
+        截止年月.setMonth(截止年月.getMonth() + 實際收幾個月);
+        const y = 截止年月.getFullYear();
+        const m = (截止年月.getMonth() + 1).toString().padStart(2, '0');
+
+        $('#hidden-截止年月').val(`${y}-${m}-01`);
         $('#text-顯示計租年月').val(`${y}-${m}`);
 
         // ✅ 顯示殘期提示
@@ -112,4 +138,7 @@
     $('#spin-期數').trigger('input');
 });
 
-</script>
+    </script>
+}
+
+
