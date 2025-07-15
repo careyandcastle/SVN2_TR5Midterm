@@ -362,8 +362,8 @@
                                 alert('無法編輯：此明細已鎖定或未具編輯權限');
                                 return;
                             }
+                            this.$refs.private_detailTable._editOneDetail(event, rowData);
                             @*this._editOneDetail(event, rowData);*@
-                            this._editOneDetail(event, rowData);
                         }
                     },
                     {
@@ -375,7 +375,8 @@
                                 alert('無法刪除：資料狀態不允許或未具刪除權限');
                                 return;
                             }
-                            this._deleteOneDetail(event, rowData);
+                            this.$refs.private_detailTable._deleteOneDetail(event, rowData);
+                            @*this._deleteOneDetail(event, rowData);*@
                         }
                     }
                 ];
@@ -557,7 +558,7 @@
                 console.log("_onMounted customize");
             }
             //#endregion
-
+            //#region data注入
             //要注入的自訂參數
             let _opPermiss = { canCreate: @canCreate, canUpdate: @canUpdate, canDelete: @canDelete, canQuery: @canQuery, canExport: @canExport };
             const params = { data: null, methods: null };
@@ -582,6 +583,8 @@
                 anClickEditOrDelete: false,
                 //#endregion
             }
+            //#endregion
+            //#region method注入
             params.methods = {
                 //系統覆寫
                 dsMasterProvider: _dsMasterProvider,
@@ -607,30 +610,11 @@
                 getMasterTableActionButtonConfig,
                 getDetailTableActionButtonConfig,
                 //#endregion
-
-                @*_editOneDetail(event, row) {
-                    if (!row) return;
-
-                    row.unselectRow();
-                    this.$nextTick(() => row.selectRow());
-
-                    this.isNewItemOnTop = false;
-
-                    if (!this.masterTableInst?.multiDetails) {
-                        this.masterTableInst?.$bvModal?.show('detail-table-edit-modal');
-                        return;
-                    }
-
-                    // ✅ 你自訂的主表元件需定義 editOneDetail 方法
-                    this.$parent?.editOneDetail?.(event, row);
-                },*@
+ 
             };
+            //#endregion
             //掛載Table
              TSC_NS.CreateVue(params).$mount('#tr5midtermcontroller-index');
-            @*const vueInstance = TSC_NS.CreateVue(params);*@
-            @*vueInstance.$mount('#tr5midtermcontroller-index');*@
-            // 🔁 補回注入
-            @*vueInstance.getDetailTableActionButtonConfig = createDetailTableButtons(vueInstance);*@
         })();
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

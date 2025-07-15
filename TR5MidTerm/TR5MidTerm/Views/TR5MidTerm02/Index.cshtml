@@ -385,7 +385,7 @@
                 link.click();
             }
             //#endregion
-            //#region 預設filter(有加上了鈞凱的ShowValidateResult)
+            //#region 預設filter 
             //覆寫欄位尋找與清除事件
             const _onFilterValueUpdate = function (event) {
                 const keyCodeAllowRegExp = /\b(8|4[6-9]|5[0-7]|6[5-9]|[7|8]\d|90|9[6-9]|10[0-5]|10[7-9]|11[0-1]|18[7-9]|13)\b/;
@@ -622,7 +622,7 @@
                                 alert('無法編輯：此明細已鎖定或未具編輯權限');
                                 return;
                             }
-                            this._editOneDetail(event, rowData);
+                            this.$refs.private_detailTable._editOneDetail(event, rowData);
                         }
                     },
                     {
@@ -634,7 +634,7 @@
                                 alert('無法刪除：資料狀態不允許或未具刪除權限');
                                 return;
                             }
-                            this._deleteOneDetail(event, rowData);
+                            this.$refs.private_detailTable._deleteOneDetail(event, rowData);
                         }
                     }
                 ];

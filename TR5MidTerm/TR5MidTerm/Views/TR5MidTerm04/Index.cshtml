@@ -344,54 +344,35 @@
             //#endregion
             //#region 自定義:明細按鈕
             const getMasterTableActionButtonConfig = function (rowData) {
-                @*debugger;*@
-                @* console.log(rowData.item.可否展開);*@
-                @* console.log("可否新增:", rowData.item.可否新增);*@
                 return [
                     {
                         text: '展開明細',
                         willShow: true,  // ✅ 控制顯示與否
-                        @* willShow: rowData.item.可否展開,  // ✅ 控制顯示與否*@
-                        @* variant: 'outline-detail1',*@
-                        @* variant: 'custom-outline-detail',*@
                         variant: rowData.item.可否展開明細 ? 'outline-detail1' : 'custom-outline-disabled',
-                    eventHandler: (event, rowData) => {
-                        if (!rowData.item.可否展開明細) {
-                            alert('查無明細'); // ✅ 顯示理由
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否展開明細) {
+                                alert('查無明細'); // ✅ 顯示理由
+                                return;
+                            }
+                            this._toggleRowDetail(event, rowData);  // ✅ 正確方法
+                        }
+                    },
+                    {
+                        text: '新增明細',
+                        willShow: true,
+                        variant: rowData.item.可否新增明細 ? 'outline-detail1' : 'custom-outline-disabled',
+                        eventHandler: (event, rowData) => {
+                        debugger;
+                        if (!rowData.item.可否新增明細) {
+                            alert('無法新增：組織不符資格'); // ✅ 顯示理由
                             return;
                         }
-                        this._toggleRowDetail(event, rowData);  // ✅ 正確方法
-                    }
-            },
-                {
-                    text: '新增明細',
-                        @* willShow: rowData.item.可否新增,*@
-            willShow: true,
-                        @* variant: 'outline-detail1',*@
-                    variant: rowData.item.可否新增明細 ? 'outline-detail1' : 'custom-outline-disabled',
-                eventHandler: (event, rowData) => {
-                    debugger;
-                    if (!rowData.item.可否新增明細) {
-                        alert('無法新增：組織不符資格'); // ✅ 顯示理由
-                        return;
-                    }
-                    else {
-                        this._createOneDetail(event, rowData);
-                    }
-                }
-        },
-                    @* {
-            text: '按鈕3',
-            willShow: true,
-            variant: 'outline-detail1',
-            eventHandler: () => { alert('btn 3'); }
-        },
-            {
-                text: '按鈕4',
-                willShow: true,
-                variant: 'outline-detail1',
-                eventHandler: () => { alert('btn 4'); }
-            } *@
+                        else {
+                            this._createOneDetail(event, rowData);
+                            }
+                        }
+                    },
+
                 ];
             }
             const getDetailTableActionButtonConfig = function (rowData) {
@@ -405,7 +386,7 @@
                                 alert('無法編輯：此明細已鎖定或未具編輯權限');
                                 return;
                             }
-                            this._editOneDetail(event, rowData);
+                            this.$refs.private_detailTable._editOneDetail(event, rowData);
                         }
                     },
                     {
@@ -417,7 +398,7 @@
                                 alert('無法刪除：資料狀態不允許或未具刪除權限');
                                 return;
                             }
-                            this._deleteOneDetail(event, rowData);
+                            this.$refs.private_detailTable._deleteOneDetail(event, rowData);
                         }
                     }
                 ];
