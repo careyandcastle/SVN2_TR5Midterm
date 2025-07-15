@@ -154,6 +154,7 @@ namespace TR5MidTerm.Controllers
                 item.未繳期數 = Math.Max(0, 累計應收期數 - paidPeriod);
                 item.下次收租日期 = 下次收租日;
                 item.累計應收租金含稅 = item.每期租金含稅 * item.未繳期數;
+                item.可收租 = 下次收租日 < DateTime.Now.AddDays(item.繳款期限天數);
             }
 
 

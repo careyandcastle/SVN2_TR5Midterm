@@ -534,7 +534,7 @@
                 if (item['每期租金含稅'] >= 100000) {
                     return 'text-success'; // green
                 }
-                if (item['下次收租日期'] <= Date.now) {
+                if (item['可收租']) {
                     return 'text-danger'; // green
                 }
                 else {
