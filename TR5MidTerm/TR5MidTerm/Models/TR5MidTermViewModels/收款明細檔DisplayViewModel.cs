@@ -17,6 +17,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 事業 { get; set; }
 
         [DisplayName("事業")]
+        [HiddenForView]
         public string 事業顯示 { get; set; }
 
         [Key]
@@ -24,6 +25,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 單位 { get; set; }
 
         [DisplayName("單位")]
+        [HiddenForView]
         public string 單位顯示 { get; set; }
 
         [Key]
@@ -31,6 +33,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 部門 { get; set; }
 
         [DisplayName("部門")]
+        [HiddenForView]
         public string 部門顯示 { get; set; }
 
         [Key]
@@ -38,9 +41,11 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 分部 { get; set; }
 
         [DisplayName("分部")]
+        [HiddenForView]
         public string 分部顯示 { get; set; }
         [Key]
         //[StringLength(5)]
+        [HiddenForView]
         public string 案號 { get; set; }
         [Key]
         //[Column(TypeName = "date")]
@@ -54,7 +59,9 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 修改人 { get; set; }
         //[Column(TypeName = "datetime")]
         public DateTime 修改時間 { get; set; }
+        [HiddenForView]
         public bool 可否修改明細 { get; set; }
+        [HiddenForView]
         public bool 可否刪除明細 { get; set; }
 
     }

@@ -405,7 +405,7 @@
             };
 
             //#endregion
-            //#region 自定義:query
+            //#region 自定義query
             const _querySelectOptions = Vue.reactive({
 
                 事業: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.事業選單)),
@@ -525,6 +525,36 @@
 
 
             //#endregion
+            //#region 自定義:顏色
+            const _getClassForMasterContent = function (rowData) {
+                const item = rowData.item;
+                @*debugger;*@
+                @* console.log(item);*@
+                
+                if (item['每期租金含稅'] >= 100000) {
+                    return 'text-success'; // green
+                }
+                if (item['下次收租日期'] <= Date.now) {
+                    return 'text-danger'; // green
+                }
+                else {
+                    return '';
+                }
+            }
+            const _getClassForDetailContent = function (rowData) {
+                const item = rowData.item;
+                @*debugger;*@
+                @* console.log(item);*@
+                
+                if (item['總金額'] >= 30000) {
+                    return 'text-primary'; // green
+                }
+                else {
+                    return '';
+                }
+            }
+
+            //#endregion
             //#region filter
             //覆寫欄位尋找與清除事件
 
@@ -628,6 +658,9 @@
                 queryResetAll: _queryResetAll,
                 queryFilterClicked: _queryFilterClicked,
                 //#endregion
+                //自定義:顏色設定
+                getClassForDetailContent: _getClassForDetailContent,
+                getClassForMasterContent: _getClassForMasterContent,
                 //#region 自定義:明細按鈕
                 getMasterTableActionButtonConfig,
                 getDetailTableActionButtonConfig

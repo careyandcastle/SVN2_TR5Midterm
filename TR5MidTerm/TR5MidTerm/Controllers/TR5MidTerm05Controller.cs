@@ -104,7 +104,19 @@ namespace TR5MidTerm.Controllers
             IQueryable<收款主檔DisplayViewModel> sql = GetBaseQuery().AsNoTracking();
             PaginatedList<收款主檔DisplayViewModel> queryedData = null;
             queryedData = await PaginatedList<收款主檔DisplayViewModel>.CreateAsync(sql, qc);
+            foreach (var item in queryedData)
+            {
+                // 取已收款的最新年月
+                var latestYm = _context.收款明細檔
+                    .Where(x => x.事業 == item.事業 && x.單位 == item.單位 &&
+                                x.部門 == item.部門 && x.分部 == item.分部 && x.案號 == item.案號)
+                    .OrderByDescending(x => x.計租年月)
+                    .Select(x => x.計租年月)
+                    .FirstOrDefault();
+                 item.收款日期 = latestYm;
+            }
 
+            //收款日期
             return Ok(new
             {
                 data = queryedData,
@@ -281,69 +293,7 @@ namespace TR5MidTerm.Controllers
             return CreatedAtAction(nameof(CreateMulti), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
         #endregion
-        #region Edit
-        [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 案號) 
-        {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
-
-            var result = await _context.收款主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
-            if (result == null)
-            {
-                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
-
-            return PartialView(result);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Edit(string 事業, string 單位, string 部門, string 分部, string 案號, [Bind("事業,單位,部門,分部,案號")] 收款主檔EditViewModel postData)
-        {
-            //if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null)
-            //{
-            //    return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            //}
-
-            //if (事業 != postData.事業 || 單位 != postData.單位 || 部門 != postData.部門 || 分部 != postData.分部 || 案號 != postData.案號)
-            //{
-            //    return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            //}
-
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-
-            #region model初始化
-            收款主檔 filledData = _mapper.Map<收款主檔EditViewModel, 收款主檔>(postData);
-            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
-            filledData.修改時間 = DateTime.Now;
-            _context.Update(filledData);
-            #endregion
-            try
-            {
-                #region 寫入DB
-                var opCount = await _context.SaveChangesAsync();
-
-                if (opCount > 0)
-                    return Ok(new ReturnData(ReturnState.ReturnCode.OK)
-                    {
-                        data = postData
-                    });
-                #endregion
-            }
-            catch (Exception ex)
-            {
-                return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-            }
-
-            return CreatedAtAction(nameof(Edit), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-        }
-        #endregion
+  
         #region Delete
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> Delete(string 事業, string 單位, string 部門, string 分部, string 案號)
@@ -482,6 +432,9 @@ namespace TR5MidTerm.Controllers
 
                         #region 主欄位
                         案號 = m.案號,
+                        流水號 = m.流水號,
+                        金額 = m.金額,
+                        計租年月 = m.計租年月,
                        
                         #endregion
                         #region 修改人與修改時間
@@ -674,60 +627,6 @@ namespace TR5MidTerm.Controllers
             }
 
             return CreatedAtAction(nameof(EditDetail), new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
-        }
-        #endregion
-        #region DeleteDetail
-        [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteDetail(string 事業, string 單位, string 部門, string 分部, string 案號, DateTime 計租年月)
-        {
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月== null)
-            {
-                return NotFound();
-            }
-
-            var result = await _context.收款明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 計租年月);
-
-            if (result == null)
-            {
-                return NotFound();
-            }
-
-            return PartialView(result);
-        }
-
-        [HttpPost, ActionName("DeleteDetail")]
-        [ValidateAntiForgeryToken]
-        [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號, DateTime 計租年月)
-        {
-            if (ModelState.IsValid == false)
-                return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-            if (事業 == null || 單位 == null || 部門 == null || 分部 == null || 案號 == null || 計租年月== null)
-                return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-
-            var result = await _context.收款明細檔.FindAsync(事業, 單位, 部門, 分部, 案號, 計租年月);
-            if (result == null)
-                return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-
-            _context.收款明細檔.Remove(result);
-
-            try
-            {
-                var opCount = await _context.SaveChangesAsync();
-                if (opCount > 0)
-                    return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.OK));
-            }
-            catch (Exception ex)
-            {
-                return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR)
-                {
-                    message = ex.Message
-                });
-            }
-
-            return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
         }
         #endregion
         #region other2

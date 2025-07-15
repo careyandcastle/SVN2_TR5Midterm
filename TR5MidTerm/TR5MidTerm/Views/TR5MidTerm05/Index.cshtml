@@ -326,29 +326,14 @@
                         text: '展開明細',
                         willShow: true,  // ✅ 控制顯示與否
                         variant: rowData.item.可否展開明細 ? 'outline-detail1' : 'custom-outline-disabled',
-                    eventHandler: (event, rowData) => {
-                        if (!rowData.item.可否展開明細) {
-                            alert('查無明細'); // ✅ 顯示理由
-                            return;
+                        eventHandler: (event, rowData) => {
+                            if (!rowData.item.可否展開明細) {
+                                alert('查無明細'); // ✅ 顯示理由
+                                return;
+                            }
+                            this._toggleRowDetail(event, rowData);  // ✅ 正確方法
                         }
-                        this._toggleRowDetail(event, rowData);  // ✅ 正確方法
-                    }
-            },
-                {
-                    text: '新增明細',
-            willShow: true,
-                    variant: rowData.item.可否新增明細 ? 'outline-detail1' : 'custom-outline-disabled',
-                eventHandler: (event, rowData) => {
-                    debugger;
-                    if (!rowData.item.可否新增明細) {
-                        alert('無法新增：組織不符資格'); // ✅ 顯示理由
-                        return;
-                    }
-                    else {
-                        this._createOneDetail(event, rowData);
-                    }
-                }
-        }, 
+                    }, 
                 ];
             }
             const getDetailTableActionButtonConfig = function (rowData) {
@@ -365,20 +350,7 @@
                             this.$refs.private_detailTable._editOneDetail(event, rowData);
                             @*this._editOneDetail(event, rowData);*@
                         }
-                    },
-                    {
-                        text: '刪除明細',
-                        willShow: true, // 預設顯示
-                        variant: rowData.item.可否刪除明細 ? 'outline-detail1' : 'custom-outline-disabled',
-                        eventHandler: (event, rowData) => {
-                            if (!rowData.item.可否刪除明細) {
-                                alert('無法刪除：資料狀態不允許或未具刪除權限');
-                                return;
-                            }
-                            this.$refs.private_detailTable._deleteOneDetail(event, rowData);
-                            @*this._deleteOneDetail(event, rowData);*@
-                        }
-                    }
+                    } 
                 ];
             };
  
