@@ -46,25 +46,39 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         //[DisplayName("承租人名")]//
         //[HiddenForView]
         public string 承租人編號 { get; set; }
+        //[DisplayName("承租人")]//
+        //public string 承租人顯示 { get; set; }
         //[DisplayName("承租方式")]
-        //[HiddenForView]
+        [HiddenForView]
         public string 租賃方式編號 { get; set; }
         [DisplayName("租賃方式")]
         public string 租賃方式顯示 { get; set; } //自定義欄位
         public string 租賃用途 { get; set; }
         //[Column(TypeName = "date")]
+        [DisplayName("租約起始日期")]
+        public string 日期顯示3 => 租約起始日期.ToString("yyyy/MM/dd") ?? string.Empty;
+        [HiddenForView]
         public DateTime 租約起始日期 { get; set; }
         public int 累計月數 { get; set; }  // 計算從起始日期至今天過了幾個月
         public int 未繳期數 { get; set; } // 累計應收期數 - 已繳期數
+        [DisplayName("下次收租日期")]
+        public string 日期顯示2 => 下次收租日期?.ToString("yyyy/MM/dd") ?? string.Empty;
+        [HiddenForView]
+
         public DateTime? 下次收租日期 { get; set; } //
         public decimal 每期租金含稅 { get; set; }  //  
         public decimal 累計應收租金含稅 { get; set; }  // 
+        [HiddenForView]
         public bool 可收租 { get; set; }  //
         //public decimal 累計金額 { get; set; }  //
         public int 租期月數 { get; set; }
         public int 計租週期月數 { get; set; }
         public int 繳款期限天數 { get; set; }
+        [DisplayName("租約終止日期")]
+        public string 日期顯示 => 租約終止日期?.ToString("yyyy/MM/dd") ?? string.Empty;
+        [HiddenForView]
         public DateTime? 租約終止日期 { get; set; }
+        //public DateTime? 租約終止日期顯示 { get; set; }//
         public string 備註 { get; set; }
         public string 修改人 { get; set; }
         public DateTime 修改時間 { get; set; }

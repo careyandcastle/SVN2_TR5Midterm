@@ -155,6 +155,7 @@ namespace TR5MidTerm.Controllers
                 item.下次收租日期 = 下次收租日;
                 item.累計應收租金含稅 = item.每期租金含稅 * item.未繳期數;
                 item.可收租 = 下次收租日 < DateTime.Now.AddDays(item.繳款期限天數);
+                item.租約終止日期 = item.租約起始日期.AddMonths(item.租期月數);
             }
 
 
@@ -174,6 +175,7 @@ namespace TR5MidTerm.Controllers
                     join dep in _context.單位 on m.單位 equals dep.單位1
                     join sec in _context.部門 on new { m.單位, m.部門 } equals new { sec.單位, 部門 = sec.部門1 }
                     join sub in _context.分部 on new { m.單位, m.部門, m.分部 } equals new { sub.單位, sub.部門, 分部 = sub.分部1 }
+                    //join man in _context.承租人檔 on new { m.事業, m.單位, m.部門, m.分部, m.承租人編號 } equals new { man.事業, man.單位, man.部門, man.分部, man.承租人編號 }
                     select new 租約主檔DisplayViewModel
                     {
                         #region 組織資料
@@ -200,7 +202,7 @@ namespace TR5MidTerm.Controllers
                         租期月數 = m.租期月數,
                         計租週期月數 = m.計租週期月數,
                         繳款期限天數 = m.繳款期限天數,
-                        租約終止日期 = m.租約終止日期,
+                        //租約終止日期 = m.租約終止日期,
                         備註 = m.備註,
                         #endregion
                         #region naviagtion
@@ -208,6 +210,8 @@ namespace TR5MidTerm.Controllers
                         租賃方式顯示 = CustomSqlFunctions.ConcatCodeAndName(m.租賃方式編號Navigation.租賃方式編號, m.租賃方式編號Navigation.租賃方式),
                         //m.租賃方式編號Navigation.租賃方式編號  // 要 Include 或 join 對應資料
                         #endregion
+                        //承租人顯示 = CustomSqlFunctions.ConcatCodeAndName(m.承租人編號, CustomSqlFunctions.DecryptToString(man.承租人)),
+
                         #region 修改人與修改時間
                         修改人 = m.修改人,
                         修改時間 = m.修改時間,
