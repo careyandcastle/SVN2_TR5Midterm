@@ -10,6 +10,11 @@
 @using TableFieldDescDictionary =
     System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.Dictionary<System.String, System.String>>;
 @{
+    //自定義時鐘與組織顯示
+    var 事業顯示 = ViewBag.事業;
+    var 單位顯示 = ViewBag.單位;
+    var 部門顯示 = ViewBag.部門;
+    var 分部顯示 = ViewBag.分部;
     //產生欄位名稱中文定義
     var tablesField = ViewBag.TableFieldDescDict;
     var masterTableDescHTML = Html.Raw(CreateTableFieldsDescription.TableFieldDescToHTML(tablesField, TableType.MasterTable));
@@ -114,6 +119,15 @@
                                  v-on:reset-all="slot.data.queryResetAll"
                                  v-on:filter-click="slot.data.queryFilterClicked">
                     </multi-input>
+                </b-col>
+            </b-row>
+            <b-row class="mb-2">
+                <b-col>
+                    <org-clock-info :事業="slot.data.params.data.事業顯示"
+                                    :單位="slot.data.params.data.單位顯示"
+                                    :部門="slot.data.params.data.部門顯示"
+                                    :分部="slot.data.params.data.分部顯示">
+                    </org-clock-info>
                 </b-col>
             </b-row>
         </template>
@@ -529,10 +543,15 @@
             const _getClassForMasterContent = function (rowData) {
                 const item = rowData.item;
                 if (item['每期租金含稅'] >= 100000) {
-                    return 'text-success'; // green
+                    if (rowData.field.key === '每期租金含稅') {
+                        return 'text-success';
+                    }
+                }
+                if (item['超過收租期限']) {
+                    return 'text-danger'; // green
                 }
                 if (item['可收租']) {
-                    return 'text-danger'; // green
+                    return 'text-Warning'; // green
                 }
                 else {
                     return '';
@@ -542,7 +561,7 @@
                 const item = rowData.item;
                 @*debugger;*@
                 @* console.log(item);*@
-                
+
                 if (item['總金額'] >= 30000) {
                     return 'text-primary'; // green
                 }
@@ -630,6 +649,12 @@
                 //#region 自訂義按鈕判斷
                 isBusy: false,
                 anClickEditOrDelete: false,
+                //#endregion
+                //#region 自定義時鐘與組織顯示
+                事業顯示: "@事業顯示",
+                單位顯示: "@單位顯示",
+                部門顯示: "@部門顯示",
+                分部顯示: "@分部顯示"
                 //#endregion
             }
             //#endregion

@@ -89,6 +89,10 @@ namespace TR5MidTerm.Controllers
             ViewBag.單位選單 = 單位清單;
             ViewBag.部門選單 = 部門清單;
             ViewBag.分部選單 = 分部清單;
+            ViewBag.事業 = ua.BusinessName;
+            ViewBag.單位 = ua.DepartmentName;
+            ViewBag.部門 = ua.DivisionName;
+            ViewBag.分部 = ua.BranchName;
             #endregion
 
             return View();

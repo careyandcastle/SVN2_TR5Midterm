@@ -11,6 +11,11 @@
 @using TableFieldDescDictionary =
     System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.Dictionary<System.String, System.String>>;
 @{
+    //自定義時鐘與組織顯示
+    var 事業顯示 = ViewBag.事業;
+    var 單位顯示 = ViewBag.單位;
+    var 部門顯示 = ViewBag.部門;
+    var 分部顯示 = ViewBag.分部;
     //產生欄位名稱中文定義
     var tablesField = ViewBag.TableFieldDescDict;
     var masterTableDescHTML = Html.Raw(CreateTableFieldsDescription.TableFieldDescToHTML(tablesField, TableType.MasterTable));
@@ -56,6 +61,16 @@
 
 <h1 class="mt-1">@ViewData["Title"]</h1>
 <div id="tr5midtermcontroller-index">
+    @*<b-row class="mb-2">
+        <b-col>
+            <org-clock-info :事業="params.data.事業顯示"
+  :單位="params.data.單位顯示"
+  :部門="params.data.部門顯示"
+  :分部="params.data.分部顯示">
+
+            </org-clock-info>
+        </b-col>
+    </b-row>*@
     <table-component id="tr5midtermcontroller-master-table"
                      @*sticky-header-height="642px"*@
                      ref="tr5midtermcontroller-master-table">
@@ -94,11 +109,22 @@
                     </multi-input>
                 </b-col>
             </b-row>
+            <b-row class="mb-2">
+                <b-col>
+                    <org-clock-info :事業="slot.data.params.data.事業顯示"
+                                    :單位="slot.data.params.data.單位顯示"
+                                    :部門="slot.data.params.data.部門顯示"
+                                    :分部="slot.data.params.data.分部顯示">
+                    </org-clock-info>
+                </b-col>
+            </b-row>
+
         </template>
 
     </table-component>
 </div>
 
+@*<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />*@
 @section Scripts {
     <script>
         (function () {
@@ -305,7 +331,9 @@
                 console.log("_onMounted customize");
             }
 
-            // #endregion
+            //#endregion
+            //#region Vue時鐘與顯示
+            //#endregion
             //#region 自訂query
             const _querySelectOptions = Vue.reactive({
 
@@ -313,6 +341,7 @@
                 單位: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.單位選單)),
                 部門: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.部門選單)),
                 分部: ConvertSelectListItemsToBFormSelectOptions(@Json.Serialize(ViewBag.分部選單)),
+
                 刪除註記: [
                     { text: '不限', value: '%' },
                      { text: '是', value: "true"},
@@ -453,7 +482,17 @@
                 isBusy: false,
                 anClickEditOrDelete: false,
                 //#endregion
-
+                //#region 自定義時鐘與組織顯示
+                @*事業顯示: "a",
+                單位顯示: "b",
+                部門顯示: "c",
+                分部顯示: "d"*@
+                @*事業顯示: (@Json.Serialize(ViewBag.事業)),*@
+                事業顯示: "@事業顯示",
+                單位顯示: "@單位顯示",
+                部門顯示: "@部門顯示",
+                分部顯示: "@分部顯示"
+                //#endregion
             }
             //#endregion
             // #region 注入methods

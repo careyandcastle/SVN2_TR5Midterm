@@ -105,6 +105,11 @@ namespace TR5MidTerm.Controllers
             ViewBag.單位選單 = 單位清單;
             ViewBag.部門選單 = 部門清單;
             ViewBag.分部選單 = 分部清單;
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            ViewBag.事業 = ua.BusinessName;
+            ViewBag.單位 = ua.DepartmentName;
+            ViewBag.部門 = ua.DivisionName;
+            ViewBag.分部 = ua.BranchName;
             #endregion
             return View();
         }
@@ -173,7 +178,8 @@ namespace TR5MidTerm.Controllers
                 item.未繳期數 = Math.Max(0, 累計應收期數 - paidPeriod);
                 item.下次收租日期 = 下次收租日;
                 item.累計應收租金含稅 = item.每期租金含稅 * item.未繳期數;
-                item.可收租 = 下次收租日 < DateTime.Now.AddDays(item.繳款期限天數);
+                item.可收租 = 下次收租日 < DateTime.Now;
+                item.超過收租期限 = 下次收租日 < DateTime.Now.AddDays(item.繳款期限天數);
                 item.租約終止日期 = item.租約起始日期.AddMonths(item.租期月數);
             }
 
