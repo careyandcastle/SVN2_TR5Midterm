@@ -69,7 +69,7 @@ namespace TR5MidTerm.Controllers
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<收款主檔DisplayViewModel, 收款明細檔DisplayViewModel>();
             #region query下拉式清單 
-            var 已使用事業代碼 = await _context.租約主檔
+            var 已使用事業代碼 = await _context.收款主檔
        .Select(x => x.事業)
        .Distinct()
        .ToListAsync();
@@ -85,7 +85,26 @@ namespace TR5MidTerm.Controllers
             var 單位清單 = new List<SelectListItem>();
             var 部門清單 = new List<SelectListItem>();
             var 分部清單 = new List<SelectListItem>();
-
+            事業清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選事業--",
+                Value = ""
+            });
+            單位清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選單位--",
+                Value = ""
+            });
+            部門清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選部門--",
+                Value = ""
+            });
+            分部清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選分部--",
+                Value = ""
+            });
             ViewBag.事業選單 = 事業清單;
             ViewBag.單位選單 = 單位清單;
             ViewBag.部門選單 = 部門清單;
@@ -371,6 +390,65 @@ namespace TR5MidTerm.Controllers
             return File(byteContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
         #endregion
+        #region 提供index使用
+        public async Task<IActionResult> GetDepartmentSelectList(string Biz)
+        {
+            var 已使用單位代碼 = await _context.收款主檔
+        .Where(x => x.事業 == Biz)
+        .Select(x => x.單位)
+        .Distinct()
+        .ToListAsync();
+
+            var 單位清單 = await _context.單位
+                .Where(d => 已使用單位代碼.Contains(d.單位1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.單位1,
+                    Text = d.單位1 + "_" + d.單位名稱
+                }).ToListAsync();
+
+            return Json(單位清單);
+        }
+        public async Task<IActionResult> GetDivisionSelectList(string Biz, string DepNo)
+        {
+            var 已使用部門代碼 = await _context.收款主檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo)
+        .Select(x => x.部門)
+        .Distinct()
+        .ToListAsync();
+
+            var 部門清單 = await _context.部門
+                .Where(d => d.單位 == DepNo && 已使用部門代碼.Contains(d.部門1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.部門1,
+                    Text = d.部門1 + "_" + d.部門名稱
+                }).ToListAsync();
+
+            return Json(部門清單);
+        }
+        public async Task<IActionResult> GetBranchSelectList(string Biz, string DepNo, string DivNo)
+        {
+            var 已使用分部代碼 = await _context.收款主檔
+        .Where(x => x.事業 == Biz && x.單位 == DepNo && x.部門 == DivNo)
+        .Select(x => x.分部)
+        .Distinct()
+        .ToListAsync();
+
+            var 分部清單 = await _context.分部
+                .Where(d => d.單位 == DepNo && d.部門 == DivNo && 已使用分部代碼.Contains(d.分部1))
+                .Select(d => new SelectListItem
+                {
+                    Value = d.分部1,
+                    Text = d.分部1 + "_" + d.分部名稱
+                }).ToListAsync();
+
+            return Json(分部清單);
+        }
+
+
+        #endregion
+
         #region other
         public bool isMasterKeyExist(string 事業, string 單位, string 部門, string 分部, string 案號)
         {

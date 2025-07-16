@@ -88,7 +88,7 @@
                     <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>
                     @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
-                    <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-charge-modal class="mr-1" variant="detail3">收租</b-button>
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal class="mr-1" variant="detail3">收租</b-button>
                     <!--Master OP Page-->
                     <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>

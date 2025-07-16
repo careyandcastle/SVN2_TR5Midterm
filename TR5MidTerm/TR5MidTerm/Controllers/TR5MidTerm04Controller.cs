@@ -81,7 +81,26 @@ namespace TR5MidTerm.Controllers
             var 單位清單 = new List<SelectListItem>();
             var 部門清單 = new List<SelectListItem>();
             var 分部清單 = new List<SelectListItem>();
-
+            事業清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選事業--",
+                Value = ""
+            });
+            單位清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選單位--",
+                Value = ""
+            });
+            部門清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選部門--",
+                Value = ""
+            });
+            分部清單.Insert(0, new SelectListItem
+            {
+                Text = "--不篩選分部--",
+                Value = ""
+            }); 
             ViewBag.事業選單 = 事業清單;
             ViewBag.單位選單 = 單位清單;
             ViewBag.部門選單 = 部門清單;
