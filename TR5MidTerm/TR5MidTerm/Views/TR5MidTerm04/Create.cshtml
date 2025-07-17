@@ -2,130 +2,140 @@
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()  <!-- ✅ 加入防偽驗證 -->
     <div class="row">
-        <div class="col-md-6">
-            <!-- 案名 -->
-            <div class="form-group">
-                <label asp-for="案名" class="control-label"></label>
-                <input asp-for="案名" class="form-control" placeholder="請輸入" />
-                <span asp-validation-for="案名" class="text-danger"></span>
-            </div>
+        <div class="col-md-12">
+                <template #default="slot">
+                    <org-clock-info :事業="slot.data.params.data.事業顯示"
+                                    :單位="slot.data.params.data.單位顯示"
+                                    :部門="slot.data.params.data.部門顯示"
+                                    :分部="slot.data.params.data.分部顯示">
+                    </org-clock-info>
+                </template>
         </div>
 
-        <div class="col-md-6">
-            <!-- 案名 -->
-            <div class="form-group">
-                <label asp-for="案號" class="control-label"></label>
-                <input asp-for="案號" class="form-control" placeholder="請輸入" />
-                <span asp-validation-for="案號" class="text-danger"></span>
+            <div class="col-md-6">
+                <!-- 案名 -->
+                <div class="form-group">
+                    <label asp-for="案名" class="control-label"></label>
+                    <input asp-for="案名" class="form-control" placeholder="請輸入" />
+                    <span asp-validation-for="案名" class="text-danger"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <!-- 承租人 -->
-            <div class="form-group">
-                <label asp-for="承租人編號" class="control-label"></label>
-                <select asp-for="承租人編號" class="form-control" asp-items="ViewBag.承租人選項">
-                    <option disabled selected value="">-- 請選擇 --</option>
+            <div class="col-md-6">
+                <!-- 案名 -->
+                <div class="form-group">
+                    <label asp-for="案號" class="control-label"></label>
+                    <input asp-for="案號" class="form-control" placeholder="請輸入" />
+                    <span asp-validation-for="案號" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- 承租人 -->
+                <div class="form-group">
+                    <label asp-for="承租人編號" class="control-label"></label>
+                    <select asp-for="承租人編號" class="form-control" asp-items="ViewBag.承租人選項">
+                        <option disabled selected value="">-- 請選擇 --</option>
+                    </select>
+                    <span asp-validation-for="承租人編號" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- 租賃方式 -->
+                <div class="form-group">
+                    <label asp-for="租賃方式編號" class="control-label"></label>
+                    <select asp-for="租賃方式編號" class="form-control" asp-items="ViewBag.租賃方式選項">
+                        <option disabled selected value="">-- 請選擇 --</option>
+                    </select>
+                    <span asp-validation-for="租賃方式編號" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div>
+                    <label class="control-label">租賃用途輸入方式</label>
+                </div>
+                <div class="mt-2">
+                    <div class="btn-group" role="group" aria-label="租賃用途輸入方式">
+                        <input type="radio" class="btn-check" name="inputMode" id="mode-select" value="select" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="mode-select">清單選擇</label>
+
+                        <input type="radio" class="btn-check" name="inputMode" id="mode-input" value="input" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="mode-input">手動輸入</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右：租賃用途實際欄位（select/input 二選一） -->
+            <div class="col-md-6">
+                <!-- Select 選擇 -->
+                <div class="form-group" id="租賃用途-select-div">
+                    <label asp-for="租賃用途" class="control-label">租賃用途</label>
+                    <select asp-for="租賃用途" class="form-control" asp-items="ViewBag.租賃用途選項">
+                        <option disabled selected value="">-- 請選擇 --</option>
+                    </select>
+                    <span asp-validation-for="租賃用途" class="text-danger"></span>
+                </div>
+
+                <!-- 手動輸入 -->
+                <div class="form-group" id="租賃用途-input-div" style="display:none;">
+                    <label asp-for="租賃用途" class="control-label">租賃用途</label>
+                    <input asp-for="租賃用途" class="form-control" type="text" placeholder="請輸入" />
+                    <span asp-validation-for="租賃用途" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- 起始日 + 月數 + 週期 -->
+            <div class="col-md-4">
+                <label asp-for="租約起始日期" class="form-label">起始日期</label>
+                <input asp-for="租約起始日期" type="date" class="form-control form-control-sm" id="租約起始日期" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="租期月數" class="form-label">租期月數</label>
+                <input asp-for="租期月數" type="number" min="0" class="form-control form-control-sm" id="租期月數" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="計租週期月數" class="form-label">計租週期</label>
+                <select asp-for="計租週期月數" class="form-control form-control-sm">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
                 </select>
-                <span asp-validation-for="承租人編號" class="text-danger"></span>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <!-- 租賃方式 -->
-            <div class="form-group">
-                <label asp-for="租賃方式編號" class="control-label"></label>
-                <select asp-for="租賃方式編號" class="form-control" asp-items="ViewBag.租賃方式選項">
-                    <option disabled selected value="">-- 請選擇 --</option>
-                </select>
-                <span asp-validation-for="租賃方式編號" class="text-danger"></span>
+            <!-- 繳款期限 -->
+            <div class="col-md-4">
+                <label asp-for="繳款期限天數" class="form-label">繳款期限天數</label>
+                <input asp-for="繳款期限天數" class="form-control form-control-sm" />
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <div>
-                <label class="control-label">租賃用途輸入方式</label>
+            <div class="col-md-4">
+                <label class="form-label">租約終止日期</label>
+                <input type="text" class="form-control form-control-sm" id="租約終止日期" readonly />
             </div>
-            <div class="mt-2">
-                <div class="btn-group" role="group" aria-label="租賃用途輸入方式">
-                    <input type="radio" class="btn-check" name="inputMode" id="mode-select" value="select" autocomplete="off" checked>
-                    <label class="btn btn-outline-primary" for="mode-select">清單選擇</label>
 
-                    <input type="radio" class="btn-check" name="inputMode" id="mode-input" value="input" autocomplete="off">
-                    <label class="btn btn-outline-primary" for="mode-input">手動輸入</label>
+
+            <div class="col-md-12">
+                <!-- 備註 -->
+                <div class="form-group">
+                    <label asp-for="備註" class="control-label"></label>
+                    <textarea asp-for="備註" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            @Html.HiddenFor(m => m.事業)
+            @Html.HiddenFor(m => m.單位)
+            @Html.HiddenFor(m => m.部門)
+            @Html.HiddenFor(m => m.分部)
+
+            <div class="col-md-12">
+                <!-- 送出 -->
+                <div class="form-group">
+                    <input type="submit" value="送出" class="btn btn-primary" />
                 </div>
             </div>
         </div>
-
-        <!-- 右：租賃用途實際欄位（select/input 二選一） -->
-        <div class="col-md-6">
-            <!-- Select 選擇 -->
-            <div class="form-group" id="租賃用途-select-div">
-                <label asp-for="租賃用途" class="control-label">租賃用途</label>
-                <select asp-for="租賃用途" class="form-control" asp-items="ViewBag.租賃用途選項">
-                    <option disabled selected value="">-- 請選擇 --</option>
-                </select>
-                <span asp-validation-for="租賃用途" class="text-danger"></span>
-            </div>
-
-            <!-- 手動輸入 -->
-            <div class="form-group" id="租賃用途-input-div" style="display:none;">
-                <label asp-for="租賃用途" class="control-label">租賃用途</label>
-                <input asp-for="租賃用途" class="form-control" type="text" placeholder="請輸入" />
-                <span asp-validation-for="租賃用途" class="text-danger"></span>
-            </div>
-        </div>
-
-        <!-- 起始日 + 月數 + 週期 -->
-        <div class="col-md-4">
-            <label asp-for="租約起始日期" class="form-label">起始日期</label>
-            <input asp-for="租約起始日期" type="date" class="form-control form-control-sm" id="租約起始日期" />
-        </div>
-        <div class="col-md-4">
-            <label asp-for="租期月數" class="form-label">租期月數</label>
-            <input asp-for="租期月數" type="number" min="0" class="form-control form-control-sm" id="租期月數" />
-        </div>
-        <div class="col-md-4">
-            <label asp-for="計租週期月數" class="form-label">計租週期</label>
-            <select asp-for="計租週期月數" class="form-control form-control-sm">
-                @for (int i = 1; i <= 12; i++)
-                {
-                    <option value="@i">@i</option>
-                }
-            </select>
-        </div>
-
-        <!-- 繳款期限 -->
-        <div class="col-md-4">
-            <label asp-for="繳款期限天數" class="form-label">繳款期限天數</label>
-            <input asp-for="繳款期限天數" class="form-control form-control-sm" />
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">租約終止日期</label>
-            <input type="text" class="form-control form-control-sm" id="租約終止日期" readonly />
-        </div>
-
-
-        <div class="col-md-12">
-            <!-- 備註 -->
-            <div class="form-group">
-                <label asp-for="備註" class="control-label"></label>
-                <textarea asp-for="備註" class="form-control" rows="3"></textarea>
-            </div>
-        </div>
-        @Html.HiddenFor(m => m.事業)
-        @Html.HiddenFor(m => m.單位)
-        @Html.HiddenFor(m => m.部門)
-        @Html.HiddenFor(m => m.分部)
-
-        <div class="col-md-12">
-            <!-- 送出 -->
-            <div class="form-group">
-                <input type="submit" value="送出" class="btn btn-primary" />
-            </div>
-        </div>
-    </div>
 </form>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -134,7 +144,7 @@
 
         //#region function:租賃用途選擇
         console.log("[頁面載入] 初始化租賃用途切換邏輯");
-         
+
 
         const $selectDiv = $('#租賃用途-select-div');
         const $inputDiv = $('#租賃用途-input-div');
@@ -195,8 +205,8 @@
         $modeRadios.change(function () {
             切換輸入方式();
         });
-         
-         
+
+
         //#endregion
         //#region function:計算終止日期(當起始日期或租期月數變動時)
         function 計算終止日期() {
@@ -217,12 +227,12 @@
             const d = date.getDate().toString().padStart(2, '0');
             $('#租約終止日期').val(`${y}/${m}/${d}`);
         }
-       
+
         $('#租約起始日期, #租期月數').on('change keyup', function () {
             計算終止日期();
         });
         計算終止日期();
-        
+
         //#endregion
     });
 </script>

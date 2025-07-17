@@ -89,11 +89,25 @@
                 <b-col>
                     @*<b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
-                    <b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">編輯</b-button>
-                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>
-                    @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
+                        <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                            <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                        </span>編輯
+                    </b-button>
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
+                        <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                            <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                        </span>刪除
+                    </b-button> @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
-                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal class="mr-1" variant="detail3">收租</b-button>
+                    @*<b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal class="mr-1" variant="detail3">收租</b-button>*@
+
+                @*<b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">*@
+                <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy || !slot.data.params.data.canCharge " class="mr-1" :variant="slot.data.params.data.canCharge ? 'success' : 'detail3'">
+                    <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                        <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                    </span>收租
+                </b-button>
                     <!--Master OP Page-->
                     <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
@@ -311,8 +325,8 @@
                     selectParam.部門 = this.部門 = data.部門;
                     selectParam.分部 = this.分部 = data.分部;
                     selectParam.案號 = this.案號 = data.案號;
-                    this.selectedMasterRow.param = selectParam;
-                    @*this.selectedMasterRow.params = selectParam;*@
+                    @*this.selectedMasterRow.param = selectParam;*@
+                    this.selectedMasterRow.params = selectParam;
 
                     //傳送給server時, 轉ISO時間
                     Object.entries(dateTimePropertyName[TableType.MasterTable]).forEach(([propName, dateType]) => {
@@ -321,8 +335,46 @@
                             selectParam[propName] = this[propName] = Date.parse_zhTW_string(dateLocalestring).toISOString();
                         }
                     });
+
+                    //#region 自定義:按鈕判斷
+                    Vue.set(params.data, 'isBusy', true);
+                    console.log("是否busy?", params.data.isBusy);
+                    this.$forceUpdate();
+                     
+                    axios.post('/TR5MidTerm04/CheckButtonPermissions', selectParam)
+                        .then(res => {
+                            @*debugger;*@
+                            @*console.log(rowData[0]['可收租']);*@
+                            // ✅ 將所有權限狀態灌入畫面綁定來源
+                            Object.entries(res.data).forEach(([key, val]) => {
+                                Vue.set(params.data, key, val);
+                            });
+                            Object.assign(this.selectedMasterRow.params, {
+                                canClickEditOrDelete: res.data.canClickEditOrDelete,
+                                @*canCharge: res.data.canCharge*@
+                                canCharge: rowData[0]['可收租']
+                            });
+                            @*debugger;*@
+                            Vue.set(params.data, 'isBusy', false);
+                            this.$forceUpdate();
+                            console.log("是否busy?", params.data.isBusy);
+                            console.log('CheckButtonPermissions 成功', res.data);
+                        })
+                        .catch(err => {
+                            console.error('CheckButtonPermissions發生錯誤：', err);
+                            Vue.set(params.data, 'isBusy', false);
+                            this.$forceUpdate();
+                        });
                 }
-            }
+                else {
+                    console.warn("[DEBUG] 主檔未選擇任何列！");
+                    this.isBusy = false; // 顯示 Loading 遮罩
+                    console.log("busy?", this.isBusy);
+                }
+
+                //#endregion
+                }
+
             //#endregion
             //#region 選擇明細
             const _onDetailRowSelect = function (rowData) {

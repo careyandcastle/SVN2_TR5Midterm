@@ -20,6 +20,8 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TR5MidTerm.PC;
 using System.Text;
+using TscLibCore.WebAPI;
+using TR5WebAPI_namespace;
 
 namespace TR5MidTerm.Controllers
 {
@@ -33,18 +35,36 @@ namespace TR5MidTerm.Controllers
 
         private static IConfigurationProvider _config;
         private static IMapper _mapper;
+        private readonly TscHttpClientService _tscHttpClentService;
 
-        public TR5MidTerm01Controller(TRDBContext context, IMapper mapper)
+        public TR5MidTerm01Controller(TscHttpClientService tscHttpClientService, TRDBContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
+            _tscHttpClentService = tscHttpClientService;
         }
 
         #region 首頁
         public async Task<IActionResult> Index()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            Debug.WriteLine($"[InitInventoryDefaultValues] ✅ 從 Session 取得使用者：UserNo={ua.UserNo}, BusinessNo={ua.BusinessNo}, DepartmentNo={ua.DepartmentNo}, DivisionNo={ua.DivisionNo}, BranchNo={ua.BranchNo}"); ;
+            //var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
+
+            ////var apiCall = new API建物主檔(tscHttpClient.BaseAddress.AbsoluteUri, tscHttpClient);
+            //var apiCall = new API建物主檔(tscHttpClient);
+
+
+            //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
+            //ViewBag.result = result;
+            //foreach (var item in result)
+            //{
+            //    Debug.WriteLine($"建物名稱: {item.建物名稱}");
+            //    //Debug.WriteLine($"地址: {item.地址.Trim()}");
+            //    Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
+            //    Debug.WriteLine($"修改人: {item.修改人}");
+            //    Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
+            //    Debug.WriteLine("--------");
+            //}
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<承租人檔DisplayViewModel>();
 

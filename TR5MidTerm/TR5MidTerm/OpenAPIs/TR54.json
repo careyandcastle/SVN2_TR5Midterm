@@ -1,0 +1,150 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "TR5 WebAPI",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "/TR5Web"
+    }
+  ],
+  "paths": {
+    "/TR5api/建物主檔Api/Get建物資料": {
+      "get": {
+        "tags": [
+          "建物主檔Api"
+        ],
+        "parameters": [
+          {
+            "name": "事業",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "單位",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "部門",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "分部",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "建物編號",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/建物主檔"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "建物主檔": {
+        "required": [
+          "建物名稱",
+          "修改人"
+        ],
+        "type": "object",
+        "properties": {
+          "事業": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "單位": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "部門": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "分部": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "建物編號": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "建物名稱": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string"
+          },
+          "地址": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "修改人": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string"
+          },
+          "修改時間": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "TscApiAuthScheme": {
+        "type": "apiKey",
+        "description": "Taisugar API Authorization",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "TscApiAuthScheme": [ ]
+    }
+  ]
+}

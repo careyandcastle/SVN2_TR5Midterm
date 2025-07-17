@@ -1332,5 +1332,60 @@ namespace TR5MidTerm.Controllers
             return string.IsNullOrEmpty(name) ? code : $"{code}_{name}";
         }
         #endregion
+        #region 檢驗
+        private void ValidateUserHasOrgPermission(string 主檔事業, string 主檔單位, string 主檔部門, string 主檔分部)
+        {
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+            if (主檔事業 != ua.BusinessNo)
+            {
+                ModelState.AddModelError("", $"無權操作該事業資料（登入事業為 {ua.BusinessName}）");
+            }
+            else if (主檔單位 != ua.DepartmentNo)
+            {
+                ModelState.AddModelError("", $"無權操作該單位資料（登入單位為 {ua.DepartmentName}）");
+            }
+            else if (主檔部門 != ua.DivisionNo)
+            {
+                ModelState.AddModelError("", $"無權操作該部門資料（登入部門為 {ua.DivisionName}）");
+            }
+            else if (主檔分部 != ua.BranchNo)
+            {
+                ModelState.AddModelError("", $"無權操作該分部資料（登入分部為 {ua.BranchNo}）");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CheckButtonPermissions([FromBody] 租約主檔DisplayViewModel key)
+        {
+            var today = DateTime.Today;
+            Debug.WriteLine("📌【CheckButtonPermissions】啟動");
+
+
+            var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+
+
+            if (key.事業 != ua.BusinessNo || key.單位 != ua.DepartmentNo || key.部門 != ua.DivisionNo || key.分部 != ua.BranchNo)
+            {
+                Debug.WriteLine("❌ 不是登入者可操作之組織");
+                return Ok(new
+                {
+                    //canCharge = false,
+                    canClickEditOrDelete = false,
+                    reasons = new
+                    {
+                        edit = "不是登入者可操作之組織",
+                        delete = "不是登入者可操作之組織",
+                    }
+                });
+            }
+             
+
+            return Ok(new
+            {
+                //canCharge = true,
+                canClickEditOrDelete = true
+            });
+        }
+        #endregion
     }
 }

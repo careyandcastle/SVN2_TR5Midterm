@@ -3,6 +3,15 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
+ 
+  
+ 
+  <ItemGroup>
+    <OpenApiReference Include="OpenAPIs\TR54.json" CodeGenerator="NSwagCSharp" Namespace="TR5WebAPI_namespace" ClassName="API建物主檔" OutputPath="$(ProjectDir)/WebApiClient/TR5WebApiReference.cs">
+		<SourceUri>https://ap2.taisugar.com.tw/TR5Web/TR5/WebApi/reference/TscLibCoreWebApi/TR5.json</SourceUri>
+		<Options>/JsonLibrary:SystemTextJson /DateTimeType: "System.DateTime"</Options>
+    </OpenApiReference>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
@@ -16,7 +25,16 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Client" Version="3.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NSwag.ApiDescription.Client" Version="13.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

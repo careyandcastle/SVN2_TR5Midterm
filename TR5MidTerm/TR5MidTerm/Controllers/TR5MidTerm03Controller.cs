@@ -19,6 +19,8 @@ using TscLibCore.Authority;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Diagnostics;
 using TR5MidTerm.PC;
+using TR5WebAPI_namespace;
+using TscLibCore.WebAPI;
 
 namespace TR5MidTerm.Controllers
 {
@@ -32,10 +34,12 @@ namespace TR5MidTerm.Controllers
 
         private static IConfigurationProvider _config;
         private static IMapper _mapper;
+        private readonly TscHttpClientService _tscHttpClentService;
 
-        public TR5MidTerm03Controller(TRDBContext context)
+        public TR5MidTerm03Controller(TRDBContext context, TscHttpClientService tscHttpClentService)
         {
             _context = context;
+            _tscHttpClentService = tscHttpClentService;
             _config ??= new MapperConfiguration(cfg =>
             {
                 cfg.CreateProjection<商品檔, 商品檔DisplayViewModel>();
@@ -56,6 +60,21 @@ namespace TR5MidTerm.Controllers
         #region 首頁
         public async Task<IActionResult> Index()
         {
+            //var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
+            //var apiCall = new API建物主檔(tscHttpClient);
+            //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
+            //ViewBag.result = result;
+            //foreach (var item in result)
+            //{
+            //    Debug.WriteLine($"建物名稱: {item.建物名稱}");
+            //    //Debug.WriteLine($"地址: {item.地址.Trim()}");
+            //    Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
+            //    Debug.WriteLine($"修改人: {item.修改人}");
+            //    Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
+            //    Debug.WriteLine("--------");
+            //}
+
+
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<商品檔DisplayViewModel>();
 
@@ -227,9 +246,10 @@ namespace TR5MidTerm.Controllers
         #endregion
         #region Create
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
+             
             var viewModel = new 商品檔CreateViewModel
             {
                 事業 = ua.BusinessNo,
@@ -245,6 +265,30 @@ namespace TR5MidTerm.Controllers
                     Text = $"{x.商品類別編號}_{x.商品類別}",
                     Value = x.商品類別編號
                 }).ToList();
+
+            var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
+            var apiCall = new API建物主檔(tscHttpClient);
+            //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
+            var 建物資料清單 = await apiCall.Get建物資料Async(ua.BusinessNo, ua.DepartmentNo, ua.DivisionNo, ua.BranchNo, "");
+
+            ViewBag.建物資料清單 = 建物資料清單
+            .Select(x => new SelectListItem
+            {
+                Text = $"{x.建物編號}_{x.建物名稱}",
+                Value = x.建物編號
+            }).ToList();
+            foreach (var item in 建物資料清單)
+            {
+                Debug.WriteLine($"建物名稱: {item.建物名稱}");
+                //Debug.WriteLine($"地址: {item.地址.Trim()}");
+                Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
+                Debug.WriteLine($"修改人: {item.修改人}");
+                Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
+                Debug.WriteLine("--------");
+            }
+
+
+
             //            ViewBag.建物資料清單 = _context.建物主檔
             ////.Where(x => x.組織符合條件)
             //.Where(x =>
@@ -257,14 +301,14 @@ namespace TR5MidTerm.Controllers
             //    Value = x.建物編號,
             //    Text = $"{x.建物編號} - {x.建物名稱}"
             //}).ToList();
-            ViewBag.建物資料清單 = new List<SelectListItem>
-{
-    new SelectListItem { Value = "B001", Text = "建物：B001 - 台北大樓" },
-    new SelectListItem { Value = "B002", Text = "建物：B002 - 新竹倉庫" },
-    new SelectListItem { Value = "B003", Text = "建物：B003 - 高雄宿舍" },
-    new SelectListItem { Value = "R101", Text = "租賃住宅：R101 - 台中公寓A" },
-    new SelectListItem { Value = "R102", Text = "租賃住宅：R102 - 台中公寓B" },
-};
+//            ViewBag.建物資料清單 = new List<SelectListItem>
+//{
+//    new SelectListItem { Value = "B001", Text = "建物：B001 - 台北大樓" },
+//    new SelectListItem { Value = "B002", Text = "建物：B002 - 新竹倉庫" },
+//    new SelectListItem { Value = "B003", Text = "建物：B003 - 高雄宿舍" },
+//    new SelectListItem { Value = "R101", Text = "租賃住宅：R101 - 台中公寓A" },
+//    new SelectListItem { Value = "R102", Text = "租賃住宅：R102 - 台中公寓B" },
+//};
 
             return PartialView(viewModel);
         }

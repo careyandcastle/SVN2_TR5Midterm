@@ -16,6 +16,7 @@
     var 單位顯示 = ViewBag.單位;
     var 部門顯示 = ViewBag.部門;
     var 分部顯示 = ViewBag.分部;
+    var apiData = ViewBag.result;
     //產生欄位名稱中文定義
     var tablesField = ViewBag.TableFieldDescDict;
     var masterTableDescHTML = Html.Raw(CreateTableFieldsDescription.TableFieldDescToHTML(tablesField, TableType.MasterTable));
@@ -128,6 +129,7 @@
 @section Scripts {
     <script>
         (function () {
+            @*console.log(@apiData);*@
             //#region 主檔
             //#region 主檔資料定義
             //主檔 Table 欄位名稱中文定義
