@@ -10,7 +10,7 @@
     }
   ],
   "paths": {
-    "/api/建物主檔Api/Get建物資料": {
+    "/TR5api/建物主檔Api/Get建物資料": {
       "get": {
         "tags": [
           "建物主檔Api"
@@ -61,6 +61,65 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/建物主檔"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/TR5api/建物主檔Api/Get租賃住宅資料": {
+      "get": {
+        "tags": [
+          "建物主檔Api"
+        ],
+        "parameters": [
+          {
+            "name": "事業",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "單位",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "部門",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "分部",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "產品編號",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/租賃住宅資料"
                   }
                 }
               }
@@ -128,6 +187,104 @@
           "修改時間": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "租賃住宅資料": {
+        "type": "object",
+        "properties": {
+          "事業": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "單位": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "部門": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "分部": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "宿舍名稱": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "出租大類編號": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "出租大類名稱": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "出租中類編號": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "出租中類名稱": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "數量": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "產品單位": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "產品編號": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "產品名稱": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "可承受數量": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "單價": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "坪數": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false

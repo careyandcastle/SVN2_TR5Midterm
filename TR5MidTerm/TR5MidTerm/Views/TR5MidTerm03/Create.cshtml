@@ -31,12 +31,36 @@
 
         <div class="form-group" id="建物資料選擇區" style="display:none;">
             <label class="control-label">請選擇建物或租賃住宅資料</label>
-            <select class="form-control" id="建物資料選單">
-                <option value="">請選擇</option>
-                @* 後端用 ViewBag.建物資料清單 傳遞資料 *@
-                @foreach (var item in ViewBag.建物資料清單 as List<SelectListItem>)
+
+            @* 建物選單 *@
+            <select class="form-control" id="建物清單選單" style="display:none;">
+                @if ((ViewBag.建物資料清單 as List<SelectListItem>)?.Any() == true)
                 {
-                    <option value="@item.Value">@item.Text</option>
+                    <option value="">請選擇建物</option>
+                    @foreach (var item in ViewBag.建物資料清單 as List<SelectListItem>)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                }
+                else
+                {
+                    <option disabled selected>⚠️ 您的組織沒有建物項目</option>
+                }
+            </select>
+
+            @* 住宅選單 *@
+            <select class="form-control" id="住宅清單選單" style="display:none;">
+                @if ((ViewBag.租賃住宅資料清單 as List<SelectListItem>)?.Any() == true)
+                {
+                    <option value="">請選擇住宅</option>
+                    @foreach (var item in ViewBag.租賃住宅資料清單 as List<SelectListItem>)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                }
+                else
+                {
+                    <option disabled selected>⚠️ 您的組織沒有住宅項目</option>
                 }
             </select>
         </div>
@@ -66,42 +90,57 @@
         </div>
     </form>
 </div>
-
-
 <script>
-        $(document).ready(function () {
-            console.log("[Modal Ready] 綁定下拉選單 change 事件");
-            const $類別選單 = $('[name="商品類別編號"]');
-            const $建物資料區 = $('#建物資料選擇區');
-            const $建物資料選單 = $('#建物資料選單');
-            const $物件欄位 = $('#物件編號欄位');
+    $(document).ready(function () {
+        const $類別選單 = $('[name="商品類別編號"]');
+        const $建物資料區 = $('#建物資料選擇區');
+        const $建物清單 = $('#建物清單選單');
+        const $住宅清單 = $('#住宅清單選單');
+        const $物件欄位 = $('#物件編號欄位');
 
-            function 控制欄位狀態() {
-                @*debugger;*@
-                const selectedCode = $類別選單.val();
-                const isSpecial = selectedCode === '01' || selectedCode === '34';
+        function 控制欄位狀態() {
+            const code = $類別選單.val();
 
-                if (isSpecial) {
-                    $建物資料區.show();
-                    $物件欄位.prop('readonly', true).val('');
-                } else {
-                    $建物資料區.hide();
-                    $物件欄位.prop('readonly', false).val('');
-                }
+            if (code === '01') {
+                // 顯示建物選單
+                $建物資料區.show();
+                $建物清單.show();
+                $住宅清單.hide();
+                $物件欄位.prop('readonly', true).val('');
             }
+            else if (code === '34') {
+                // 顯示住宅選單
+                $建物資料區.show();
+                $建物清單.hide();
+                $住宅清單.show();
+                $物件欄位.prop('readonly', true).val('');
+            }
+            else {
+                // 隱藏全部
+                $建物資料區.hide();
+                $建物清單.hide();
+                $住宅清單.hide();
+                $物件欄位.prop('readonly', false).val('');
+            }
+        }
 
-            $類別選單.change(function () {
-                控制欄位狀態();
-            });
-
-            $建物資料選單.change(function () {
-                const selected物件 = $(this).val();
-                $物件欄位.val(selected物件);
-            });
-
-            控制欄位狀態(); // 初始化時觸發
+        // 下拉變更時將值填回物件欄位
+        $建物清單.change(function () {
+            $物件欄位.val($(this).val());
         });
+
+        $住宅清單.change(function () {
+            $物件欄位.val($(this).val());
+        });
+
+        $類別選單.change(function () {
+            控制欄位狀態();
+        });
+
+        控制欄位狀態(); // 頁面初始化時執行一次
+    });
 </script>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

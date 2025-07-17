@@ -270,6 +270,7 @@ namespace TR5MidTerm.Controllers
             var apiCall = new API建物主檔(tscHttpClient);
             //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
             var 建物資料清單 = await apiCall.Get建物資料Async(ua.BusinessNo, ua.DepartmentNo, ua.DivisionNo, ua.BranchNo, "");
+            var 租賃住宅資料清單 = await apiCall.Get租賃住宅資料Async(ua.BusinessNo, ua.DepartmentNo, ua.DivisionNo, ua.BranchNo, "");
 
             ViewBag.建物資料清單 = 建物資料清單
             .Select(x => new SelectListItem
@@ -277,6 +278,14 @@ namespace TR5MidTerm.Controllers
                 Text = $"{x.建物編號}_{x.建物名稱}",
                 Value = x.建物編號
             }).ToList();
+
+            ViewBag.租賃住宅資料清單 = 租賃住宅資料清單
+            .Select(x => new SelectListItem
+            {
+                Text = $"{x.產品編號}_{x.產品名稱}",
+                Value = x.產品編號
+            }).ToList();
+
             foreach (var item in 建物資料清單)
             {
                 Debug.WriteLine($"建物名稱: {item.建物名稱}");

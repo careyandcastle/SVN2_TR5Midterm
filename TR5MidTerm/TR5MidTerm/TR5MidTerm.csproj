@@ -3,12 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
- 
-  
- 
+
   <ItemGroup>
-    <OpenApiReference Include="OpenAPIs\TR54.json" CodeGenerator="NSwagCSharp" Namespace="TR5WebAPI_namespace" ClassName="API建物主檔" OutputPath="$(ProjectDir)/WebApiClient/TR5WebApiReference.cs">
-		<SourceUri>https://ap2.taisugar.com.tw/TR5Web/TR5/WebApi/reference/TscLibCoreWebApi/TR5.json</SourceUri>
+    <OpenApiReference Include="OpenAPIs\TR5.json" CodeGenerator="NSwagCSharp" Namespace="TR5WebAPI_namespace" ClassName="API建物主檔" OutputPath="$(ProjectDir)/WebApiClient/TR5WebApiReference.cs">
+      <SourceUri>https://ap2.taisugar.com.tw/TR5Web/TR5/WebApi/reference/TscLibCoreWebApi/TR5.json</SourceUri>
 		<Options>/JsonLibrary:SystemTextJson /DateTimeType: "System.DateTime"</Options>
     </OpenApiReference>
   </ItemGroup>

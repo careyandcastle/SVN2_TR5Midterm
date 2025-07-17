@@ -10,6 +10,8 @@
 #pragma warning disable 1573 // Disable "CS1573 Parameter '...' has no matching param tag in the XML comment for ...
 #pragma warning disable 1591 // Disable "CS1591 Missing XML comment for publicly visible type or member ..."
 
+using System;
+
 namespace TR5WebAPI_namespace
 {
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.0.5.0 (NJsonSchema v10.0.22.0 (Newtonsoft.Json v11.0.0.0))")]
@@ -118,6 +120,94 @@ namespace TR5WebAPI_namespace
                         }
             
                         return default(System.Collections.Generic.ICollection<建物主檔>);
+                    }
+                    finally
+                    {
+                        if (response_ != null)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+            }
+        }
+    
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<租賃住宅資料>> Get租賃住宅資料Async(string 事業, string 單位, string 部門, string 分部, string 產品編號)
+        {
+            return Get租賃住宅資料Async(事業, 單位, 部門, 分部, 產品編號, System.Threading.CancellationToken.None);
+        }
+    
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<租賃住宅資料>> Get租賃住宅資料Async(string 事業, string 單位, string 部門, string 分部, string 產品編號, System.Threading.CancellationToken cancellationToken)
+        {
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/TR5api/建物主檔Api/Get租賃住宅資料?");
+            if (事業 != null) 
+            {
+                urlBuilder_.Append(System.Uri.EscapeDataString("事業") + "=").Append(System.Uri.EscapeDataString(ConvertToString(事業, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            }
+            if (單位 != null) 
+            {
+                urlBuilder_.Append(System.Uri.EscapeDataString("單位") + "=").Append(System.Uri.EscapeDataString(ConvertToString(單位, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            }
+            if (部門 != null) 
+            {
+                urlBuilder_.Append(System.Uri.EscapeDataString("部門") + "=").Append(System.Uri.EscapeDataString(ConvertToString(部門, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            }
+            if (分部 != null) 
+            {
+                urlBuilder_.Append(System.Uri.EscapeDataString("分部") + "=").Append(System.Uri.EscapeDataString(ConvertToString(分部, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            }
+            if (產品編號 != null) 
+            {
+                urlBuilder_.Append(System.Uri.EscapeDataString("產品編號") + "=").Append(System.Uri.EscapeDataString(ConvertToString(產品編號, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            }
+            urlBuilder_.Length--;
+    
+            var client_ = _httpClient;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+    
+                    PrepareRequest(client_, request_, urlBuilder_);
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+                    PrepareRequest(client_, request_, url_);
+    
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+    
+                        ProcessResponse(client_, response_);
+    
+                        var status_ = ((int)response_.StatusCode).ToString();
+                        if (status_ == "200") 
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<租賃住宅資料>>(response_, headers_).ConfigureAwait(false);
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ != "200" && status_ != "204")
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
+                            throw new ApiException("The HTTP status code of the response was not expected (" + (int)response_.StatusCode + ").", (int)response_.StatusCode, responseData_, headers_, null);
+                        }
+            
+                        return default(System.Collections.Generic.ICollection<租賃住宅資料>);
                     }
                     finally
                     {
@@ -262,7 +352,73 @@ namespace TR5WebAPI_namespace
         public string 修改人 { get; set; }
     
         [Newtonsoft.Json.JsonProperty("修改時間", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.DateTimeOffset 修改時間 { get; set; }
+        public DateTime 修改時間 { get; set; }
+    
+    
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.0.22.0 (Newtonsoft.Json v11.0.0.0)")]
+    public partial class 租賃住宅資料 
+    {
+        [Newtonsoft.Json.JsonProperty("事業", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(2)]
+        public string 事業 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("單位", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(2)]
+        public string 單位 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("部門", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(2)]
+        public string 部門 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("分部", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(2)]
+        public string 分部 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("宿舍名稱", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 宿舍名稱 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("出租大類編號", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 出租大類編號 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("出租大類名稱", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 出租大類名稱 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("出租中類編號", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 出租中類編號 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("出租中類名稱", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 出租中類名稱 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("數量", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double? 數量 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("產品單位", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 產品單位 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("產品編號", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 產品編號 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("產品名稱", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string 產品名稱 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("可承受數量", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int? 可承受數量 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("單價", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double? 單價 { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("坪數", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double? 坪數 { get; set; }
     
     
     }
