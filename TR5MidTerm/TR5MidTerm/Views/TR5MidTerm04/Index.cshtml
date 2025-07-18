@@ -104,7 +104,9 @@
                     @*<b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal class="mr-1" variant="detail3">收租</b-button>*@
 
                 @*<b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">*@
-                <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy || !slot.data.params.data.canCharge " class="mr-1" :variant="slot.data.params.data.canCharge ? 'success' : 'detail3'">
+                @*<b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy   " class="mr-1" :variant="slot.data.params.data.canCharge ? 'success' : 'detail3'">*@
+                @*<b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy || !slot.data.params.data.canCharge " class="mr-1" :variant="slot.data.params.data.canCharge ? 'success' : 'detail3'">*@
+                <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-charge-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy || !slot.data.selectedMasterRow?.params?.canCharge " class="mr-1" :variant="slot.data.selectedMasterRow?.params?.canCharge ? 'success' : 'detail3'">
                     <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
                         <b-spinner small type="border" class="custom-spinner"></b-spinner>
                     </span>收租
@@ -326,7 +328,7 @@
                     selectParam.部門 = this.部門 = data.部門;
                     selectParam.分部 = this.分部 = data.分部;
                     selectParam.案號 = this.案號 = data.案號;
-                    @*this.selectedMasterRow.param = selectParam;*@
+                    this.selectedMasterRow.param = selectParam;
                     this.selectedMasterRow.params = selectParam;
 
                     //傳送給server時, 轉ISO時間
@@ -345,7 +347,7 @@
                     axios.post('/TR5MidTerm04/CheckButtonPermissions', selectParam)
                         .then(res => {
                             @*debugger;*@
-                            @*console.log(rowData[0]['可收租']);*@
+                            console.log("可收租?" ,( rowData[0]['可收租'] ) );
                             // ✅ 將所有權限狀態灌入畫面綁定來源
                             Object.entries(res.data).forEach(([key, val]) => {
                                 Vue.set(params.data, key, val);
@@ -366,6 +368,10 @@
                             Vue.set(params.data, 'isBusy', false);
                             this.$forceUpdate();
                         });
+                    @*console.log(this.selectedMasterRow.params);*@
+                    console.log(this.selectedMasterRow);
+                    
+                    @*debugger;*@
                 }
                 else {
                     console.warn("[DEBUG] 主檔未選擇任何列！");
@@ -702,6 +708,7 @@
                 //#region 自訂義按鈕判斷
                 isBusy: false,
                 anClickEditOrDelete: false,
+                canCharge: false,
                 //#endregion
                 //#region 自定義時鐘與組織顯示
                 事業顯示: "@事業顯示",

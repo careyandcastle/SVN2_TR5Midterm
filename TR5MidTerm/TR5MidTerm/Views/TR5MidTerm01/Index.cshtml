@@ -26,53 +26,53 @@
     UserAccountForSession sess = HttpContextAccessor.HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
     @*ViewData["Title"] = (string)sess.GetUserAuthority()["procname"];*@
-ViewData["Title"] = "TR5MIDTERM_01 承租人檔維護"; ;
-var canCreate = Html.Raw(sess.AddYn).ToString().ToLower();
-var canUpdate = Html.Raw(sess.UpdateYn).ToString().ToLower();
-var canDelete = Html.Raw(sess.DeleteYn).ToString().ToLower();
-var canQuery = Html.Raw(sess.QueryYn).ToString().ToLower();
-var canExport = Html.Raw(sess.ExportYn).ToString().ToLower();
+    ViewData["Title"] = "TR5MIDTERM_01 承租人檔維護"; ;
+    var canCreate = Html.Raw(sess.AddYn).ToString().ToLower();
+    var canUpdate = Html.Raw(sess.UpdateYn).ToString().ToLower();
+    var canDelete = Html.Raw(sess.DeleteYn).ToString().ToLower();
+    var canQuery = Html.Raw(sess.QueryYn).ToString().ToLower();
+    var canExport = Html.Raw(sess.ExportYn).ToString().ToLower();
 
-var dateTimePropertyName = new
-{
-    MasterTable = new Dictionary<string, string>(),
-    DetailTable = new Dictionary<string, string>(),
-};
-var dateType = (datetime: "datetime", date: "date");
-foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.MasterTable.ToString()])
-{
-    var prop = typeof(承租人檔DisplayViewModel).GetProperty(propName.Key);
-    Type propertyType = prop.PropertyType;
-    Type typeWithNullable = Nullable.GetUnderlyingType(propertyType);
-    propertyType = typeWithNullable ?? propertyType;
-    if (propertyType == typeof(DateTime))
+    var dateTimePropertyName = new
     {
-        var att = (DataTypeAttribute)prop.GetCustomAttributes(typeof(DataTypeAttribute), false).FirstOrDefault();
-
-        var dateTimeFormat = dateType.datetime;
-
-        if (att != null && ((DataTypeAttribute)att).DataType == DataType.Date)
+        MasterTable = new Dictionary<string, string>(),
+        DetailTable = new Dictionary<string, string>(),
+    };
+    var dateType = (datetime: "datetime", date: "date");
+    foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.MasterTable.ToString()])
+    {
+        var prop = typeof(承租人檔DisplayViewModel).GetProperty(propName.Key);
+        Type propertyType = prop.PropertyType;
+        Type typeWithNullable = Nullable.GetUnderlyingType(propertyType);
+        propertyType = typeWithNullable ?? propertyType;
+        if (propertyType == typeof(DateTime))
         {
-            dateTimeFormat = dateType.date;
-        }
+            var att = (DataTypeAttribute)prop.GetCustomAttributes(typeof(DataTypeAttribute), false).FirstOrDefault();
 
-        dateTimePropertyName.MasterTable.Add(propName.Key, dateTimeFormat);
+            var dateTimeFormat = dateType.datetime;
+
+            if (att != null && ((DataTypeAttribute)att).DataType == DataType.Date)
+            {
+                dateTimeFormat = dateType.date;
+            }
+
+            dateTimePropertyName.MasterTable.Add(propName.Key, dateTimeFormat);
+        }
     }
-}
 }
 
 <h1 class="mt-1">@ViewData["Title"]</h1>
 <div id="tr5midtermcontroller-index">
     @*<b-row class="mb-2">
-        <b-col>
-            <org-clock-info :事業="params.data.事業顯示"
-  :單位="params.data.單位顯示"
-  :部門="params.data.部門顯示"
-  :分部="params.data.分部顯示">
+              <b-col>
+                  <org-clock-info :事業="params.data.事業顯示"
+        :單位="params.data.單位顯示"
+        :部門="params.data.部門顯示"
+        :分部="params.data.分部顯示">
 
-            </org-clock-info>
-        </b-col>
-    </b-row>*@
+                  </org-clock-info>
+              </b-col>
+          </b-row>*@
     <table-component id="tr5midtermcontroller-master-table"
                      @*sticky-header-height="642px"*@
                      ref="tr5midtermcontroller-master-table">
