@@ -23,7 +23,8 @@
     var requestToken = Html.Raw(Antiforgery.GetAndStoreTokens(Context).RequestToken);
     UserAccountForSession sess = HttpContextAccessor.HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
-    ViewData["Title"] = (string)sess.GetUserAuthority()["procname"];
+    @*ViewData["Title"] = (string)sess.GetUserAuthority()["procname"];*@
+    ViewData["Title"] = "TR5MIDTERM_04 租約檔維護";
     var canCreate = Html.Raw(sess.AddYn).ToString().ToLower();
     var canUpdate = Html.Raw(sess.UpdateYn).ToString().ToLower();
     var canDelete = Html.Raw(sess.DeleteYn).ToString().ToLower();

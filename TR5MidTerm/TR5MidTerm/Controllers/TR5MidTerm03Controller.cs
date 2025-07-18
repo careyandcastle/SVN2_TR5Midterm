@@ -286,38 +286,15 @@ namespace TR5MidTerm.Controllers
                 Value = x.產品編號
             }).ToList();
 
-            foreach (var item in 建物資料清單)
-            {
-                Debug.WriteLine($"建物名稱: {item.建物名稱}");
-                //Debug.WriteLine($"地址: {item.地址.Trim()}");
-                Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
-                Debug.WriteLine($"修改人: {item.修改人}");
-                Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
-                Debug.WriteLine("--------");
-            }
-
-
-
-            //            ViewBag.建物資料清單 = _context.建物主檔
-            ////.Where(x => x.組織符合條件)
-            //.Where(x =>
-            //        x.事業 == ua.BusinessNo &&
-            //        x.單位 == ua.DepartmentNo &&
-            //        x.部門 == ua.DivisionNo &&
-            //        x.分部 == ua.BranchName)
-            //.Select(x => new SelectListItem
+            //foreach (var item in 建物資料清單)
             //{
-            //    Value = x.建物編號,
-            //    Text = $"{x.建物編號} - {x.建物名稱}"
-            //}).ToList();
-//            ViewBag.建物資料清單 = new List<SelectListItem>
-//{
-//    new SelectListItem { Value = "B001", Text = "建物：B001 - 台北大樓" },
-//    new SelectListItem { Value = "B002", Text = "建物：B002 - 新竹倉庫" },
-//    new SelectListItem { Value = "B003", Text = "建物：B003 - 高雄宿舍" },
-//    new SelectListItem { Value = "R101", Text = "租賃住宅：R101 - 台中公寓A" },
-//    new SelectListItem { Value = "R102", Text = "租賃住宅：R102 - 台中公寓B" },
-//};
+            //    Debug.WriteLine($"建物名稱: {item.建物名稱}");
+            //    //Debug.WriteLine($"地址: {item.地址.Trim()}");
+            //    Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
+            //    Debug.WriteLine($"修改人: {item.修改人}");
+            //    Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
+            //    Debug.WriteLine("--------");
+            //}
 
             return PartialView(viewModel);
         }
