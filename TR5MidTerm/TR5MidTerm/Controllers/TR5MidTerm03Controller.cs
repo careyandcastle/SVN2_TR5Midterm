@@ -21,7 +21,7 @@ using System.Diagnostics;
 using TR5MidTerm.PC;
 using TR5WebAPI_namespace;
 using TscLibCore.WebAPI;
-
+using Newtonsoft.Json; // 確保有安裝 Newtonsoft.Json 套件
 namespace TR5MidTerm.Controllers
 {
     [ProcUseRang(ProcNo, ProcUseRang.Menu)]
@@ -344,35 +344,68 @@ namespace TR5MidTerm.Controllers
             // 共用的 HttpClient
             var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
 
-            object viewModel = null;
+            //object viewModel = null;
 
             if (商品.商品類別編號 == "01")
             {
+                ViewBag.isBuilding = true;
                 // 查建物
                 var apiCall = new API建物主檔(tscHttpClient);
                 var 建物清單 = await apiCall.Get建物資料Async(事業, 單位, 部門, 分部, 商品編號);
                 var 建物資料 = 建物清單.FirstOrDefault();
-                viewModel = _mapper.Map<TR5WebAPI_namespace.建物主檔, 建物主檔DisplayViewModel>(建物資料);
+                var viewModel = _mapper.Map<TR5WebAPI_namespace.建物主檔, 建物主檔DisplayViewModel>(建物資料);
+
+                if (建物資料 == null)
+                {
+                    ViewBag.noResult = true;
+                    return PartialView();
+                }
+
+                //Debug.WriteLine(JsonConvert.SerializeObject(viewModel, Formatting.Indented));
+                await SetOrgNamesAsync(viewModel, 事業, 單位, 部門, 分部);
+                return PartialView((object)viewModel); // ← 型別仍是 object，供 view 使用
+
+                //return PartialView(viewModel);
             }
             else if (商品.商品類別編號 == "34")
             {
+                ViewBag.isBuilding = false;
                 // 查租賃住宅
                 var apiCall = new API建物主檔(tscHttpClient);
                 var 住宅清單 = await apiCall.Get租賃住宅資料Async(事業, 單位, 部門, 分部, 商品編號);
                 var 住宅資料 = 住宅清單.FirstOrDefault();
-                viewModel = _mapper.Map<TR5WebAPI_namespace.租賃住宅資料, 租賃住宅資料DisplayViewModel>(住宅資料);
+
+                if (住宅資料 == null)
+                {
+                    ViewBag.noResult = true;
+                    return PartialView();
+                }
+
+                var viewModel = _mapper.Map<TR5WebAPI_namespace.租賃住宅資料, 租賃住宅資料DisplayViewModel>(住宅資料);
+                await SetOrgNamesAsync(viewModel, 事業, 單位, 部門, 分部);
+                return PartialView(viewModel);
             }
-
-
-            //else
-            //{
-            //    // 其他類別不處理
-            //    return NotFound("不支援的商品類別編號");
-            //}
+            ViewBag.noResult = false; 
             return NotFound("不支援的商品類別編號");
 
         }
 
+        private async Task SetOrgNamesAsync(IHasOrgNameDisplay vm, string 事業, string 單位, string 部門, string 分部)
+        {
+            var 事業名稱 = await _context.事業.Where(x => x.事業1 == 事業).Select(x => x.事業名稱).FirstOrDefaultAsync();
+            var 單位名稱 = await _context.單位.Where(x => x.單位1 == 單位).Select(x => x.單位名稱).FirstOrDefaultAsync();
+            var 部門名稱 = await _context.部門.Where(x => x.單位 == 單位 && x.部門1 == 部門).Select(x => x.部門名稱).FirstOrDefaultAsync();
+            var 分部名稱 = await _context.分部.Where(x => x.單位 == 單位 && x.部門 == 部門 && x.分部1 == 分部).Select(x => x.分部名稱).FirstOrDefaultAsync();
+
+            vm.事業顯示 = CombineCodeAndName(事業, 事業名稱);
+            vm.單位顯示 = CombineCodeAndName(單位, 單位名稱);
+            vm.部門顯示 = CombineCodeAndName(部門, 部門名稱);
+            vm.分部顯示 = CombineCodeAndName(分部, 分部名稱);
+        }
+        public static string CombineCodeAndName(string code, string name)
+        {
+            return string.IsNullOrEmpty(name) ? code : $"{code}_{name}";
+        }
         [ProcUseRang(ProcNo, ProcUseRang.Add)]
         public IActionResult CreateMulti()
         {

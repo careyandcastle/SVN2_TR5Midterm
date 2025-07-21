@@ -1,0 +1,109 @@
+﻿@using TR5MidTerm.Models
+@using TR5MidTerm.Models.TR5MidTermViewModels
+
+@model object
+
+@{
+    var isBuilding = ViewBag.isBuilding == true;
+    var noResult = ViewBag.noResult == true;
+}
+
+
+
+<div class="text-danger">
+    @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "text-danger" })
+</div>
+@if (noResult)
+{
+    ViewData["Title"] = "沒有查詢到詳細資料";
+    <h1 class="mt-2 text-danger">@ViewData["Title"]</h1>
+}
+else if (isBuilding)
+{
+    ViewData["Title"] = "建物資料";
+    <h1 class="mt-2 text-danger">@ViewData["Title"]</h1>
+    var modelData = (建物主檔DisplayViewModel)Model;
+    <dl class="row">
+        <dt class="col-sm-2">事業</dt>
+        <dd class="col-sm-10">@modelData.事業顯示</dd>
+        <input type="hidden" name="事業" value="@modelData.事業" />
+
+        <dt class="col-sm-2">單位</dt>
+        <dd class="col-sm-10">@modelData.單位顯示</dd>
+        <input type="hidden" name="單位" value="@modelData.單位" />
+
+        <dt class="col-sm-2">部門</dt>
+        <dd class="col-sm-10">@modelData.部門顯示</dd>
+        <input type="hidden" name="部門" value="@modelData.部門" />
+
+        <dt class="col-sm-2">分部</dt>
+        <dd class="col-sm-10">@modelData.分部顯示</dd>
+        <input type="hidden" name="分部" value="@modelData.分部" />
+
+
+        <dt class="col-sm-2">建物編號</dt>
+        <dd class="col-sm-10">@modelData.建物編號</dd>
+
+        <dt class="col-sm-2">建物名稱</dt>
+        <dd class="col-sm-10">@modelData.建物名稱</dd>
+
+        <dt class="col-sm-2">地址</dt>
+        <dd class="col-sm-10">@modelData.地址</dd>
+
+        <dt class="col-sm-2">修改人</dt>
+        <dd class="col-sm-10">@modelData.修改人</dd>
+
+        <dt class="col-sm-2">修改時間</dt>
+        <dd class="col-sm-10">@modelData.修改時間.ToString("yyyy/MM/dd HH:mm")</dd>
+    </dl>
+
+    <form asp-action="DeleteConfirmed">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="建物編號" value="@modelData.建物編號" />
+        <input type="submit" value="確認刪除" class="btn btn-danger" /> |
+        <a href="javascript:history.back()" class="btn btn-secondary">取消</a>
+    </form>
+}
+else
+{
+    ViewData["Title"] = "租賃住宅資料";
+    <h1 class="mt-2 text-danger">@ViewData["Title"]</h1>
+    var modelData = (租賃住宅資料DisplayViewModel)Model;
+    <dl class="row">
+        <dt class="col-sm-2">事業</dt>
+        <dd class="col-sm-10">@modelData.事業顯示</dd>
+        <input type="hidden" name="事業" value="@modelData.事業" />
+
+        <dt class="col-sm-2">單位</dt>
+        <dd class="col-sm-10">@modelData.單位顯示</dd>
+        <input type="hidden" name="單位" value="@modelData.單位" />
+
+        <dt class="col-sm-2">部門</dt>
+        <dd class="col-sm-10">@modelData.部門顯示</dd>
+        <input type="hidden" name="部門" value="@modelData.部門" />
+
+        <dt class="col-sm-2">分部</dt>
+        <dd class="col-sm-10">@modelData.分部顯示</dd>
+        <input type="hidden" name="分部" value="@modelData.分部" />
+
+
+        <dt class="col-sm-2">宿舍名稱</dt>
+        <dd class="col-sm-10">@modelData.宿舍名稱</dd>
+
+        <dt class="col-sm-2">出租中類名稱</dt>
+        <dd class="col-sm-10">@modelData.出租中類名稱</dd>
+
+        <dt class="col-sm-2">產品編號</dt>
+        <dd class="col-sm-10">@modelData.產品編號</dd>
+
+        <dt class="col-sm-2">產品名稱</dt>
+        <dd class="col-sm-10">@modelData.產品名稱</dd>
+
+        <dt class="col-sm-2">數量</dt>
+        <dd class="col-sm-10">@modelData.數量</dd>
+
+        <dt class="col-sm-2">單價</dt>
+        <dd class="col-sm-10">@modelData.單價</dd>
+    </dl>
+
+}

@@ -10,18 +10,30 @@ using TscLibCore.Attribute;
 
 namespace TR5MidTerm.Models.TR5MidTermViewModels
 {
-    public partial class 租賃住宅資料DisplayViewModel
+    public partial class 租賃住宅資料DisplayViewModel : IHasOrgNameDisplay
     {
+        [DisplayName("事業")]
+        public string 事業顯示 { get; set; }
+        [DisplayName("單位")]
+        public string 單位顯示 { get; set; }
+        [DisplayName("部門")]
+        public string 部門顯示 { get; set; }
+        [DisplayName("分部")]
+        public string 分部顯示 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 事業 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 單位 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 部門 { get; set; }
         [Key]
+        [HiddenForView]
         //[StringLength(2)]
         public string 分部 { get; set; }
         //[StringLength(50)]
