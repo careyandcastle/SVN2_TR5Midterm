@@ -66,7 +66,7 @@
                     @*<b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-multi-modal class="mr-1" variant="detail3">多筆建立</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canCreate" v-b-modal.master-table-create-modal class="mr-1" variant="detail3">建立</b-button>
                     @*<b-button v-if="slot.data.operatePermissions.canUpdate" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.param" class="mr-1" variant="detail3">編輯</b-button>
-                        <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>*@
+        <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-del-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow" class="mr-1" variant="detail3">刪除</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-edit-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canClickEditOrDelete || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
                         <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
                             <b-spinner small type="border" class="custom-spinner"></b-spinner>
@@ -77,11 +77,17 @@
                             <b-spinner small type="border" class="custom-spinner"></b-spinner>
                         </span>刪除
                     </b-button>
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-detailed-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy || !slot.data.selectedMasterRow?.params?.canSearchDetail " class="mr-1" variant="detail3">
+                        <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
+                            <b-spinner small type="border" class="custom-spinner"></b-spinner>
+                        </span>詳細
+                    </b-button>
                     @*<b-button v-if="slot.data.operatePermissions.canExport" class="mr-1" variant="detail3" v-on:click="slot.data.onDataExport" isWaitting="!isWaitting">匯出</b-button>*@
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
                     <!--Master OP Page-->
                     <fetched-page-modal url="CreateMulti" id="master-table-create-multi-modal" title="批次新增單檔資料" :classes="['max-width-90-pt']"></fetched-page-modal>
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
+                    <fetched-page-modal url="SearchDetailed" id="master-table-detailed-modal" title="詳細"></fetched-page-modal>
                     <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.params" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
                     <fetched-page-modal url="Delete" :param="slot.data.selectedMasterRow?.params" id="master-table-del-modal" title="刪除操作"></fetched-page-modal>
                     <query-page-modal id="master-table-query-modal" title="進階查詢" :queryfields="slot.data.mTableFields" :is_filtered="slot.data.isFiltered"></query-page-modal>
@@ -221,7 +227,8 @@
                             Vue.set(params.data, key, val);
                         });
                         Object.assign(this.selectedMasterRow.params, {
-                            canClickEditOrDelete: res.data.canClickEditOrDelete
+                            canClickEditOrDelete: res.data.canClickEditOrDelete,
+                            canSearchDetail: rowData[0]['可否詳細']
                         });
                         Vue.set(params.data, 'isBusy', false);
                         this.$forceUpdate();

@@ -52,6 +52,9 @@ namespace TR5MidTerm.Controllers
                 cfg.CreateMap<商品檔EditViewModel, 商品檔>();
                 cfg.CreateMap<商品檔, 商品檔EditViewModel>();
 
+                cfg.CreateMap<TR5WebAPI_namespace.建物主檔, 建物主檔DisplayViewModel>();
+                cfg.CreateMap<TR5WebAPI_namespace.租賃住宅資料, 租賃住宅資料DisplayViewModel>();
+                 
             });
 
             _mapper ??= _config.CreateMapper();
@@ -59,22 +62,7 @@ namespace TR5MidTerm.Controllers
         #endregion
         #region 首頁
         public async Task<IActionResult> Index()
-        {
-            //var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
-            //var apiCall = new API建物主檔(tscHttpClient);
-            //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
-            //ViewBag.result = result;
-            //foreach (var item in result)
-            //{
-            //    Debug.WriteLine($"建物名稱: {item.建物名稱}");
-            //    //Debug.WriteLine($"地址: {item.地址.Trim()}");
-            //    Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
-            //    Debug.WriteLine($"修改人: {item.修改人}");
-            //    Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
-            //    Debug.WriteLine("--------");
-            //}
-
-
+        { 
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<商品檔DisplayViewModel>();
 
@@ -175,12 +163,13 @@ namespace TR5MidTerm.Controllers
                         商品類別顯示 = CustomSqlFunctions.ConcatCodeAndName(m.商品類別編號, m.商品類別編號Navigation.商品類別),
                         物件編號 = m.物件編號,
                         單價 = m.單價,
+                        可否詳細 = (m.商品類別編號 == "01" || m.商品類別編號 == "34"),
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
                         修改時間 = m.修改時間
                         #endregion
-                    }); 
+                    });; 
         }
         #endregion
         #region 提供index使用
@@ -249,7 +238,8 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> Create()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-             
+            #region 選單viewbag
+
             var viewModel = new 商品檔CreateViewModel
             {
                 事業 = ua.BusinessNo,
@@ -265,7 +255,8 @@ namespace TR5MidTerm.Controllers
                     Text = $"{x.商品類別編號}_{x.商品類別}",
                     Value = x.商品類別編號
                 }).ToList();
-
+            #endregion
+            #region apiCall選單
             var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
             var apiCall = new API建物主檔(tscHttpClient);
             //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
@@ -285,8 +276,8 @@ namespace TR5MidTerm.Controllers
                 Text = $"{x.產品編號}_{x.產品名稱}",
                 Value = x.產品編號
             }).ToList();
-             
 
+            #endregion
             return PartialView(viewModel);
         }
 
@@ -335,6 +326,51 @@ namespace TR5MidTerm.Controllers
             }
 
             return CreatedAtAction(nameof(Create), new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+        }
+
+        public async Task<IActionResult> SearchDetailed(string 事業, string 單位, string 部門, string 分部, string 商品編號)
+        {
+
+            #region 判斷類別
+            // 取得商品類別編號
+            var 商品 = await _context.商品檔
+                .Where(x => x.事業 == 事業 && x.單位 == 單位 && x.部門 == 部門 && x.分部 == 分部 && x.商品編號 == 商品編號)
+                .Select(x => new { x.商品類別編號 })
+                .FirstOrDefaultAsync();
+
+            if (商品 == null)
+                return NotFound("找不到商品資料");
+            #endregion
+            // 共用的 HttpClient
+            var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
+
+            object viewModel = null;
+
+            if (商品.商品類別編號 == "01")
+            {
+                // 查建物
+                var apiCall = new API建物主檔(tscHttpClient);
+                var 建物清單 = await apiCall.Get建物資料Async(事業, 單位, 部門, 分部, 商品編號);
+                var 建物資料 = 建物清單.FirstOrDefault();
+                viewModel = _mapper.Map<TR5WebAPI_namespace.建物主檔, 建物主檔DisplayViewModel>(建物資料);
+            }
+            else if (商品.商品類別編號 == "34")
+            {
+                // 查租賃住宅
+                var apiCall = new API建物主檔(tscHttpClient);
+                var 住宅清單 = await apiCall.Get租賃住宅資料Async(事業, 單位, 部門, 分部, 商品編號);
+                var 住宅資料 = 住宅清單.FirstOrDefault();
+                viewModel = _mapper.Map<TR5WebAPI_namespace.租賃住宅資料, 租賃住宅資料DisplayViewModel>(住宅資料);
+            }
+
+
+            //else
+            //{
+            //    // 其他類別不處理
+            //    return NotFound("不支援的商品類別編號");
+            //}
+            return NotFound("不支援的商品類別編號");
+
         }
 
         [ProcUseRang(ProcNo, ProcUseRang.Add)]

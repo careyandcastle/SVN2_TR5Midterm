@@ -28,8 +28,7 @@ namespace TR5MidTerm.Models
         public string 修改人 { get; set; }
         [Column(TypeName = "datetime")]
         public DateTime 修改日期時間 { get; set; }
-
         [InverseProperty("單位Navigation")]
-        public virtual ICollection<部門> 部門 { get; set; }
+        public virtual ICollection<部門> 部門 { get; set; } 
     }
 }

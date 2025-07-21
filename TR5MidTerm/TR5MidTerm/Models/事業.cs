@@ -10,6 +10,11 @@ namespace TR5MidTerm.Models
 {
     public partial class 事業
     {
+        //public 事業()
+        //{
+        //    數量折扣主檔 = new HashSet<數量折扣主檔>();
+        //}
+
         [Key]
         [Column("事業")]
         [StringLength(2)]
@@ -23,5 +28,8 @@ namespace TR5MidTerm.Models
         public string 修改人 { get; set; }
         [Column(TypeName = "datetime")]
         public DateTime 修改日期時間 { get; set; }
+
+        //[InverseProperty("事業Navigation")]
+        //public virtual ICollection<數量折扣主檔> 數量折扣主檔 { get; set; }
     }
 }

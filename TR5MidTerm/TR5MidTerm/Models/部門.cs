@@ -14,7 +14,6 @@ namespace TR5MidTerm.Models
         {
             分部 = new HashSet<分部>();
         }
-
         [Key]
         [StringLength(2)]
         public string 單位 { get; set; }
