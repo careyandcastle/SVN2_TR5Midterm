@@ -48,23 +48,6 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> Index()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
-            //var tscHttpClient = _tscHttpClentService.CreateHttpClient("WebApiTester");
-
-            ////var apiCall = new API建物主檔(tscHttpClient.BaseAddress.AbsoluteUri, tscHttpClient);
-            //var apiCall = new API建物主檔(tscHttpClient);
-
-
-            //var result = await apiCall.Get建物資料Async("A1", "01", "58", "04", "");
-            //ViewBag.result = result;
-            //foreach (var item in result)
-            //{
-            //    Debug.WriteLine($"建物名稱: {item.建物名稱}");
-            //    //Debug.WriteLine($"地址: {item.地址.Trim()}");
-            //    Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
-            //    Debug.WriteLine($"修改人: {item.修改人}");
-            //    Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
-            //    Debug.WriteLine("--------");
-            //}
             ViewBag.TableFieldDescDict = new CreateTableFieldsDescription()
                    .Create<承租人檔DisplayViewModel>();
 
@@ -250,32 +233,33 @@ namespace TR5MidTerm.Controllers
                 .First();
             #endregion
             #region 寫入
-            try
-            {
-                model.承租人編號 = await GetNext承租人編號Async(
+            model.承租人編號 = await GetNext承租人編號Async(
     model.事業, model.單位, model.部門, model.分部);
 
-                var entity = new 承租人檔
-                {
-                    事業 = model.事業,
-                    單位 = model.單位,
-                    部門 = model.部門,
-                    分部 = model.分部,
-                    承租人編號 = model.承租人編號,
-                    身分別編號 = model.身分別編號,
-                    承租人 = 承租人資料.承租人,
-                    統一編號 = 承租人資料.統一編號,
-                    行動電話 = 承租人資料.行動電話,
-                    電子郵件 = 承租人資料.電子郵件,
-                    刪除註記 = false,
-                    修改人 = ua.UserNo + '_' + ua.UserName,
-                    修改時間 = DateTime.Now,
+            var entity = new 承租人檔
+            {
+                事業 = model.事業,
+                單位 = model.單位,
+                部門 = model.部門,
+                分部 = model.分部,
+                承租人編號 = model.承租人編號,
+                身分別編號 = model.身分別編號,
+                承租人 = 承租人資料.承租人,
+                統一編號 = 承租人資料.統一編號,
+                行動電話 = 承租人資料.行動電話,
+                電子郵件 = 承租人資料.電子郵件,
+                刪除註記 = false,
+                修改人 = ua.UserNo + '_' + ua.UserName,
+                修改時間 = DateTime.Now,
 
-                    
-                };
-                Debug.WriteLine("entity:", entity);
 
-                _context.承租人檔.Add(entity);
+            };
+            Debug.WriteLine("entity:", entity);
+
+            _context.承租人檔.Add(entity);
+            try
+            {
+                
                 int result = await _context.SaveChangesAsync();
 
                 if (result > 0)
@@ -555,7 +539,7 @@ namespace TR5MidTerm.Controllers
         {
             // 🔐 權限檢查
             ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
-
+            await ValidateForDelete(postData);
             if (ModelState.IsValid == false)
                 return ModelStateInvalidResult("Delete", false);
             var result = await _context.承租人檔
@@ -709,6 +693,41 @@ namespace TR5MidTerm.Controllers
                 canClickEditOrDelete = true
             });
         }
+        #endregion
+        #region 驗證
+        private async Task ValidateForCreate(承租人檔CreateViewModel model)
+        {
+            // 1. 檢查是否已有相同案號的收租檔
+            var exists = await _context.承租人檔.AnyAsync(x =>
+                x.事業 == model.事業 &&
+                x.單位 == model.單位 &&
+                x.部門 == model.部門 &&
+                x.分部 == model.分部 &&
+                x.承租人編號 == model.承租人編號
+            );
+
+            if (exists)
+            {
+                ModelState.AddModelError(nameof(model.承租人編號), "已有該承租人");
+            }
+        }
+        private async Task ValidateForDelete(承租人檔DisplayViewModel model)
+        {
+            // 1. 檢查是否已有相同案號的收租檔
+            var exists = await _context.承租人檔.AnyAsync(x =>
+                x.事業 == model.事業 &&
+                x.單位 == model.單位 &&
+                x.部門 == model.部門 &&
+                x.分部 == model.分部 &&
+                x.承租人編號 == model.承租人編號
+            );
+
+            if (exists)
+            {
+                ModelState.AddModelError(nameof(model.承租人編號), "該承租人具有承租紀錄，故不可刪除該承租人");
+            }
+        }
+
         #endregion
     }
 }

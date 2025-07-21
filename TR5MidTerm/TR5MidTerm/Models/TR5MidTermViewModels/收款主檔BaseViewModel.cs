@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using TR5MidTerm.Attributes;
 using TscLibCore.Attribute;
 
 #nullable disable
@@ -28,6 +29,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
 
         [Key]
         //[StringLength(5)]
+        [CTStringLength(5)]
+        [CTRequired]
         public string 案號 { get; set; }
         
         

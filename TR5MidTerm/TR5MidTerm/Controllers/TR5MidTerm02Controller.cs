@@ -235,10 +235,20 @@ namespace TR5MidTerm.Controllers
             {
                 var opCount = await _context.SaveChangesAsync();
                 if (opCount > 0)
+                {
+                    var newData = await GetBaseQuery()
+                            .Where(x =>
+                                x.事業 == postData.事業 &&
+                                x.單位 == postData.單位 &&
+                                x.部門 == postData.部門 &&
+                                x.分部 == postData.分部 &&
+                                x.總表號 == postData.總表號
+                            ).SingleOrDefaultAsync();
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                     {
-                        data = filledData
+                        data = newData
                     });
+                }
             }
             catch (Exception ex)
             {

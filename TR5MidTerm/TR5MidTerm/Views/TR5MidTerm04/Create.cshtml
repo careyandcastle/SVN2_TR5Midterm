@@ -16,7 +16,7 @@
                 <!-- 案名 -->
                 <div class="form-group">
                     <label asp-for="案名" class="control-label"></label>
-                    <input asp-for="案名" class="form-control" placeholder="請輸入" />
+                    <input asp-for="案名" class="form-control" placeholder="例如: 北平展售中心" />
                     <span asp-validation-for="案名" class="text-danger"></span>
                 </div>
             </div>
@@ -25,7 +25,7 @@
                 <!-- 案名 -->
                 <div class="form-group">
                     <label asp-for="案號" class="control-label"></label>
-                    <input asp-for="案號" class="form-control" placeholder="請輸入" />
+                    <input asp-for="案號" class="form-control" placeholder="例如: 00008" />
                     <span asp-validation-for="案號" class="text-danger"></span>
                 </div>
             </div>
@@ -108,7 +108,7 @@
             <!-- 繳款期限 -->
             <div class="col-md-4">
                 <label asp-for="繳款期限天數" class="form-label">繳款期限天數</label>
-                <input asp-for="繳款期限天數" class="form-control form-control-sm" placeholder="例如：30，代表收租日後 30 天內需付款" />/>
+                <input asp-for="繳款期限天數" class="form-control form-control-sm" min="0" placeholder="例如：30，代表收租日後 30 天內需付款" />
             </div>
 
             <div class="col-md-4">

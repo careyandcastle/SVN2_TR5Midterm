@@ -37,12 +37,14 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [Key]
         [HiddenForView]
         //[Required]
+        [CTStringLength(5)]
         //[StringLength(5)]
         public string 承租人編號 { get; set; }
         //[Required]
         [HiddenForView]
         public byte[] 承租人 { get; set; }
-        //[Required]
+        [CTRequired]
+        [CTStringLength(2)]
         //[StringLength(2)]
         [HiddenForView]
         public string 身分別編號 { get; set; }

@@ -1,66 +1,64 @@
 ﻿@model TR5MidTerm.Models.TR5MidTermViewModels.水電總表檔CreateViewModel
-<div id="app">
-    <div v-if="true" class="alert alert-success">
-        A {{ customVariable.message }}
-    </div>
-</div>
-<div>
-    <form asp-action="Create" method="post">
-        @Html.AntiForgeryToken()
-        @* 全域錯誤訊息區塊 *@
-        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
-            <ul></ul>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <!-- 錯誤訊息 -->
+        <div class="col-md-12">
+            <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+                <ul></ul>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="總表號"></label>
-            <input asp-for="總表號" class="form-control" />
-            <span asp-validation-for="總表號" class="text-danger"></span>
+        <!-- 總表號 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="總表號" class="control-label"></label>
+                <input asp-for="總表號" class="form-control" placeholder="例如 12345678" />
+                <span asp-validation-for="總表號" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="案號"></label>
-            <input asp-for="案號" class="form-control" />
-            <span asp-validation-for="案號" class="text-danger"></span>
+        <!-- 案號 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="案號" class="control-label"></label>
+                <input asp-for="案號" class="form-control" placeholder="例如 00002 或 2" />
+                <span asp-validation-for="案號" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="計量表種類編號"></label>
-            <select asp-for="計量表種類編號" asp-items="ViewBag.計量表種類選項" class="form-control">
-                <option value="" disabled selected>請選擇</option>
-            </select>
-            <span asp-validation-for="計量表種類編號" class="text-danger"></span>
+        <!-- 計量表種類編號 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="計量表種類編號" class="control-label"></label>
+                <select asp-for="計量表種類編號" asp-items="ViewBag.計量表種類選項" class="form-control">
+                    <option value="" disabled selected>-- 請選擇 --</option>
+                </select>
+                <span asp-validation-for="計量表種類編號" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="計量對象"></label>
-            <input asp-for="計量對象" class="form-control" />
-            <span asp-validation-for="計量對象" class="text-danger"></span>
+        <!-- 計量對象 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="計量對象" class="control-label"></label>
+                <input asp-for="計量對象" class="form-control" placeholder="例如: 1F辦公室樓梯間" />
+                <span asp-validation-for="計量對象" class="text-danger"></span>
+            </div>
         </div>
-        @* 隱藏欄位（必要主鍵） *@
+
+        <!-- 隱藏主鍵 -->
         @Html.HiddenFor(m => m.事業)
         @Html.HiddenFor(m => m.單位)
         @Html.HiddenFor(m => m.部門)
         @Html.HiddenFor(m => m.分部)
 
-        <div class="form-group text-right mt-3">
+        <!-- 操作按鈕 -->
+        <div class="col-md-12 text-end mt-3">
             <button type="submit" class="btn btn-primary">儲存</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
         </div>
-    </form>
-
-    <script>
-        debugger;
-        this.Afunction = function () { }
-        this.$off('fetched-page-modal::ready')
-            .$on('fetched-page-modal::ready', () => {
-
-                alert("alert");
-
-            });
-        this.$set(this.customVariable, 'message', "hello");
-         
-    </script>
-</div>
-
- 
+    </div>
+</form>

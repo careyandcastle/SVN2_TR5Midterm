@@ -1,39 +1,72 @@
-﻿@model TR5MidTerm.Models.TR5MidTermViewModels.商品檔CreateViewModel
+﻿ 
+@model TR5MidTerm.Models.TR5MidTermViewModels.商品檔CreateViewModel
 
-<div>
-    <form asp-action="Create" method="post">
-        @Html.AntiForgeryToken()
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
 
-        @* 全域錯誤訊息區塊 *@
-        <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
-            <ul></ul>
+    <div class="row">
+        <!-- 錯誤訊息 -->
+        <div class="col-md-12">
+            <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+                <ul></ul>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="商品編號"></label>
-            <input asp-for="商品編號" class="form-control" />
-            <span asp-validation-for="商品名稱" class="text-danger"></span>
+        <!-- 商品編號 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="商品編號" class="control-label"></label>
+                <input asp-for="商品編號" class="form-control" placeholder="請輸入商品編號" />
+                <span asp-validation-for="商品編號" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="商品名稱"></label>
-            <input asp-for="商品名稱" class="form-control" />
-            <span asp-validation-for="商品名稱" class="text-danger"></span>
+        <!-- 商品名稱 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="商品名稱" class="control-label"></label>
+                <input asp-for="商品名稱" class="form-control" placeholder="請輸入商品名稱" />
+                <span asp-validation-for="商品名稱" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label asp-for="商品類別編號"></label>
-            <select asp-for="商品類別編號" asp-items="ViewBag.商品類別選項" class="form-control">
-                <option value="" disabled selected>請選擇</option>
-            </select>
-            <span asp-validation-for="商品類別編號" class="text-danger"></span>
+        <!-- 商品類別 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="商品類別編號" class="control-label"></label>
+                <select asp-for="商品類別編號" asp-items="ViewBag.商品類別選項" class="form-control">
+                    <option value="" disabled selected>-- 請選擇商品類別 --</option>
+                </select>
+                <span asp-validation-for="商品類別編號" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="form-group" id="建物資料選擇區" style="display:none;">
+
+
+        <!-- 單價 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="單價" class="control-label"></label>
+                <input asp-for="單價" class="form-control" placeholder="請輸入單價" />
+                <span asp-validation-for="單價" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- 物件編號 -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="物件編號" class="control-label"></label>
+                <input asp-for="物件編號" class="form-control" id="物件編號欄位" placeholder="請輸入物件編號" />
+                <span asp-validation-for="物件編號" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- 建物/住宅選擇區 -->
+        <div class="col-md-6" id="建物資料選擇區" style="display:none;">
             <label class="control-label">請選擇建物或租賃住宅資料</label>
 
-            @* 建物選單 *@
-            <select class="form-control" id="建物清單選單" style="display:none;">
+            <!-- 建物清單 -->
+            <select class="form-control mt-1" id="建物清單選單" style="display:none;">
                 @if ((ViewBag.建物資料清單 as List<SelectListItem>)?.Any() == true)
                 {
                     <option value="">請選擇建物</option>
@@ -48,8 +81,8 @@
                 }
             </select>
 
-            @* 住宅選單 *@
-            <select class="form-control" id="住宅清單選單" style="display:none;">
+            <!-- 租賃住宅清單 -->
+            <select class="form-control mt-2" id="住宅清單選單" style="display:none;">
                 @if ((ViewBag.租賃住宅資料清單 as List<SelectListItem>)?.Any() == true)
                 {
                     <option value="">請選擇住宅</option>
@@ -65,31 +98,21 @@
             </select>
         </div>
 
-        <div class="form-group">
-            <label asp-for="物件編號"></label>
-            <input asp-for="物件編號" class="form-control" id="物件編號欄位" />
-            <span asp-validation-for="物件編號" class="text-danger"></span>
-        </div>
-
-
-        <div class="form-group">
-            <label asp-for="單價"></label>
-            <input asp-for="單價" class="form-control" />
-            <span asp-validation-for="單價" class="text-danger"></span>
-        </div>
-
-        @* 隱藏主鍵欄位 *@
+        <!-- 隱藏主鍵 -->
         @Html.HiddenFor(m => m.事業)
         @Html.HiddenFor(m => m.單位)
         @Html.HiddenFor(m => m.部門)
         @Html.HiddenFor(m => m.分部)
 
-        <div class="form-group text-right mt-3">
+        <!-- 按鈕區 -->
+        <div class="col-md-12 text-end mt-3">
             <button type="submit" class="btn btn-primary">儲存</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
         </div>
-    </form>
-</div>
+    </div>
+</form>
+
+
 <script>
     $(document).ready(function () {
         const $類別選單 = $('[name="商品類別編號"]');

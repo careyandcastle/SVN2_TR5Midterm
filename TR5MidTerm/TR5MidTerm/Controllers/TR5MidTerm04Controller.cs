@@ -376,7 +376,7 @@ namespace TR5MidTerm.Controllers
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
             filledData.備註 = string.IsNullOrWhiteSpace(postData.備註) ? "" : postData.備註;
-            filledData.修改人 = CustomSqlFunctions.ConcatCodeAndName(ua.UserNo, ua.UserName);
+            filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
             filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
 
@@ -384,10 +384,20 @@ namespace TR5MidTerm.Controllers
             {
                 var opCount = await _context.SaveChangesAsync();
                 if (opCount > 0)
+                {
+                    var newData = await GetBaseQuery()
+                            .Where(x =>
+                                x.事業 == postData.事業 &&
+                                x.單位 == postData.單位 &&
+                                x.部門 == postData.部門 &&
+                                x.分部 == postData.分部 &&
+                                x.案號 == postData.案號
+                            ).SingleOrDefaultAsync();
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                     {
-                        data = postData
+                        data = newData
                     });
+                } 
             }
             catch (Exception ex)
             {
@@ -1385,6 +1395,26 @@ namespace TR5MidTerm.Controllers
                 //canCharge = true,
                 canClickEditOrDelete = true
             });
+        }
+
+        #endregion
+
+        #region 驗證
+        private async Task ValidateForCreate(租約主檔CreateViewModel model)
+        {
+            // 1. 檢查是否已有相同案號的收租檔
+            var exists = await _context.收款主檔.AnyAsync(x =>
+                x.事業 == model.事業 &&
+                x.單位 == model.單位 &&
+                x.部門 == model.部門 &&
+                x.分部 == model.分部 &&
+                x.案號 == model.案號
+            );
+
+            if (exists)
+            {
+                ModelState.AddModelError(nameof(model.案號), "已有該案之承租檔");
+            }
         }
         #endregion
     }

@@ -18,6 +18,7 @@ using TscLibCore.Modules;
 using TscLibCore.Authority;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Diagnostics;
+using TR5MidTerm.PC;
 
 namespace TR5MidTerm.Controllers
 {
@@ -222,8 +223,11 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> Create([Bind("事業,單位,部門,分部,案號")] 收款主檔CreateViewModel postData)
         {
             #region 驗證欄位
-            if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+            await ValidateForCreate(postData);
+            //if (ModelState.IsValid == false)
+            //    return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
+            if (!ModelState.IsValid)
+                return ModelStateInvalidResult("Create", true);
             #endregion
             #region model初始化
             收款主檔 filledData = _mapper.Map<收款主檔CreateViewModel, 收款主檔>(postData);
@@ -237,10 +241,21 @@ namespace TR5MidTerm.Controllers
                 #region 寫入DB
                 var opCount = await _context.SaveChangesAsync();
                 if (opCount > 0)
+                {
+                    var newData = await GetBaseQuery()
+                            .Where(x =>
+                                x.事業 == postData.事業 &&
+                                x.單位 == postData.單位 &&
+                                x.部門 == postData.部門 &&
+                                x.分部 == postData.分部 &&
+                                x.案號 == postData.案號
+                            ).SingleOrDefaultAsync();
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                     {
-                        data = postData
+                        data = newData
                     });
+                }
+                    
                 #endregion
             }
             catch (Exception ex)
@@ -476,8 +491,14 @@ namespace TR5MidTerm.Controllers
             //            where s.事業 == keys.事業 && s.單位 == keys.單位 && s.部門 == keys.部門 && s.分部 == keys.分部 && s.案號 == keys.案號
             //            select s;
 
-            var query = GetDetailsBaseQuery();
-
+            //var query = GetDetailsBaseQuery();
+            var query = GetDetailsBaseQuery().Where(s =>
+    s.事業 == keys.事業 &&
+    s.單位 == keys.單位 &&
+    s.部門 == keys.部門 &&
+    s.分部 == keys.分部 &&
+    s.案號 == keys.案號
+);
             return CreatedAtAction(nameof(GetDetails), new ReturnData(ReturnState.ReturnCode.OK)
             {
                 data = await query.ToListAsync()
@@ -719,6 +740,55 @@ namespace TR5MidTerm.Controllers
         public static string CombineCodeAndName(string code, string name)
         {
             return string.IsNullOrEmpty(name) ? code : $"{code}_{name}";
+        }
+        #endregion
+
+        #region 驗證
+        private async Task ValidateForCreate(收款主檔CreateViewModel model)
+        { 
+            // 1. 檢查是否已有相同案號的收租檔
+            var exists = await _context.收款主檔.AnyAsync(x =>
+                x.事業 == model.事業 &&
+                x.單位 == model.單位 &&
+                x.部門 == model.部門 &&
+                x.分部 == model.分部 &&
+                x.案號 == model.案號
+            );
+
+            if (exists)
+            {
+                ModelState.AddModelError(nameof(model.案號), "已有該案之收租檔");
+            }
+        }
+
+        private IActionResult ModelStateInvalidResult(string context, bool 驗證前)
+        {
+            string sourceLabel = 驗證前 ? "ViewModel驗證" : "Validator驗證";
+            Debug.WriteLine($"[{context}] [ERROR] ModelState 無效（{sourceLabel}）");
+
+            foreach (var kv in ModelState.ToErrorInfos())
+            {
+                foreach (var msg in kv.Value)
+                    Debug.WriteLine($"        ↳ 欄位：{kv.Key}，錯誤：{msg}");
+            }
+
+            // 根據 context 自動選對 ReturnCode
+            var code = context.ToLower() switch
+            {
+                "create" => ReturnState.ReturnCode.CREATE_ERROR,
+                "edit" => ReturnState.ReturnCode.EDIT_ERROR,
+                "Delete" => ReturnState.ReturnCode.DELETE_ERROR,
+                "ApproveConfirmed" => ReturnState.ReturnCode.EDIT_ERROR,
+                "CreateDetail" => ReturnState.ReturnCode.CREATE_ERROR,
+                "EditDetail" => ReturnState.ReturnCode.EDIT_ERROR,
+                "DeleteDetail" => ReturnState.ReturnCode.DELETE_ERROR,
+                _ => ReturnState.ReturnCode.ERROR
+            };
+
+            return Ok(new ReturnData(code)
+            {
+                data = ModelState.ToErrorInfos()
+            });
         }
         #endregion
     }

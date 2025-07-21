@@ -15,6 +15,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
     {
         //[CTRequired]
         [DisplayName("刪除註記")]
+        [HiddenForView]
         public string 刪除註記顯示 { get; set; }
         [CTRequired]
         [NameRegex(NameType.NaturalPerson)]

@@ -21,17 +21,20 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 單位 { get; set; }
         [Key]
         [StringLength(2)]
+        //[CTStringLength(2)]
         public string 部門 { get; set; }
         [Key]
         [StringLength(2)]
         public string 分部 { get; set; }
         [Key]
-        [StringLength(20)]
+        //[StringLength(20)]
+        [CTStringLength(20)]
         public string 總表號 { get; set; }
         [Key]
         [CTRequired]
         public int 分表號 { get; set; }
-        [StringLength(20)]
+        //[StringLength(20)]
+        [CTStringLength(20)]
         public string 備註 { get; set; }
         [Column(TypeName = "decimal(18, 0)")]
         public decimal 上期度數 { get; set; }

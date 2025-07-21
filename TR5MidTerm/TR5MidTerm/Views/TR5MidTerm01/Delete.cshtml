@@ -56,6 +56,9 @@
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.修改人)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.修改人)</dd>
 
+        <span asp-validation-for="承租人編號" class="text-danger"></span>
+        
+
     </dl>
 
     <form asp-action="DeleteConfirmed">
@@ -75,8 +78,8 @@
     </form>
     </div>
 
-@*@section Scripts {
+@section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     這行會載入並執行 _ValidationScriptsPartial.cshtml 這個部分視圖（partial view），作用是引用 用來處理用戶端驗證 的 JavaScript，例如 jQuery Validate。
 
-}*@
+}

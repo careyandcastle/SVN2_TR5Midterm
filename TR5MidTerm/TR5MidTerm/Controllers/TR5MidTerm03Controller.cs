@@ -285,16 +285,7 @@ namespace TR5MidTerm.Controllers
                 Text = $"{x.產品編號}_{x.產品名稱}",
                 Value = x.產品編號
             }).ToList();
-
-            //foreach (var item in 建物資料清單)
-            //{
-            //    Debug.WriteLine($"建物名稱: {item.建物名稱}");
-            //    //Debug.WriteLine($"地址: {item.地址.Trim()}");
-            //    Debug.WriteLine($"地址: {(item.地址?.Trim() ?? "無資料")}");
-            //    Debug.WriteLine($"修改人: {item.修改人}");
-            //    Debug.WriteLine($"修改時間: {item.修改時間:yyyy-MM-dd HH:mm:ss}");
-            //    Debug.WriteLine("--------");
-            //}
+             
 
             return PartialView(viewModel);
         }
@@ -321,10 +312,19 @@ namespace TR5MidTerm.Controllers
             {
                 var opCount = await _context.SaveChangesAsync();
                 if (opCount > 0)
+                {
+                    var newData = await GetBaseQuery()
+                            .Where(x =>
+                                x.事業 == postData.事業 &&
+                                x.單位 == postData.單位 &&
+                                x.部門 == postData.部門 &&
+                                x.分部 == postData.分部
+                            ).SingleOrDefaultAsync();
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                     {
-                        data = postData
+                        data = newData
                     });
+                }
             }
             catch (Exception ex)
             {
@@ -513,12 +513,19 @@ namespace TR5MidTerm.Controllers
         {
 
             ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
+            await ValidateForDelete(postData);
 
-            if (ModelState.IsValid == false)
+            //if (ModelState.IsValid == false)
+            //{
+            //    ModelStateInvalidResult("Delete", true); 
+            //} 
+            if (!ModelState.IsValid)
             {
-                ModelStateInvalidResult("Delete", true);
-                //return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-            } 
+                return Ok(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR)
+                {
+                    data = ModelState.ToErrorInfos()
+                });
+            }
             var result = await _context.商品檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.商品編號);
             if (result == null)
                 return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
@@ -646,7 +653,7 @@ namespace TR5MidTerm.Controllers
             }
 
             // 根據 context 自動選對 ReturnCode
-            var code = context.ToLower() switch
+            var code = context switch
             {
                 "Create" => ReturnState.ReturnCode.CREATE_ERROR,
                 "Edit" => ReturnState.ReturnCode.EDIT_ERROR,
@@ -661,8 +668,29 @@ namespace TR5MidTerm.Controllers
             return Ok(new ReturnData(code)
             {
                 data = ModelState.ToErrorInfos()
+
             });
         }
+
+        private async Task ValidateForDelete(商品檔DisplayViewModel model)
+        {
+            // 檢查該商品是否仍被租約明細檔使用
+            var exists = await _context.租約明細檔.AnyAsync(x =>
+                x.事業 == model.事業 &&
+                x.單位 == model.單位 &&
+                x.部門 == model.部門 &&
+                x.分部 == model.分部 &&
+                x.商品編號 == model.商品編號
+            );
+
+            if (exists)
+            {
+                // 綁定到對應欄位，讓 Razor 能顯示紅字
+                //ModelState.AddModelError(nameof(model.商品編號), "該商品已有租約明細紀錄，不可刪除。");
+                ModelState.AddModelError(nameof(model.商品編號), "該商品已有租約明細紀錄，不可刪除。");
+            }
+        }
+
         #endregion
 
     }

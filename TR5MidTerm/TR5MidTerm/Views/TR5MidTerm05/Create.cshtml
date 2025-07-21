@@ -3,15 +3,22 @@
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
     <div class="row">
+        <!-- 錯誤訊息 -->
+        <div class="col-md-12">
+            <div id="ModelErrorDiv" class="validation-summary-valid text-danger">
+                <ul></ul>
+            </div>
+        </div>
         <!-- 案號：下拉選單 -->
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="form-group">
                 <label asp-for="案號" class="control-label"></label>
                 <select asp-for="案號" class="form-control" asp-items="ViewBag.案號選項">
                     <option disabled selected value="">-- 請選擇案號 --</option>
                 </select>
-                <span asp-validation-for="案號" class="text-danger"></span>
+
             </div>
+            <span asp-validation-for="案號" class="text-danger"></span>
         </div>
 
         <!-- 顯示：事業、單位、部門、分部 -->
@@ -27,3 +34,6 @@
         </div>
     </div>
 </form>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

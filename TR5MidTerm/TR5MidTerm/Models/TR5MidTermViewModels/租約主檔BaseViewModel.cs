@@ -26,29 +26,43 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [HiddenForView]
         public string 分部 { get; set; }
         [Key]
+        [CTRequired]
         [StringLength(5)]
         public string 案號 { get; set; }
         [CTRequired]
         [StringLength(50)]
         public string 案名 { get; set; }
         [CTRequired]
-        [StringLength(5)]
+        [StringLength(5, ErrorMessage = "承租人最長為5個字元")]
+        //[StringLength(5)]
         [DisplayName("承租人")]
         public string 承租人編號 { get; set; }
         [CTRequired]
         [StringLength(2)]
         public string 租賃方式編號 { get; set; }
         [CTRequired]
-        [StringLength(20)]
+        //[StringLength(20)]
+        [CTStringLength(20)]
         public string 租賃用途 { get; set; }
+        [CTRequired]
         [Column(TypeName = "date")]
         public DateTime 租約起始日期 { get; set; }
+        [CTRequired]
+        //[Range(1, int.MaxValue, ErrorMessage = "租期月數必須大於或等於 1")]
+        [CTRange(1, 999)]
         public int 租期月數 { get; set; }
+        [CTRequired]
+        [CTRange(1, 12)]
         public int 計租週期月數 { get; set; }
+        [CTRequired]
+        //[Range(1, int.MaxValue, ErrorMessage = "繳款期限天數必須大於 0")]
+        [CTRange(0, 999)]
         public int 繳款期限天數 { get; set; }
         [Column(TypeName = "date")]
+        [CTRequired]
         public DateTime? 租約終止日期 { get; set; }
-        [StringLength(200)]
+        //[StringLength(200)]
+        [CTStringLength(200)]
         public string 備註 { get; set; }
     }
 }

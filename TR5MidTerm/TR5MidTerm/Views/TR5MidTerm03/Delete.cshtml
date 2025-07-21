@@ -40,7 +40,7 @@
 
         @*<dt class="col-sm-2">@Html.DisplayNameFor(model => model.商品類別編號)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.商品類別編號)</dd>
-        
+
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.商品類別)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.商品類別)</dd>*@
 
@@ -55,6 +55,8 @@
 
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.修改時間)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.修改時間)</dd>
+
+        <span asp-validation-for="商品編號" class="text-danger"></span>
     </dl>
 
     <form asp-action="DeleteConfirmed">
