@@ -101,7 +101,7 @@
                 </b-col>
             </b-row>
             <b-row class="mb-2">
-                <b-col>
+                <b-col cols="8">
                     <multi-input :schema="slot.data.params.data.querySchema"
                                  :select-options="slot.data.params.data.querySelectOptions"
                                  :value-obj="slot.data.params.data.queryData"
@@ -110,7 +110,40 @@
                                  v-on:filter-click="slot.data.queryFilterClicked">
                     </multi-input>
                 </b-col>
+                <b-col cols="2">
+
+                    <sticky-fields-selector :field-key-desc="slot.data.mTableFieldDesc"
+                                            selected-indic-limit=3
+                                            ref="stickySelector">
+                    </sticky-fields-selector>
+                </b-col>
+
+                <b-col cols="2">
+                    <b-button class="ml-2" variant="detail3"
+                              v-show="slot.data.$parent?.$refs?.stickySelector?.selected"
+                              @@click="()=>slot.data.$parent.$refs.stickySelector.selectedClear()">
+                        取消凍結
+                    </b-button>
+                </b-col>
             </b-row>
+            @*<b-row class="mb-2">
+                <b-col cols="auto">
+
+                    <sticky-fields-selector :field-key-desc="slot.data.mTableFieldDesc"
+                                            selected-indic-limit=3
+                                            ref="stickySelector">
+                    </sticky-fields-selector>
+                </b-col>
+
+                <b-col cols="auto">
+                    <b-button class="ml-1" variant="detail3"
+                              v-show="slot.data.$parent?.$refs?.stickySelector?.selected"
+                              @@click="()=>slot.data.$parent.$refs.stickySelector.selectedClear()">
+                        取消凍結
+                    </b-button>
+                </b-col>
+            </b-row>*@
+
             <b-row class="mb-2">
                 <b-col>
                     <org-clock-info :事業="slot.data.params.data.事業顯示"
@@ -121,11 +154,12 @@
                 </b-col>
             </b-row>
 
+
         </template>
 
     </table-component>
 </div>
- 
+
 @section Scripts {
     <script>
         (function () {
@@ -360,14 +394,7 @@
             ];
             //#region 連動選單onChanged
             const _queryChanged = function (key, value) {
-                @*let filterDataObj = {};
-                this.params.querySchema.forEach((item) => {
-                    let val = this.params.queryData[item.key];
-                    if (val != null && val !== '') {
-                        filterDataObj[item.key] = { condit: 'eq', value: val };
-                    }
-                });
-                _assignFilter.call(this, filterDataObj); // ← 套用過濾條件*@
+
                 if (key == '事業') {
                     onBizSelectChanged();
                 }

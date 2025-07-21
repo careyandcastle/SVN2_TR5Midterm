@@ -379,6 +379,7 @@ namespace TR5MidTerm.Controllers
             filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
             filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
+             
 
             try
             {
@@ -582,6 +583,7 @@ namespace TR5MidTerm.Controllers
             x.分部 == 分部 &&
             x.案號 == 案號)
                .SingleOrDefaultAsync();
+
             //var viewModel = _mapper.Map<租約主檔DisplayViewModel, 租約主檔>(result);
             if (result == null)
             {
@@ -594,31 +596,61 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
-        public async Task<IActionResult> DeleteConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號)
+        public async Task<IActionResult> DeleteConfirmed([Bind("事業,單位,部門,分部,案號")] 租約主檔DisplayViewModel postData)
         {
+            await ValidateForDelete(postData);
             if (ModelState.IsValid == false)
-                return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
+                ModelStateInvalidResult("Delete", false);
+            //return BadRequest(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
-            ModelStateInvalidResult("Delete", false);
 
-            var result = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
-            if (result == null)
-                return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
-            _context.租約主檔.Remove(result);
+            // 取得要刪除的主檔資料
+            var master = await _context.租約主檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.案號);
+            if (master == null)
+                return NotFound(new ReturnData(ReturnState.ReturnCode.DELETE_ERROR) { message = "查無主檔資料" });
+
+            // 開啟交易（確保主從刪除的一致性）
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                var opCount = await _context.SaveChangesAsync();
-                if (opCount > 0)
+                // 刪除明細檔（全部找出來再 Remove）
+                var details = await _context.租約明細檔
+                    .Where(x =>
+                        x.事業 == postData.事業 &&
+                        x.單位 == postData.單位 &&
+                        x.部門 == postData.部門 &&
+                        x.分部 == postData.分部 &&
+                        x.案號 == postData.案號)
+                    .ToListAsync();
+
+                _context.租約明細檔.RemoveRange(details);
+
+                // 刪除主檔
+                _context.租約主檔.Remove(master);
+
+                // 實際執行刪除
+                var count = await _context.SaveChangesAsync();
+
+                // 提交交易
+                await transaction.CommitAsync();
+
+                if (count > 0)
                     return Ok(new ReturnData(ReturnState.ReturnCode.OK));
+                else
+                    return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
             catch (Exception ex)
             {
-                return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
-            }
+                await transaction.RollbackAsync();
+                //_logger.LogError(ex, $"[DeleteConfirmed] 刪除主從資料失敗：{ex.Message}");
 
-            return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
+                return StatusCode(500, new ReturnData(ReturnState.ReturnCode.DELETE_ERROR)
+                {
+                    message = "刪除失敗，請稍後再試"
+                });
+            }
         }
         #endregion
         #region Export
@@ -770,6 +802,8 @@ namespace TR5MidTerm.Controllers
             if (rent == null)
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR) { message = "找不到租約主檔" });
 
+            #region 更新收款主檔
+
             var 每期月數 = Math.Max(1, rent.計租週期月數);
             var 終止日 = rent.租約終止日期 ?? rent.租約起始日期.AddMonths(rent.租期月數 - 1);
             var 終止年月 = new DateTime(終止日.Year, 終止日.Month, 1);
@@ -851,6 +885,42 @@ namespace TR5MidTerm.Controllers
                 chargeMaster.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
                 chargeMaster.修改時間 = DateTime.Now;
             }
+            #endregion
+
+            #region 更新水電表
+            // 先查所有該案號對應的租約水電(案號(一) -> 總表號+分表號(多))
+            var 租約水電清單 = await _context.租約水電檔
+                .Where(x =>
+                    x.事業 == postData.事業 &&
+                    x.單位 == postData.單位 &&
+                    x.部門 == postData.部門 &&
+                    x.分部 == postData.分部 &&
+                    x.案號 == postData.案號)
+                .Select(x => new { x.總表號, x.分表號 })
+                .ToListAsync();
+
+            // 接著查對應的水電分表檔
+            var 水電分表清單 = await (
+                from 水電 in _context.水電分表檔
+                join 租水 in 租約水電清單
+                  on new { 水電.總表號, 水電.分表號 } equals new { 租水.總表號, 租水.分表號 }
+                where 水電.事業 == postData.事業 &&
+                      水電.單位 == postData.單位 &&
+                      水電.部門 == postData.部門 &&
+                      水電.分部 == postData.分部
+                select 水電
+            ).ToListAsync();
+
+
+            // 同步本期度數 → 上期度數
+            foreach (var item in 水電分表清單)
+            {
+                item.上期度數 = item.本期度數;
+                item.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
+                item.修改時間 = DateTime.Now;
+            }
+            #endregion
+
 
             // ✅ 儲存異動
             try
@@ -1268,6 +1338,7 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號, [Bind("事業,單位,部門,分部,案號,商品編號")] 租約明細檔DisplayViewModel postData)
         {
+            
             if (ModelState.IsValid == false)
                 return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
@@ -1414,6 +1485,22 @@ namespace TR5MidTerm.Controllers
             if (exists)
             {
                 ModelState.AddModelError(nameof(model.案號), "已有該案之承租檔");
+            }
+        }
+        private async Task ValidateForDelete(租約主檔DisplayViewModel model)
+        {
+            // 1. 檢查是否已有相同案號的收租檔
+            var exists = await _context.租約水電檔.AnyAsync(x =>
+                x.事業 == model.事業 &&
+                x.單位 == model.單位 &&
+                x.部門 == model.部門 &&
+                x.分部 == model.分部 &&
+                x.案號 == model.案號
+            );
+
+            if (exists)
+            {
+                ModelState.AddModelError(nameof(model.案號), "該租約有租約水電紀錄，不可刪除");
             }
         }
         #endregion

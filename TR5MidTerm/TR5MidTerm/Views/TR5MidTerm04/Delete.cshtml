@@ -50,7 +50,9 @@
         <dd class="col-sm-10">@Html.DisplayFor(model => model.租約終止日期)</dd>
 
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.租期月數)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.租期月數)</dd>
+        @*<dd class="col-sm-10">@Html.DisplayFor(model => model.租期月數)月</dd>*@
+        <dd class="col-sm-10"> @Html.DisplayFor(model => model.租期月數) @($"月")</dd>
+
 
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.計租週期月數)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.計租週期月數)</dd>
@@ -66,7 +68,7 @@
 
         <dt class="col-sm-2">@Html.DisplayNameFor(model => model.修改時間)</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.修改時間)</dd>
-        
+        <span asp-validation-for="案號" class="text-danger"></span>
     </dl>
 
     <form asp-action="DeleteConfirmed">
