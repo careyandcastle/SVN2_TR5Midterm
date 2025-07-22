@@ -167,7 +167,10 @@ namespace TR5MidTerm.Controllers
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,
-                        修改時間 = m.修改時間
+                        修改時間 = m.修改時間,
+                        #endregion
+                        #region 權限
+                        可否編輯刪除 = (m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo && m.部門 == ua.DivisionNo && m.分部 == ua.BranchNo),
                         #endregion
                     }).AsNoTracking();
         }

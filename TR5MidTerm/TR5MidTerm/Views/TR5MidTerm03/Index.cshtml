@@ -77,7 +77,7 @@
                             <b-spinner small type="border" class="custom-spinner"></b-spinner>
                         </span>刪除
                     </b-button>
-                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-detailed-modal @@click="slot.data.isNewItemOnTop = false" :disabled="slot.data.params.data.isBusy || !slot.data.selectedMasterRow?.params?.canSearchDetail " class="mr-1" variant="detail3">
+                    <b-button v-if="slot.data.operatePermissions.canDelete" v-b-modal.master-table-detailed-modal @@click="slot.data.isNewItemOnTop = false" :disabled="!slot.data.selectedMasterRow?.params?.canSearchDetail || slot.data.params.data.isBusy" class="mr-1" variant="detail3">
                         <span v-if="slot.data.params.data.isBusy" class="spinner-overlay">
                             <b-spinner small type="border" class="custom-spinner"></b-spinner>
                         </span>詳細
@@ -213,16 +213,13 @@
 
 
                     //#region 自定義:按鈕判斷
-                    Vue.set(params.data, 'isBusy', true);
+                    //#region 判斷方法1
+                    @*Vue.set(params.data, 'isBusy', true);
                     console.log("是否busy?", params.data.isBusy);
                     this.$forceUpdate();
 
-                    @* axios.post('/TR5MidTerm02/CheckButtonPermissions', this.selectedMasterRow.params) *@
-                    @*debugger;*@
                     axios.post('/TR5MidTerm03/CheckButtonPermissions', selectParam)
                         .then(res => {
-                            @*debugger;*@
-                        // ✅ 將所有權限狀態灌入畫面綁定來源
                         Object.entries(res.data).forEach(([key, val]) => {
                             Vue.set(params.data, key, val);
                         });
@@ -239,7 +236,23 @@
                             console.error('CheckButtonPermissions發生錯誤：', err);
                             Vue.set(params.data, 'isBusy', false);
                             this.$forceUpdate();
-                        });
+                        });*@
+                    //#endregion
+                    //#region 判斷方法2
+                    @*Vue.set(params.data, 'isBusy', true);
+                    console.log("是否busy?", params.data.isBusy);*@
+                    @*this.$forceUpdate();*@
+                    Object.assign(this.selectedMasterRow.params, {
+                        canSearchDetail: rowData[0]['可否詳細'],
+                        canClickEditOrDelete: rowData[0]['可否編輯刪除']
+                    });
+                    this.$forceUpdate();
+                    @*Vue.set(params.data, 'isBusy', false);
+                    this.$forceUpdate();
+                    console.log("是否busy?", params.data.isBusy);*@
+
+                    //#endregion
+
                 }
                 else {
                     console.warn("[DEBUG] 主檔未選擇任何列！");

@@ -164,6 +164,7 @@ namespace TR5MidTerm.Controllers
                         物件編號 = m.物件編號,
                         單價 = m.單價,
                         可否詳細 = (m.商品類別編號 == "01" || m.商品類別編號 == "34"),
+                        可否編輯刪除 = (m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo && m.部門 == ua.DivisionNo && m.分部== ua.BranchNo),
                         #endregion
                         #region 修改人與修改時間
                         修改人 = m.修改人,

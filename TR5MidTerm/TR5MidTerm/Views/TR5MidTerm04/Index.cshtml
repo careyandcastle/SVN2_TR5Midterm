@@ -355,24 +355,22 @@
                     });
 
                     //#region 自定義:按鈕判斷
-                    Vue.set(params.data, 'isBusy', true);
+                    @*Vue.set(params.data, 'isBusy', true);
                     console.log("是否busy?", params.data.isBusy);
                     this.$forceUpdate();
                      
                     axios.post('/TR5MidTerm04/CheckButtonPermissions', selectParam)
                         .then(res => {
-                            @*debugger;*@
+          
                             console.log("可收租?" ,( rowData[0]['可收租'] ) );
-                            // ✅ 將所有權限狀態灌入畫面綁定來源
+            
                             Object.entries(res.data).forEach(([key, val]) => {
                                 Vue.set(params.data, key, val);
                             });
                             Object.assign(this.selectedMasterRow.params, {
                                 canClickEditOrDelete: res.data.canClickEditOrDelete,
-                                @*canCharge: res.data.canCharge*@
                                 canCharge: rowData[0]['可收租']
                             });
-                            @*debugger;*@
                             Vue.set(params.data, 'isBusy', false);
                             this.$forceUpdate();
                             console.log("是否busy?", params.data.isBusy);
@@ -382,11 +380,14 @@
                             console.error('CheckButtonPermissions發生錯誤：', err);
                             Vue.set(params.data, 'isBusy', false);
                             this.$forceUpdate();
-                        });
-                    @*console.log(this.selectedMasterRow.params);*@
-                    console.log(this.selectedMasterRow);
-                    
-                    @*debugger;*@
+                        }); 
+                    console.log(this.selectedMasterRow);*@
+                    Object.assign(this.selectedMasterRow.params, {
+                        canClickEditOrDelete: rowData[0]['可否編輯刪除'],
+                        canCharge: rowData[0]['可收租']
+                    });
+                    this.$forceUpdate();
+                     
                 }
                 else {
                     console.warn("[DEBUG] 主檔未選擇任何列！");

@@ -88,6 +88,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public bool 可否展開明細{ get; set; }
         [HiddenForView]
         public bool 可否新增明細{ get; set; }
-        
+        [HiddenForView]
+        public bool 可否編輯刪除 { get; set; }//
+
     }
 }

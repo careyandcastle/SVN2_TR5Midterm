@@ -79,6 +79,8 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 修改人 { get; set; }
         //[Column(TypeName = "datetime")]
         public DateTime 修改時間 { get; set; }
+        [HiddenForView]
+        public bool 可否編輯刪除 { get; set; }//
 
     }
 }

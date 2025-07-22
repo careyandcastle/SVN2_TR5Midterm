@@ -314,37 +314,16 @@
                             selectParam[propName] = this[propName] = Date.parse_zhTW_string(dateLocalestring).toISOString();
                         }
                     });
-
-                    //#region 自定義:按鈕判斷
-                    Vue.set(params.data, 'isBusy', true);
-                    console.log("是否busy?", params.data.isBusy);
+                    @*this.$forceUpdate();*@
+                    Object.assign(this.selectedMasterRow.params, { 
+                        canClickEditOrDelete: rowData[0]['可否編輯刪除']
+                    });
                     this.$forceUpdate();
-
-                    axios.post('/TR5MidTerm02/CheckButtonPermissions', selectParam)
-                    @*axios.post('/TR5MidTerm02/CheckButtonPermissions', this.selectedMasterRow.params)*@
-                        .then(res => {
-                            // ✅ 將所有權限狀態灌入畫面綁定來源
-                            Object.entries(res.data).forEach(([key, val]) => {
-                                Vue.set(params.data, key, val);
-                            });
-                            Object.assign(this.selectedMasterRow.params, {
-                                canClickEditOrDelete: res.data.canClickEditOrDelete
-                            });
-                            Vue.set(params.data, 'isBusy', false);
-                            this.$forceUpdate();
-                            console.log("是否busy?", params.data.isBusy);
-                            console.log('CheckButtonPermissions 成功', res.data);
-                        })
-                        .catch(err => {
-                            console.error('CheckButtonPermissions發生錯誤：', err);
-                            Vue.set(params.data, 'isBusy', false);
-                            this.$forceUpdate();
-                        });
                 }
                 else {
                     console.warn("[DEBUG] 主檔未選擇任何列！");
-                    this.isBusy = false; // 顯示 Loading 遮罩
-                    console.log("busy?", this.isBusy);
+                    @*this.isBusy = false; // 顯示 Loading 遮罩
+                    console.log("busy?", this.isBusy);*@
                 }
 
                 //#endregion

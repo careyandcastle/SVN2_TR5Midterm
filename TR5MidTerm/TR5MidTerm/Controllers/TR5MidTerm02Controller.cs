@@ -169,14 +169,15 @@ namespace TR5MidTerm.Controllers
                         #endregion
                         #region
                         可否展開 = _context.水電分表檔.Any(d =>
-    d.事業 == m.事業 &&
-    d.單位 == m.單位 &&
-    d.部門 == m.部門 &&
-    d.分部 == m.分部 &&
-    d.總表號 == m.總表號)
-                        ,
+                        d.事業 == m.事業 &&
+                        d.單位 == m.單位 &&
+                        d.部門 == m.部門 &&
+                        d.分部 == m.分部 &&
+                        d.總表號 == m.總表號)
+                                            ,
 
                         可否新增 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部),
+                        可否編輯刪除 = (m.事業 == ua.BusinessNo && m.單位 == ua.DepartmentNo && m.部門 == ua.DivisionNo && m.分部 == ua.BranchNo),
                         #endregion
                     }).AsNoTracking();
         }
