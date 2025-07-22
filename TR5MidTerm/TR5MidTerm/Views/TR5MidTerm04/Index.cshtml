@@ -641,6 +641,8 @@
             //#region 自定義:顏色
             const _getClassForMasterContent = function (rowData) {
                 const item = rowData.item;
+                debugger;
+                console.log(item['超過收租期限'], item['可收租'], item['未繳期數']);
                 if (item['每期租金含稅'] >= 100000) {
                     if (rowData.field.key === '每期租金含稅') {
                         return 'text-success';

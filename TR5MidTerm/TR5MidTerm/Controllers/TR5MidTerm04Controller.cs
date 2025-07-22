@@ -178,8 +178,8 @@ namespace TR5MidTerm.Controllers
                 item.未繳期數 = Math.Max(0, 累計應收期數 - paidPeriod);
                 item.下次收租日期 = 下次收租日;
                 item.累計應收租金含稅 = item.每期租金含稅 * item.未繳期數;
-                item.可收租 = 下次收租日 < DateTime.Now;
-                item.超過收租期限 = 下次收租日 < DateTime.Now.AddDays(item.繳款期限天數);
+                item.可收租 = 下次收租日 < DateTime.Now && item.未繳期數 != 0 ;
+                item.超過收租期限 = (下次收租日 < DateTime.Now.AddDays(item.繳款期限天數)) && (item.未繳期數 != 0);
                 item.租約終止日期 = item.租約起始日期.AddMonths(item.租期月數);
             }
 
@@ -729,17 +729,34 @@ namespace TR5MidTerm.Controllers
                 .Select(x => (DateTime?)x.計租年月)
                 .FirstOrDefaultAsync();
 
+
+
+            #region ✅ 推算剩餘月數與可收期數上限
+            var 租期月數 = rentMaster.租期月數;
+            var 終止日 = rentMaster.租約終止日期 ?? rentMaster.租約起始日期.AddMonths(租期月數);
+            //var 終止年月 = 終止日;
+
+
             var 計租週期 = Math.Max(1, rentMaster.計租週期月數);
             DateTime nextStartYm;
 
             if (lastYm.HasValue)
             {
-                nextStartYm = lastYm.Value.AddMonths(計租週期);
+                // ✅ 取 .Value 才能使用 .Year 和 .Month
+                var 剩餘 = ((終止日.Year - lastYm.Value.Year) * 12 + (終止日.Month - lastYm.Value.Month) + 1);
+                if (剩餘 < rentMaster.計租週期月數){
+                    nextStartYm = lastYm.Value.AddMonths(剩餘);
+                }
+                else
+                {
+                    nextStartYm = lastYm.Value.AddMonths(計租週期);
+                }
             }
             else
             {
                 var 起始日 = rentMaster.租約起始日期;
-                nextStartYm = new DateTime(起始日.Year, 起始日.Month, 1);
+                //nextStartYm = new DateTime(起始日.Year, 起始日.Month, 1);
+                nextStartYm = 起始日;
             }
             #endregion
 
@@ -757,12 +774,8 @@ namespace TR5MidTerm.Controllers
             var 每期租金 = 每月租金 * 計租週期;
             #endregion
 
-            #region ✅ 推算剩餘月數與可收期數上限
-            var 租期月數 = rentMaster.租期月數;
-            var 終止日 = rentMaster.租約終止日期 ?? rentMaster.租約起始日期.AddMonths(租期月數 - 1);
-            var 終止年月 = new DateTime(終止日.Year, 終止日.Month, 1);
 
-            var 剩餘月數 = ((終止年月.Year - nextStartYm.Year) * 12) + (終止年月.Month - nextStartYm.Month) + 1;
+            var 剩餘月數 = ((終止日.Year - nextStartYm.Year) * 12) + (終止日.Month - nextStartYm.Month);
             var 可收期數上限 = (int)Math.Ceiling((decimal)剩餘月數 / 計租週期);
             #endregion
 
@@ -830,8 +843,10 @@ namespace TR5MidTerm.Controllers
                 .MaxAsync(x => (int?)x.流水號) ?? 0;
 
             var 新增筆數 = 0;
-            var currentYm_殘月計算 = new DateTime(起算年月_判斷殘月用.Year, 起算年月_判斷殘月用.Month, 1);
-            var currentYm_計租年月標記 = new DateTime(起算年月.Year, 起算年月.Month, 1);
+            //var currentYm_殘月計算 = new DateTime(起算年月_判斷殘月用.Year, 起算年月_判斷殘月用.Month, 1);
+            var currentYm_殘月計算 = 起算年月_判斷殘月用;
+            //var currentYm_計租年月標記 = new DateTime(起算年月.Year, 起算年月.Month, 1);
+            var currentYm_計租年月標記 = 起算年月;
             var 實際月數總計 = 0;
 
             for (int i = 0; i < postData.收幾期; i++)
@@ -854,6 +869,7 @@ namespace TR5MidTerm.Controllers
 
                 var 本期金額 = 每月金額 * 本期月數;
 
+
                 // 跳下期
                 currentYm_殘月計算 = currentYm_殘月計算.AddMonths(本期月數);
                 currentYm_計租年月標記 = currentYm_計租年月標記.AddMonths(本期月數);
@@ -872,6 +888,7 @@ namespace TR5MidTerm.Controllers
                     修改時間 = DateTime.Now
                 };
 
+
                 _context.收款明細檔.Add(entity);
                 新增筆數++;
                 實際月數總計 += 本期月數;
@@ -887,9 +904,10 @@ namespace TR5MidTerm.Controllers
                 chargeMaster.修改時間 = DateTime.Now;
             }
             #endregion
-
+             
             #region 更新水電表
-            // 先查所有該案號對應的租約水電(案號(一) -> 總表號+分表號(多))
+
+            // Step 1️⃣ 查出該案號所有的「總表號 + 分表號」組合（先存在記憶體中）
             var 租約水電清單 = await _context.租約水電檔
                 .Where(x =>
                     x.事業 == postData.事業 &&
@@ -900,20 +918,24 @@ namespace TR5MidTerm.Controllers
                 .Select(x => new { x.總表號, x.分表號 })
                 .ToListAsync();
 
-            // 接著查對應的水電分表檔
-            var 水電分表清單 = await (
-                from 水電 in _context.水電分表檔
+            // Step 2️⃣ 查出所有符合事業/單位/部門/分部 的水電分表檔
+            var 全部水電分表 = await _context.水電分表檔
+                .Where(x =>
+                    x.事業 == postData.事業 &&
+                    x.單位 == postData.單位 &&
+                    x.部門 == postData.部門 &&
+                    x.分部 == postData.分部)
+                .ToListAsync();
+
+            // Step 3️⃣ 在記憶體中做 Join
+            var 水電分表清單 = (
+                from 水電 in 全部水電分表
                 join 租水 in 租約水電清單
                   on new { 水電.總表號, 水電.分表號 } equals new { 租水.總表號, 租水.分表號 }
-                where 水電.事業 == postData.事業 &&
-                      水電.單位 == postData.單位 &&
-                      水電.部門 == postData.部門 &&
-                      水電.分部 == postData.分部
                 select 水電
-            ).ToListAsync();
+            ).ToList();
 
-
-            // 同步本期度數 → 上期度數
+            // Step 4️⃣ 同步上期度數
             foreach (var item in 水電分表清單)
             {
                 item.上期度數 = item.本期度數;
@@ -921,7 +943,6 @@ namespace TR5MidTerm.Controllers
                 item.修改時間 = DateTime.Now;
             }
             #endregion
-
 
             // ✅ 儲存異動
             try
