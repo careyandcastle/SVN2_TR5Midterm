@@ -544,7 +544,12 @@ namespace TR5MidTerm.Controllers
             ValidateUserHasOrgPermission(postData.事業, postData.單位, postData.部門, postData.分部);
             await ValidateForDelete(postData);
             if (ModelState.IsValid == false)
+            {
+                //TempData["Error"] = "驗證失敗，請確認輸入資料。";
+                //return RedirectToAction("Index");
                 return ModelStateInvalidResult("Delete", false);
+            }
+
             var result = await _context.承租人檔
                 .Where(x =>
                     x.事業 == postData.事業 &&
@@ -567,6 +572,7 @@ namespace TR5MidTerm.Controllers
             }
             catch (Exception ex)
             {
+                 
                 return CreatedAtAction(nameof(DeleteConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
             }
 

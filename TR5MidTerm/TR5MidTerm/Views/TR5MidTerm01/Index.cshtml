@@ -73,6 +73,9 @@
                   </org-clock-info>
               </b-col>
           </b-row>*@
+    @*<div class="mt-2"> 
+        <button class="btn btn-primary" onclick="showCustomAlert()">點我</button>
+    </div>*@
     <table-component id="tr5midtermcontroller-master-table"
                      @*sticky-header-height="642px"*@
                      ref="tr5midtermcontroller-master-table">
@@ -93,6 +96,9 @@
                     </b-button>
 
                     <b-button v-if="slot.data.operatePermissions.canQuery" v-b-modal.master-table-query-modal class="mr-1" variant="detail3">進階查詢</b-button>
+                    @*<button class="btn btn-primary" onclick="showCustomAlert()">點我</button>*@
+                    <button class="btn btn-primary" onclick="SharedVue.alertBox(5).showErrorAlert('錯誤', 'error');">測試alertBox</button>
+
                     <!--Master OP Page-->
                     <fetched-page-modal url="Create" id="master-table-create-modal" title="新增單檔資料"></fetched-page-modal>
                     <fetched-page-modal url="Edit" :param="slot.data.selectedMasterRow?.params" id="master-table-edit-modal" title="更新資料"></fetched-page-modal>
@@ -127,22 +133,22 @@
                 </b-col>
             </b-row>
             @*<b-row class="mb-2">
-                <b-col cols="auto">
+                    <b-col cols="auto">
 
-                    <sticky-fields-selector :field-key-desc="slot.data.mTableFieldDesc"
-                                            selected-indic-limit=3
-                                            ref="stickySelector">
-                    </sticky-fields-selector>
-                </b-col>
+                        <sticky-fields-selector :field-key-desc="slot.data.mTableFieldDesc"
+                                                selected-indic-limit=3
+                                                ref="stickySelector">
+                        </sticky-fields-selector>
+                    </b-col>
 
-                <b-col cols="auto">
-                    <b-button class="ml-1" variant="detail3"
-                              v-show="slot.data.$parent?.$refs?.stickySelector?.selected"
-                              @@click="()=>slot.data.$parent.$refs.stickySelector.selectedClear()">
-                        取消凍結
-                    </b-button>
-                </b-col>
-            </b-row>*@
+                    <b-col cols="auto">
+                        <b-button class="ml-1" variant="detail3"
+                                  v-show="slot.data.$parent?.$refs?.stickySelector?.selected"
+                                  @@click="()=>slot.data.$parent.$refs.stickySelector.selectedClear()">
+                            取消凍結
+                        </b-button>
+                    </b-col>
+                </b-row>*@
 
             <b-row class="mb-2">
                 <b-col>
@@ -162,6 +168,28 @@
 
 @section Scripts {
     <script>
+         $(document).ready(function () {
+            // 自訂測試按鈕提示
+            window.showCustomAlert = function () {
+                const msgContent = `
+                    <ul>
+                        <li>This is an apple</li>
+                        <li>This is an apple pen</li>
+                    </ul>
+                    <img class='align-h-center' src='https://upload.wikimedia.org/wikipedia/zh/d/db/Pen-Pineapple-Apple-Pen.jpg' />
+                `;
+                SharedVue.alertBox(20).showInfoAlert("This is a pen", msgContent);
+             };
+            const success = '@TempData["Success"]';
+            const error = '@TempData["Error"]';
+
+            if (success) {
+                SharedVue.alertBox().showSuccessAlert('成功', success);
+            } else if (error) {
+                SharedVue.alertBox().showErrorAlert('錯誤', error);
+            }
+
+        });
         (function () {
             @*console.log(@apiData);*@
             //#region 主檔
@@ -333,10 +361,45 @@
             const _onFiltered = function (event) {
                 console.log("_onFiltered customize: ", event);
             }
+            // 🔸宣告函式區塊：可放在 _serverReturned 同一層（或上方）
+            const showAlertByReturnData = (retData, successSeconds = 3, errorSeconds = 5) => {
+                let title = '';
+                let content = '';
+                let isSuccess = (retData?.returnCode === 'OK');
+
+                if (isSuccess) {
+                    title = '成功';
+                    content = retData.message || '操作成功';
+                    SharedVue.alertBox(successSeconds).showSuccessAlert(title, content);
+                } else {
+                    title = '錯誤';
+
+                    if (retData?.data?.length > 0) {
+                        const firstErrorEntry = retData.data[0];
+                        const field = firstErrorEntry.Key;
+                        const fieldMessages = firstErrorEntry.Value;
+
+                        if (fieldMessages?.length > 0) {
+                            content = `${field}：${fieldMessages[0]}`;
+                        }
+                    } else if (retData?.message) {
+                        content = retData.message;
+                    } else {
+                        content = '操作失敗，請稍後再試。';
+                    }
+
+                    SharedVue.alertBox(errorSeconds).showErrorAlert(title, content);
+                }
+            };
 
             const _serverReturned = function (retData) {
                 ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
                 console.log("serverReturned customize: ", retData);
+                // 決定訊息類型與文字
+                //#region ALERT BOXS
+                showAlertByReturnData(retData);  
+                @* SharedVue.alertBox(5).showErrorAlert('錯誤', 'error');*@
+                //#endregion
             }
 
             const _onBeforeMount = function (tableInstance) {
@@ -534,6 +597,8 @@
             //掛載Table
             TSC_NS.CreateVue(params).$mount('#tr5midtermcontroller-index');
         })();
+
+
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
