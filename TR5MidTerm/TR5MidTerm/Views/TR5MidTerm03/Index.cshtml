@@ -126,6 +126,30 @@
 
 @section Scripts {
     <script>
+        //#region 導入ALERT BOX
+        $(document).ready(function () {
+        // 自訂測試按鈕提示
+        window.showCustomAlert = function () {
+            const msgContent = `
+                <ul>
+                    <li>This is an apple</li>
+                    <li>This is an apple pen</li>
+                </ul>
+                <img class='align-h-center' src='https://upload.wikimedia.org/wikipedia/zh/d/db/Pen-Pineapple-Apple-Pen.jpg' />
+            `;
+            SharedVue.alertBox(20).showInfoAlert("This is a pen", msgContent);
+            };
+        const success = '@TempData["Success"]';
+        const error = '@TempData["Error"]';
+
+        if (success) {
+            SharedVue.alertBox().showSuccessAlert('成功', success);
+        } else if (error) {
+            SharedVue.alertBox().showErrorAlert('錯誤', error);
+        }
+
+        });
+        //#endregion
         (function () {
             //#region 主檔
             //主檔 Table 欄位名稱中文定義
@@ -329,10 +353,42 @@
             const _onFiltered = function (event) {
                 console.log("_onFiltered customize: ", event);
             }
+            const showAlertByReturnData = (retData, successSeconds = 3, errorSeconds = 5) => {
+                let title = '';
+                let content = '';
+                let isSuccess = (retData?.returnCode === 'OK');
+
+                if (isSuccess) {
+                    title = '成功';
+                    content = retData.message || '操作成功';
+                    SharedVue.alertBox(successSeconds).showSuccessAlert(title, content);
+                } else {
+                    title = '錯誤';
+
+                    if (retData?.data?.length > 0) {
+                        const firstErrorEntry = retData.data[0];
+                        const field = firstErrorEntry.Key;
+                        const fieldMessages = firstErrorEntry.Value;
+
+                        if (fieldMessages?.length > 0) {
+                            content = `${field}：${fieldMessages[0]}`;
+                        }
+                    } else if (retData?.message) {
+                        content = retData.message;
+                    } else {
+                        content = '操作失敗，請稍後再試。';
+                    }
+
+                    SharedVue.alertBox(errorSeconds).showErrorAlert(title, content);
+                }
+            };
 
             const _serverReturned = function (retData) {
                 ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
                 console.log("serverReturned customize: ", retData);
+                //#region ALERT BOXS
+                showAlertByReturnData(retData);
+                //#endregion
             }
 
             const _onBeforeMount = function (tableInstance) {

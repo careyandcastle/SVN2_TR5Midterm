@@ -168,6 +168,7 @@
 
 @section Scripts {
     <script>
+        //#region 導入ALERT BOX
          $(document).ready(function () {
             // 自訂測試按鈕提示
             window.showCustomAlert = function () {
@@ -189,9 +190,9 @@
                 SharedVue.alertBox().showErrorAlert('錯誤', error);
             }
 
-        });
-        (function () {
-            @*console.log(@apiData);*@
+         });
+        //#endregion
+        (function () { 
             //#region 主檔
             //#region 主檔資料定義
             //主檔 Table 欄位名稱中文定義
@@ -294,7 +295,6 @@
                 //#endregion
                 }
             //#endregion
-            //#endregion
             //#region 匯出ods
             const _onDataExport = async function () {
                 let response = await axios.post('@Url.Action("Export","TR5MidTermController")', dsMasterProviderParams, {
@@ -394,8 +394,7 @@
 
             const _serverReturned = function (retData) {
                 ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
-                console.log("serverReturned customize: ", retData);
-                // 決定訊息類型與文字
+                console.log("serverReturned customize: ", retData); 
                 //#region ALERT BOXS
                 showAlertByReturnData(retData);  
                 @* SharedVue.alertBox(5).showErrorAlert('錯誤', 'error');*@

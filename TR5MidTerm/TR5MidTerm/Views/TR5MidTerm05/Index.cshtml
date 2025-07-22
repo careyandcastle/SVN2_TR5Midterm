@@ -170,6 +170,30 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
 }
 @section Scripts {
     <script>
+        //#region 導入ALERT BOX
+        $(document).ready(function () {
+            // 自訂測試按鈕提示
+            window.showCustomAlert = function () {
+                const msgContent = `
+                    <ul>
+                        <li>This is an apple</li>
+                        <li>This is an apple pen</li>
+                    </ul>
+                    <img class='align-h-center' src='https://upload.wikimedia.org/wikipedia/zh/d/db/Pen-Pineapple-Apple-Pen.jpg' />
+                `;
+                SharedVue.alertBox(20).showInfoAlert("This is a pen", msgContent);
+             };
+            const success = '@TempData["Success"]';
+            const error = '@TempData["Error"]';
+
+            if (success) {
+                SharedVue.alertBox().showSuccessAlert('成功', success);
+            } else if (error) {
+                SharedVue.alertBox().showErrorAlert('錯誤', error);
+            }
+
+        });
+        //#endregion
         (function () {
             //#region 主明細檔
             //主檔 Table 欄位名稱中文定義
@@ -349,7 +373,7 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
                             }
                             this._toggleRowDetail(event, rowData);  // ✅ 正確方法
                         }
-                    }, 
+                    },
                 ];
             }
             const getDetailTableActionButtonConfig = function (rowData) {
@@ -367,10 +391,10 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
                             console.log(this);
                             @*this._editOneDetail(event, rowData);*@
                         }
-                    } 
+                    }
                 ];
             };
- 
+
             //#endregion
             //#region 自定義:query
             const _querySelectOptions = Vue.reactive({
@@ -532,10 +556,44 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
             const _onFiltered = function (event) {
                 console.log("_onFiltered customize: ", event);
             }
+            // 🔸宣告函式區塊：可放在 _serverReturned 同一層（或上方）
+            const showAlertByReturnData = (retData, successSeconds = 3, errorSeconds = 5) => {
+                let title = '';
+                let content = '';
+                let isSuccess = (retData?.returnCode === 'OK');
+
+                if (isSuccess) {
+                    title = '成功';
+                    content = retData.message || '操作成功';
+                    SharedVue.alertBox(successSeconds).showSuccessAlert(title, content);
+                } else {
+                    title = '錯誤';
+
+                    if (retData?.data?.length > 0) {
+                        const firstErrorEntry = retData.data[0];
+                        const field = firstErrorEntry.Key;
+                        const fieldMessages = firstErrorEntry.Value;
+
+                        if (fieldMessages?.length > 0) {
+                            content = `${field}：${fieldMessages[0]}`;
+                        }
+                    } else if (retData?.message) {
+                        content = retData.message;
+                    } else {
+                        content = '操作失敗，請稍後再試。';
+                    }
+
+                    SharedVue.alertBox(errorSeconds).showErrorAlert(title, content);
+                }
+            };
 
             const _serverReturned = function (retData) {
                 ShowValidateResult(retData, { filter: '#ModelErrorDiv' });
                 console.log("serverReturned customize: ", retData);
+                //#region ALERT BOXS
+                showAlertByReturnData(retData);
+                @* SharedVue.alertBox(5).showErrorAlert('錯誤', 'error');*@
+                //#endregion
             }
 
             const _onBeforeMount = function (tableInstance) {
@@ -599,7 +657,7 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
                 getMasterTableActionButtonConfig,
                 getDetailTableActionButtonConfig,
                 //#endregion
- 
+
             };
             //#endregion
             //掛載Table
