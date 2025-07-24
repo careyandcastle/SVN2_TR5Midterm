@@ -67,7 +67,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
 
         public DateTime? 下次收租日期 { get; set; } //
         public decimal 每期租金含稅 { get; set; }  //  
-        public decimal 累計應收租金含稅 { get; set; }  // 
+        public decimal 整體租約_剩餘租金含稅 { get; set; }  // 
         [HiddenForView]
         public bool 可收租 { get; set; }  //
         [HiddenForView]

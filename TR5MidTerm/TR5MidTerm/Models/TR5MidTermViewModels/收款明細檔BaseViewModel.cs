@@ -37,7 +37,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public decimal 每期租金含稅 { get; set; } //  
         public int 每期月數 { get; set; } // 
         public decimal 每月租金含稅 { get; set; } // 
-        public int 剩餘可收月數 { get; set; } // 從租約主檔取得
+        public int? 剩餘可收月數 { get; set; } // 從租約主檔取得
 
         [Required(ErrorMessage = "請輸入收款期數")]
         public int 本次收幾期 { get; set; } // 

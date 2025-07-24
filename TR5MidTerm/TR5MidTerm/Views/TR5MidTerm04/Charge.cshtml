@@ -79,12 +79,16 @@ else
         const 每月租金 = parseFloat('@Model.每月租金含稅');
         const 每期月數 = parseInt('@Model.每期月數');
         const 租約剩餘可收月數 = parseInt('@Model.剩餘可收月數');
+        debugger;
 
         $('#spin-本次收幾期').on('input', function () {
-            const 本次收幾期 = parseInt($(this).val()) || 1;
+            const 本次收幾期 = parseInt($(this).val());
             const 本次收幾個月 = 本次收幾期 * 每期月數;
-            @*const 實際收幾個月 = Math.min(本次收幾個月, 租約剩餘可收月數);*@
-            const totalRentThisTime = 本次收幾個月 * 每月租金;
+            const 實際收幾個月 = Math.min(本次收幾個月, 租約剩餘可收月數);
+            const 完整期數 = Math.floor(實際收幾個月 / 每期月數);
+            const 殘月數 = 實際收幾個月 % 每期月數;
+
+            const totalRentThisTime = (完整期數 * 每期月數 * 每月租金) + (殘月數 * 每月租金);
             $('#input-欲收租金總額').val(totalRentThisTime.toFixed(2));
 
             // ✅ 更新送出的 hidden 欄位
