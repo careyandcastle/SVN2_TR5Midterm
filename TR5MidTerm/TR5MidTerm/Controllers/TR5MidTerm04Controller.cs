@@ -120,25 +120,21 @@ namespace TR5MidTerm.Controllers
         public async Task<IActionResult> GetData([FromBody] QueryConditions qc)
         {
             IQueryable<租約主檔DisplayViewModel> sql = GetBaseQuery().AsNoTracking();
+            var queryedData = await PaginatedList<租約主檔DisplayViewModel>.CreateAsync(sql, qc);
 
-            PaginatedList<租約主檔DisplayViewModel> queryedData = null;
-            queryedData = await PaginatedList<租約主檔DisplayViewModel>.CreateAsync(sql, qc);
             foreach (var item in queryedData)
             {
                 if (item == null)
                 {
                     Debug.WriteLine("item is null");
+                    continue;
                 }
-                else
-                {
-                    Debug.WriteLine("案號: " + item.案號);
-                }
-            }
 
-            foreach (var item in queryedData)
-            {
-                // 每期租金含稅
-                var 每月租金含稅 = (
+                Debug.WriteLine("案號: " + item.案號);
+
+                #region 計算每期租金（含稅）
+
+                var 每月租金含稅 = await (
                     from d in _context.租約明細檔
                     join p in _context.商品檔
                       on new { d.事業, d.單位, d.部門, d.分部, d.商品編號 }
@@ -146,106 +142,84 @@ namespace TR5MidTerm.Controllers
                     where d.事業 == item.事業 && d.單位 == item.單位 &&
                           d.部門 == item.部門 && d.分部 == item.分部 && d.案號 == item.案號
                     select d.數量 * p.單價 * 1.05m
-                ).Sum();
+                ).SumAsync();
 
                 item.每期租金含稅 = 每月租金含稅 * item.計租週期月數;
 
+                #endregion
 
-                // 取已收款的最新年月
-                var latestCharge = _context.收款明細檔
+                #region 查詢最新收款紀錄
+
+                var latestCharge = await _context.收款明細檔
                     .Where(x => x.事業 == item.事業 && x.單位 == item.單位 &&
                                 x.部門 == item.部門 && x.分部 == item.分部 && x.案號 == item.案號)
                     .OrderByDescending(x => x.計租年月)
-                    .FirstOrDefault();
+                    .FirstOrDefaultAsync();
 
-                DateTime? 下次收租日 = null;
-                var 有尾期flag = false;
-                decimal 尾期租金 = 0m; 
-                var totalPeriod = item.租期月數 / item.計租週期月數;
-                var 殘月 = (item.租期月數 % item.計租週期月數);
-                if (殘月 != 0)
-                {
-                    有尾期flag = true;
-                    totalPeriod += 1;
-                    尾期租金 = 殘月 * 每月租金含稅;
-                }
+                #endregion
+
+                #region 租期與收租計算
+
+                int 租期月數 = item.租期月數;
+                int 週期月數 = item.計租週期月數;
+                int 殘月 = 租期月數 % 週期月數;
+                bool 有尾期 = 殘月 != 0;
+
+                int totalPeriod = 租期月數 / 週期月數 + (有尾期 ? 1 : 0);
+                decimal 尾期租金 = 有尾期 ? 殘月 * 每月租金含稅 : 0m;
 
                 int paidPeriod = 0;
-                var 整個租約_剩餘未繳月數 = 0;
-                //if (每月租金含稅 == 16997.4m)
-                //{
-                //    var a = 1;
-                //    Debug.WriteLine(item);
-                //}
-                if (latestCharge != default)
+                DateTime? 下次收租日 = null;
+                int 未繳月數 = 租期月數;
+
+                if (latestCharge != null)
                 {
-                    var latestPayDate = latestCharge.計租年月; 
-                    int paidMonths = (latestPayDate.Year - item.租約起始日期.Year) * 12
-                                   + (latestPayDate.Month - item.租約起始日期.Month);
+                    var paidMonths = (latestCharge.計租年月.Year - item.租約起始日期.Year) * 12
+                                   + (latestCharge.計租年月.Month - item.租約起始日期.Month);
 
-                    paidPeriod = paidMonths /item.計租週期月數 ;
-                    if((paidMonths == item.租期月數) && (item.租期月數 % item.計租週期月數 != 0))
-                    {
+                    paidPeriod = paidMonths / 週期月數;
+
+                    if (paidMonths == 租期月數 && 殘月 > 0)
                         paidPeriod++;
-                    }
 
-                    整個租約_剩餘未繳月數 = item.租期月數 - paidMonths;
-                    var 整個租約_尾期殘月數 = item.租期月數 % item.計租週期月數;
-                    if (整個租約_剩餘未繳月數 == 整個租約_尾期殘月數)
-                    {
-                        下次收租日 = latestPayDate.AddMonths(整個租約_尾期殘月數);
-                    }
-                    else
-                    {
-                        下次收租日 = latestPayDate.AddMonths(item.計租週期月數);
-                    }
+                    未繳月數 = 租期月數 - paidMonths;
+
+                    下次收租日 = (未繳月數 == 殘月)
+                        ? latestCharge.計租年月.AddMonths(殘月)
+                        : latestCharge.計租年月.AddMonths(週期月數);
                 }
                 else
                 {
-                    //var latestPayDate = latestCharge.計租年月;
-
-                    整個租約_剩餘未繳月數 = item.租期月數;
-                    var 整個租約_尾期殘月數 = item.租期月數 % item.計租週期月數;
-                    if (整個租約_剩餘未繳月數 == 整個租約_尾期殘月數)
-                    {
-                        下次收租日 = item.租約起始日期.AddMonths(整個租約_尾期殘月數);
-                    }
-                    else
-                    {
-                        下次收租日 = item.租約起始日期.AddMonths(item.計租週期月數);
-                    }
+                    下次收租日 = (未繳月數 == 殘月)
+                        ? item.租約起始日期.AddMonths(殘月)
+                        : item.租約起始日期.AddMonths(週期月數);
                 }
 
-                // 補上欄位
-                item.未繳期數 = totalPeriod - paidPeriod; 
-                if(item.未繳期數 == 0)
+                #endregion
+
+                #region 補上欄位
+
+                item.未繳期數 = totalPeriod - paidPeriod;
+
+                if (item.未繳期數 == 0)
                 {
                     item.整體租約_剩餘租金含稅 = 0;
                     item.可收租 = false;
-                    item.超過收租期限 = false; 
+                    item.超過收租期限 = false;
                 }
                 else
                 {
                     item.下次收租日期 = 下次收租日;
-                    if (有尾期flag)
-                    {
-                        item.整體租約_剩餘租金含稅 = item.每期租金含稅 * (item.未繳期數 - 1);
-                        item.整體租約_剩餘租金含稅 += 尾期租金;
+                    item.整體租約_剩餘租金含稅 = item.每期租金含稅 * (item.未繳期數 - (有尾期 ? 1 : 0)) + 尾期租金;
 
-                    }
-                    else
-                    {
-                        item.整體租約_剩餘租金含稅 = item.每期租金含稅 * item.未繳期數;
-                    }
                     item.可收租 = 下次收租日 < DateTime.Now;
-                    item.超過收租期限 = (下次收租日 < DateTime.Now.AddDays(item.繳款期限天數));
-                    
+                    item.超過收租期限 = 下次收租日 < DateTime.Now.AddDays(item.繳款期限天數);
                 }
-                item.租約終止日期 = item.租約起始日期.AddMonths(item.租期月數);
 
+                item.租約終止日期 = item.租約起始日期.AddMonths(租期月數);
 
+                #endregion
             }
-
 
             return Ok(new
             {
@@ -253,6 +227,7 @@ namespace TR5MidTerm.Controllers
                 total = queryedData.TotalCount
             });
         }
+
         private IQueryable<租約主檔DisplayViewModel> GetBaseQuery()
         {
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
@@ -753,99 +728,89 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
         public async Task<IActionResult> Charge(string 事業, string 單位, string 部門, string 分部, string 案號)
         {
+            // ✅ 參數基本驗證（任一為空就視為錯誤）
             if (string.IsNullOrWhiteSpace(事業) || string.IsNullOrWhiteSpace(單位) ||
                 string.IsNullOrWhiteSpace(部門) || string.IsNullOrWhiteSpace(分部) || string.IsNullOrWhiteSpace(案號))
             {
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
 
-            #region ✅ 檢查租約主檔是否存在
+            #region ✅ 檢查租約主檔是否存在（租約基本資訊來源）
             var rentMaster = await _context.租約主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
             if (rentMaster == null)
             {
-                ViewBag.無租約主檔 = true;
+                ViewBag.無租約主檔 = true; // Razor View 用於顯示警示
                 return PartialView();
             }
-            else
-            {
-                ViewBag.無租約主檔 = false;
-            }
+            ViewBag.無租約主檔 = false;
             #endregion
 
-            #region ✅ 檢查是否已建立收款主檔（不然不可收租）
+            #region ✅ 檢查是否已建立收款主檔（收款前置條件）
             var chargeMaster = await _context.收款主檔.FindAsync(事業, 單位, 部門, 分部, 案號);
             if (chargeMaster == null)
             {
                 ViewBag.無收款主檔 = true;
                 return PartialView();
             }
-            else{
-                ViewBag.無收款主檔 = false;
-            }
+            ViewBag.無收款主檔 = false;
             #endregion
 
-            #region ✅ 推算起算年月（下次收租年月）
+            #region ✅ 查詢最後一筆收款明細（推算下次計租年月）
             var lastYm = await _context.收款明細檔
                 .Where(x => x.事業 == 事業 && x.單位 == 單位 &&
                             x.部門 == 部門 && x.分部 == 分部 && x.案號 == 案號)
                 .OrderByDescending(x => x.計租年月)
-                .Select(x => (DateTime?)x.計租年月)
+                .Select(x => (DateTime?)x.計租年月) // 轉成可 null 型別
                 .FirstOrDefaultAsync();
+            #endregion
 
+            #region ✅ 計算剩餘可收月數與下次起算年月
 
+            // 取得起始與終止日（若無明確終止日則加上租期月數）
+            var 起始日 = rentMaster.租約起始日期;
+            var 終止日 = rentMaster.租約終止日期 ?? 起始日.AddMonths(rentMaster.租期月數);
 
-            #region ✅ 推算剩餘月數與可收期數上限
-            var 租期月數 = rentMaster.租期月數;
-            var 終止日 = rentMaster.租約終止日期 ?? rentMaster.租約起始日期.AddMonths(租期月數);
-            //var 終止年月 = 終止日;
-
-
+            // 避免除以 0，保底為 1
             var 計租週期 = Math.Max(1, rentMaster.計租週期月數);
-            var 剩餘 = 0;
-            DateTime nextStartYm;
+
+            int 剩餘月數;
+            DateTime 起算年月;
 
             if (lastYm.HasValue)
             {
-                // ✅ 取 .Value 才能使用 .Year 和 .Month
-                剩餘 = ((終止日.Year - lastYm.Value.Year) * 12 + (終止日.Month - lastYm.Value.Month));
-                //if (剩餘 < rentMaster.計租週期月數){
-                //    nextStartYm = lastYm.Value.AddMonths(剩餘);
-                //}
-                //else
-                //{
-                //    nextStartYm = lastYm.Value.AddMonths(計租週期);
-                //}
-                nextStartYm = lastYm.Value;
+                // ➕ 有歷史收租紀錄 → 用最新計租年月推算剩餘租期
+                剩餘月數 = (終止日.Year - lastYm.Value.Year) * 12 + (終止日.Month - lastYm.Value.Month);
+                起算年月 = lastYm.Value;
             }
             else
             {
-                剩餘 = rentMaster.租期月數;
-                var 起始日 = rentMaster.租約起始日期;
-                //nextStartYm = new DateTime(起始日.Year, 起始日.Month, 1);
-                nextStartYm = 起始日;
+                // ➖ 尚未收過租 → 直接用起始日當作下次收租點
+                剩餘月數 = rentMaster.租期月數;
+                起算年月 = 起始日;
             }
+
+            // 以 ceil 計算「最多可以收幾期」（殘月也要算一整期）
+            int 可收期數上限 = (int)Math.Ceiling((decimal)剩餘月數 / 計租週期);
             #endregion
 
-            #region ✅ 計算每月租金
-            var 每月租金 = await (
+            #region ✅ 計算每月與每期租金（含稅）
+
+            // 用租約明細與商品單價算出每月金額，加上稅率 5%
+            var 每月租金含稅 = await (
                 from d in _context.租約明細檔
                 join p in _context.商品檔
-                    on new { d.事業, d.單位, d.部門, d.分部, d.商品編號 }
-                    equals new { p.事業, p.單位, p.部門, p.分部, p.商品編號 }
+                  on new { d.事業, d.單位, d.部門, d.分部, d.商品編號 }
+                  equals new { p.事業, p.單位, p.部門, p.分部, p.商品編號 }
                 where d.事業 == 事業 && d.單位 == 單位 &&
                       d.部門 == 部門 && d.分部 == 分部 && d.案號 == 案號
                 select d.數量 * p.單價 * 1.05m
             ).SumAsync();
 
-            var 每期租金 = 每月租金 * 計租週期;
+            // 每期租金 = 每月租金 * 每期月數
+            var 每期租金含稅 = 每月租金含稅 * 計租週期;
             #endregion
 
-
-            //var 剩餘月數 = ((終止日.Year - lastYm?.Year) * 12) + (終止日.Month - lastYm?.Month);
-            var 可收期數上限 = (int)Math.Ceiling((decimal)剩餘 / 計租週期);
-            #endregion
-
-            #region ✅ 組 ViewModel
+            #region ✅ 組合回傳用的 ViewModel 給畫面顯示（Razor View）
             var viewModel = new 收款明細檔CreateViewModel
             {
                 事業 = 事業,
@@ -853,14 +818,14 @@ namespace TR5MidTerm.Controllers
                 部門 = 部門,
                 分部 = 分部,
                 案號 = 案號,
-                計租年月 = nextStartYm,
-                計租年月_判斷殘月用 = nextStartYm,
-                案號名顯示 = $"{案號}_{rentMaster.案名}",
-                每期月數 = 計租週期,
-                每月租金含稅 = 每月租金,
-                每期租金含稅 = 每期租金,
-                剩餘可收月數 = 剩餘,
-                可收期數上限 = 可收期數上限
+                計租年月 = 起算年月,                   // 起算用的年月（例如：下一次收租日）
+                計租年月_判斷殘月用 = 起算年月,         // 冗餘欄位，給殘月判斷用
+                案號名顯示 = $"{案號}_{rentMaster.案名}", // 顯示用欄位：案號_案名
+                每期月數 = 計租週期,                   // 一期租金涵蓋幾個月
+                每月租金含稅 = 每月租金含稅,           // 月租金（含稅）
+                每期租金含稅 = 每期租金含稅,           // 期租金（含稅）
+                剩餘可收月數 = 剩餘月數,               // 剩下的月數（尚未收的）
+                可收期數上限 = 可收期數上限             // 頁面上限用來限制下拉選單
             };
             #endregion
 
@@ -869,28 +834,30 @@ namespace TR5MidTerm.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ProcUseRang(ProcNo, ProcUseRang.Update)]
+        [ProcUseRang(ProcNo, ProcUseRang.Update)] 
         public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月, 計租年月_判斷殘月用,本次收幾期")] 收款明細檔CreateViewModel postData)
         {
+            // ✅ 前端欄位驗證不通過
             if (!ModelState.IsValid)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
 
+            // ✅ 取得登入者帳號資訊
             var ua = HttpContext.Session.GetObject<UserAccountForSession>(nameof(UserAccountForSession));
 
-            // ✅ 查租約主檔，取得週期、終止年月
+            #region ✅ 查租約主檔資訊
             var rent = await _context.租約主檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.案號);
             if (rent == null)
                 return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR) { message = "找不到租約主檔" });
 
-            #region 更新收款主檔
+            // 推算租約週期、起始日、終止日
+            var 每期月數 = Math.Max(1, rent.計租週期月數);
+            var 租期月數 = rent.租期月數;
+            var 起始日 = rent.租約起始日期;
+            var 終止日 = 起始日.AddMonths(租期月數);
+            #endregion
 
-            var 整體租約_每期月數 = Math.Max(1, rent.計租週期月數);  // 例如：12 月
-            var 整體租約_租期月數 = rent.租期月數;                  // 例如：44 月
-            var 整體租約_起始日 = rent.租約起始日期;                 // 例如：2022-03-01
-            var 整體租約_終止日 = 整體租約_起始日.AddMonths(整體租約_租期月數); // 終止日應為 2025/10/1 (2022/3/1 加上 44 個月)
-
-            // ✅ 查每月租金（JOIN 商品檔）
-            var 整體租約_每月租金含稅 = await (
+            #region ✅ 計算每月租金（含稅）
+            var 每月租金含稅 = await (
                 from d in _context.租約明細檔
                 join p in _context.商品檔
                     on new { d.事業, d.單位, d.部門, d.分部, d.商品編號 }
@@ -900,55 +867,44 @@ namespace TR5MidTerm.Controllers
                       d.案號 == postData.案號
                 select d.數量 * p.單價 * 1.05m
             ).SumAsync();
+            #endregion
 
-            var 本次收租_第i期起算年月 = postData.計租年月;
-            var 起算年月_判斷殘月用 = postData.計租年月_判斷殘月用;
+            #region ✅ 推算實際收租期數與金額
+            var 起算年月 = postData.計租年月;
+            var 計算基準 = postData.計租年月_判斷殘月用;
+
+            // 查目前最大流水號（為了產生新筆）
             var maxSerial = await _context.收款明細檔
                 .Where(x =>
-                    x.事業 == postData.事業 && x.單位 == postData.單位 &&
-                    x.部門 == postData.部門 && x.分部 == postData.分部 && x.案號 == postData.案號)
+                    x.事業 == postData.事業 &&
+                    x.單位 == postData.單位 &&
+                    x.部門 == postData.部門 &&
+                    x.分部 == postData.分部 &&
+                    x.案號 == postData.案號)
                 .MaxAsync(x => (int?)x.流水號) ?? 0;
 
-            //#region 新邏輯
-            int 本次收租_總計月數 = 0;
-            DateTime final計租年月 = 本次收租_第i期起算年月;
-            int 本次收租_第i期月數 = 0;
+            int 累積月數 = 0;
+            DateTime finalYm = 起算年月;
+
             for (int i = 0; i < postData.本次收幾期; i++)
             {
-                
+                // 🧮 判斷剩餘月數（避免超收）
+                var 剩餘月數 = ((終止日.Year - 起算年月.Year) * 12) + (終止日.Month - 起算年月.Month);
+                if (剩餘月數 < 0) break;
 
-                // 判斷剩餘月數（避免超收）
-                var 整體租約_剩餘月數 = ((整體租約_終止日.Year - 本次收租_第i期起算年月.Year) * 12) + (整體租約_終止日.Month - 本次收租_第i期起算年月.Month)  ;
-                // ⛔️ A/B共通檢查：若剩餘月數已為 0（代表已租完），則停止收租
-                if (整體租約_剩餘月數 < 0)
-                    break;
+                // 🅰️ 標準期（完整一期）
+                int 本期月數 = (剩餘月數 >= 每期月數) ? 每期月數 : 剩餘月數;
 
-                // 🅰️【A情況：標準完整期收租】
-                // ⬇️ 若剩餘月數足夠收一整期，則本期就收預設的「每期月數」（例如：12 個月）
-                if (整體租約_剩餘月數 >= 整體租約_每期月數)
-                {
-                    本次收租_第i期月數 = 整體租約_每期月數;
-                }
-                // 🅱️【B情況：最後一期殘月收租】
-                // ⬇️ 若剩餘月數不足以收完整一期（如只剩 8 個月），則本期只收這些殘月
-                else if(整體租約_剩餘月數 > 0)
-                {
-                    本次收租_第i期月數 = 整體租約_剩餘月數;
-                }
-
-                // 🔁 推進到下一期的起算年月（加上這期所收的月數）
-                本次收租_第i期起算年月 = 本次收租_第i期起算年月.AddMonths(本次收租_第i期月數);
-                // 📦 累加這一期所收的月數
-                本次收租_總計月數 += 本次收租_第i期月數;
-
-                
+                // 推進到下一期
+                起算年月 = 起算年月.AddMonths(本期月數);
+                累積月數 += 本期月數;
             }
-            
 
-            // 最後一筆的計租年月設為標記
-            final計租年月 = 本次收租_第i期起算年月;
-            var 本次收租_總金額 = 本次收租_總計月數 * 整體租約_每月租金含稅;
+            finalYm = 起算年月;
+            var 總金額 = 每月租金含稅 * 累積月數;
+            #endregion
 
+            #region ✅ 新增一筆收款明細（合併多期金額）
             var 明細 = new 收款明細檔
             {
                 事業 = postData.事業,
@@ -957,15 +913,15 @@ namespace TR5MidTerm.Controllers
                 分部 = postData.分部,
                 案號 = postData.案號,
                 流水號 = ++maxSerial,
-                計租年月 = final計租年月,  
-                金額 = 本次收租_總金額,        // ✅ 多期合計金額
+                計租年月 = finalYm, // 這筆收租的最後一個月
+                金額 = 總金額,
                 修改人 = CombineCodeAndName(ua.UserNo, ua.UserName),
                 修改時間 = DateTime.Now
             };
             _context.收款明細檔.Add(明細);
-            //#endregion
+            #endregion
 
-            // ✅ 更新收款主檔 修改時間
+            #region ✅ 更新收款主檔修改資訊
             var chargeMaster = await _context.收款主檔.FindAsync(postData.事業, postData.單位, postData.部門, postData.分部, postData.案號);
             if (chargeMaster != null)
             {
@@ -973,10 +929,9 @@ namespace TR5MidTerm.Controllers
                 chargeMaster.修改時間 = DateTime.Now;
             }
             #endregion
-             
-            #region 更新水電表
 
-            // Step 1️⃣ 查出該案號所有的「總表號 + 分表號」組合（先存在記憶體中）
+            #region ✅ 同步水電資料的上期度數（複數水表）
+            // 1️⃣ 查出所有該案號對應的總表號與分表號組合
             var 租約水電清單 = await _context.租約水電檔
                 .Where(x =>
                     x.事業 == postData.事業 &&
@@ -987,7 +942,7 @@ namespace TR5MidTerm.Controllers
                 .Select(x => new { x.總表號, x.分表號 })
                 .ToListAsync();
 
-            // Step 2️⃣ 查出所有符合事業/單位/部門/分部 的水電分表檔
+            // 2️⃣ 查出符合組織條件的水電分表
             var 全部水電分表 = await _context.水電分表檔
                 .Where(x =>
                     x.事業 == postData.事業 &&
@@ -996,7 +951,7 @@ namespace TR5MidTerm.Controllers
                     x.分部 == postData.分部)
                 .ToListAsync();
 
-            // Step 3️⃣ 在記憶體中做 Join
+            // 3️⃣ 在記憶體中進行 Join
             var 水電分表清單 = (
                 from 水電 in 全部水電分表
                 join 租水 in 租約水電清單
@@ -1004,7 +959,7 @@ namespace TR5MidTerm.Controllers
                 select 水電
             ).ToList();
 
-            // Step 4️⃣ 同步上期度數
+            // 4️⃣ 將「上期度數」同步為「本期度數」，並更新修改資訊
             foreach (var item in 水電分表清單)
             {
                 item.上期度數 = item.本期度數;
@@ -1013,18 +968,17 @@ namespace TR5MidTerm.Controllers
             }
             #endregion
 
-            // ✅ 儲存異動
+            #region ✅ 儲存變更並回傳結果
             try
             {
                 var opCount = await _context.SaveChangesAsync();
                 return Ok(new ReturnData(ReturnState.ReturnCode.OK)
                 {
-                    message = $"已成功新增 {postData.本次收幾期} 期收租，共 {本次收租_總計月數} 月",
+                    message = $"已成功新增 {postData.本次收幾期} 期收租，共 {累積月數} 月",
                     data = new
                     {
-                        實際月數 = 本次收租_總計月數,
-                        //最後截止年月 = currentYm_計租年月標記.AddMonths(-1),
-                        起始年月 = 整體租約_起始日
+                        實際月數 = 累積月數,
+                        起始年月 = 起始日
                     }
                 });
             }
@@ -1035,7 +989,9 @@ namespace TR5MidTerm.Controllers
                     message = "儲存失敗: " + ex.Message
                 });
             }
+            #endregion
 
+            // 若程式未進入 try 區段（理論上不會發生）
             return StatusCode(500, new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
         }
 
