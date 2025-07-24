@@ -740,7 +740,7 @@ namespace TR5MidTerm.Controllers
             if (rentMaster == null)
             {
                 ViewBag.無租約主檔 = true; // Razor View 用於顯示警示
-                return PartialView();
+                return NotFound(new ReturnData(ReturnState.ReturnCode.EDIT_ERROR));
             }
             ViewBag.無租約主檔 = false;
             #endregion
@@ -755,6 +755,25 @@ namespace TR5MidTerm.Controllers
             ViewBag.無收款主檔 = false;
             #endregion
 
+            #region ✅ 檢查是否有租約明細（否則沒得收款） 
+            bool 有明細 = await _context.租約明細檔
+                .AnyAsync(x => x.事業 == 事業 &&
+                               x.單位 == 單位 &&
+                               x.部門 == 部門 &&
+                               x.分部 == 分部 &&
+                               x.案號 == 案號);
+            if (有明細)
+            {
+                ViewBag.無租約明細 = false;
+                //return PartialView();
+            }
+            else
+            {
+                ViewBag.無租約明細 = true;
+                return PartialView();
+            }
+            #endregion
+             
             #region ✅ 查詢最後一筆收款明細（推算下次計租年月）
             var lastYm = await _context.收款明細檔
                 .Where(x => x.事業 == 事業 && x.單位 == 單位 &&

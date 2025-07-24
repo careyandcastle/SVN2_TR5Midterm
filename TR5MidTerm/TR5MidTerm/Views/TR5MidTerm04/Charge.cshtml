@@ -6,11 +6,17 @@
         ⚠️ 無可用的收款主檔，無法新增收款明細。
     </div>
 }
+else if (ViewBag.無租約明細)
+{
+    <div class="alert alert-warning" role="alert">
+        ⚠️ 本租約的尚未加入租金商品項目。
+    </div>
+}
 else
 {
 
     // Razor 頁面中先計算顯示用 firstYm
-    var firstYm = @Model.計租年月; 
+    var firstYm = @Model.計租年月;
 
     <form asp-action="Charge" method="post">
         @Html.AntiForgeryToken()
@@ -48,13 +54,13 @@ else
                 <label asp-for="金額">本次欲收租金總額</label>
                 <input asp-for="金額" id="input-欲收租金總額" class="form-control" readonly />
                 <span asp-validation-for="金額" class="text-danger"></span>
-            </div> 
+            </div>
             <!-- ✅ 顯示用：firstYm，這只是顯示，不送出 -->
             <div class="col-md-5 form-group">
                 <label>收租起始月</label>
                 <input type="text" class="form-control" value="@firstYm.ToString("yyyy-MM")" readonly />
             </div>
-             
+
             <div class="col-md-5 form-group">
                 <label>收租結束月</label>
                 @*（與起始月對稱、可視為本期的尾月 ）*@
@@ -64,7 +70,7 @@ else
 
             <input asp-for="計租年月" type="hidden" />
             <input asp-for="計租年月_判斷殘月用" type="hidden" />
-             <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
+            <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
             <input type="hidden" id="每期月數" value="@Model.每期月數" />
 
             <div class="col-md-12 form-group text-right">
@@ -72,7 +78,7 @@ else
             </div>
         </div>
     </form>
-     
+
     <script>
     $(document).ready(function () {
         const 起算年月 = new Date('@Model.計租年月.ToString("yyyy-MM-dd")');
