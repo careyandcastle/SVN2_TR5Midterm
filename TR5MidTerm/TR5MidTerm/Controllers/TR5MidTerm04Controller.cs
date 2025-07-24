@@ -804,7 +804,7 @@ namespace TR5MidTerm.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ProcUseRang(ProcNo, ProcUseRang.Update)]
-        public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月, 計租年月_判斷殘月用,收幾期")] 收款明細檔CreateViewModel postData)
+        public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月, 計租年月_判斷殘月用,本次收幾期")] 收款明細檔CreateViewModel postData)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ReturnData(ReturnState.ReturnCode.CREATE_ERROR));
@@ -849,7 +849,7 @@ namespace TR5MidTerm.Controllers
             var currentYm_計租年月標記 = 起算年月;
             var 實際月數總計 = 0;
 
-            for (int i = 0; i < postData.收幾期; i++)
+            for (int i = 0; i < postData.本次收幾期; i++)
             {
                 int 本期月數;
 

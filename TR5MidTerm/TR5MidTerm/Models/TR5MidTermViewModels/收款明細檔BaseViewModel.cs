@@ -40,7 +40,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public int 剩餘可收月數 { get; set; } // 從租約主檔取得
 
         [Required(ErrorMessage = "請輸入收款期數")]
-        public int 收幾期 { get; set; } // 
+        public int 本次收幾期 { get; set; } // 
         [Key]
         public int 流水號 { get; set; }
         [Key]

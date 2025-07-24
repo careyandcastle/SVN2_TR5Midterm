@@ -10,16 +10,7 @@ else
 {
 
     // Razor 頁面中先計算顯示用 firstYm
-    var firstYm = @Model.計租年月;
-
-    /*if (Model.剩餘可收月數 >= Model.每期月數)
-    {
-        firstYm = Model.計租年月.AddMonths(Model.每期月數);
-    }
-    else
-    {
-        firstYm = Model.計租年月.AddMonths(Model.剩餘可收月數);
-    } */
+    var firstYm = @Model.計租年月; 
 
     <form asp-action="Charge" method="post">
         @Html.AntiForgeryToken()
@@ -38,73 +29,42 @@ else
                 <span asp-validation-for="案號名顯示" class="text-danger"></span>
             </div>
 
-            <div class="col-md-6 form-group">
+            <div class="col-md-3 form-group">
                 <label>每期租金（含稅）</label>
                 <input type="text" class="form-control" readonly value="@Model.每期租金含稅" />
             </div>
 
             <div class="col-md-6 form-group">
-                <label asp-for="收幾期">收款期數（每期 @Model.每期月數 月）</label>
-                <input asp-for="收幾期" id="spin-期數" type="number" class="form-control" min="1" max="@Model.可收期數上限" />
-                <span asp-validation-for="收幾期" class="text-danger"></span>
+                <label asp-for="本次收幾期">本次欲收款期數（每期 @Model.每期月數 月）</label>
+                <input asp-for="本次收幾期" id="spin-本次收幾期" type="number" class="form-control" min="1" max="@Model.可收期數上限" />
+                <span asp-validation-for="本次收幾期" class="text-danger"></span>
                 <small class="form-text text-muted">
                     請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
                 </small>
                 <div id="partial-month-hint" class="form-text text-warning" style="display:none;"></div>
             </div>
 
-            <div class="col-md-6 form-group">
-                <label asp-for="金額">本次應收總金額</label>
-                <input asp-for="金額" id="input-金額" class="form-control" readonly />
+            <div class="col-md-3 form-group">
+                <label asp-for="金額">本次欲收租金總額</label>
+                <input asp-for="金額" id="input-欲收租金總額" class="form-control" readonly />
                 <span asp-validation-for="金額" class="text-danger"></span>
-            </div>
-            @*<div class="form-group">
-                    <label>起算年月（第一筆計租年月）</label>
-                    <input type="text"
-                           id="hidden-計租年月"
-                           name="計租年月"
-                           class="form-control"
-                           value="@firstYm.ToString("yyyy-MM-01")"
-                           readonly />
-                </div>
-                <div class="form-group">
-                    <label>起算年月（第一筆計租年月）</label>
-                    <input type="text"
-                           id="hidden-計租年月"
-                           name="計租年月_判斷殘月用"
-                           class="form-control"
-                           value="@Model.計租年月_判斷殘月用.ToString("yyyy-MM-01")"
-                           readonly />
-                </div>*@
+            </div> 
             <!-- ✅ 顯示用：firstYm，這只是顯示，不送出 -->
-            <div class="form-group">
-                <label>起算年月（預計顯示用）</label>
+            <div class="col-md-5 form-group">
+                <label>收租起始月</label>
                 <input type="text" class="form-control" value="@firstYm.ToString("yyyy-MM")" readonly />
             </div>
+             
+            <div class="col-md-5 form-group">
+                <label>收租結束月</label>
+                @*（與起始月對稱、可視為本期的尾月 ）*@
+                <input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月.ToString("yyyy-MM-dd")" readonly />
 
-            <!-- ✅ 實際送出起算年月 -->
-            @*<input type="hidden" name="計租年月" value="@Model.計租年月.ToString("yyyy-MM-01")" />*@
-            @*<input type="hidden" name="計租年月_判斷殘月用" value="@Model.計租年月_判斷殘月用.ToString("yyyy-MM-01")" />*@
-
-
-        <div class="col-md-6 form-group">
-            <label>計租年月（截止）</label>
-            @*<input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月" readonly />*@
- 
-            <input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月.ToString("yyyy-MM-dd")" readonly />
-
-        </div>
+            </div>
 
             <input asp-for="計租年月" type="hidden" />
             <input asp-for="計租年月_判斷殘月用" type="hidden" />
-
-            @* Hidden 欄位 *@
-            <!-- 起算年月（傳給後端做 currentYm 起點） -->
-            @*<input type="hidden" id="hidden-起算年月" name="起算年月"
-                value="@Model.計租年月.ToString("yyyy-MM-01")" />*@
-            @*<input type="hidden" id="hidden-計租年月" name="計租年月" value="@Model.計租年月.ToString("yyyy-MM-01")" />*@
-            @*<input type="hidden" id="hidden-計租年月_判斷殘月用" name="計租年月_判斷殘月用" value="@Model.計租年月_判斷殘月用.ToString("yyyy-MM-01")" />*@
-            <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
+             <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
             <input type="hidden" id="每期月數" value="@Model.每期月數" />
 
             <div class="col-md-12 form-group text-right">
@@ -118,30 +78,30 @@ else
         const 起算年月 = new Date('@Model.計租年月.ToString("yyyy-MM-dd")');
         const 每月租金 = parseFloat('@Model.每月租金含稅');
         const 每期月數 = parseInt('@Model.每期月數');
-        const 剩餘月 = parseInt('@Model.剩餘可收月數');
+        const 租約剩餘可收月數 = parseInt('@Model.剩餘可收月數');
 
-        $('#spin-期數').on('input', function () {
-            const 收幾期 = parseInt($(this).val()) || 1;
-            const 預計收幾個月 = 收幾期 * 每期月數;
-            const 實際收幾個月 = Math.min(預計收幾個月, 剩餘月);
-            const totalAmount = 實際收幾個月 * 每月租金;
-            $('#input-金額').val(totalAmount.toFixed(0));
+        $('#spin-本次收幾期').on('input', function () {
+            const 本次收幾期 = parseInt($(this).val()) || 1;
+            const 本次收幾個月 = 本次收幾期 * 每期月數;
+            @*const 實際收幾個月 = Math.min(本次收幾個月, 租約剩餘可收月數);*@
+            const totalRentThisTime = 本次收幾個月 * 每月租金;
+            $('#input-欲收租金總額').val(totalRentThisTime.toFixed(2));
 
             // ✅ 更新送出的 hidden 欄位
             $('input[name="計租年月"]').val(起算年月.toISOString().split('T')[0]);
             $('input[name="計租年月_判斷殘月用"]').val(起算年月.toISOString().split('T')[0]);
 
-            // ✅ 計算截止年月（DateTime 型）
-            let 截止年月 = new Date(起算年月);
-            截止年月.setMonth(截止年月.getMonth() + 實際收幾個月);
+            // ✅ 計算收租結束月（DateTime 型）
+            let 收租結束月 = new Date(起算年月);
+            收租結束月.setMonth(收租結束月.getMonth() + 本次收幾個月);
 
-            const y = 截止年月.getFullYear();
-            const m = (截止年月.getMonth() + 1).toString().padStart(2, '0');
-            const d = (截止年月.getDate()).toString().padStart(2, '0');
+            const y = 收租結束月.getFullYear();
+            const m = (收租結束月.getMonth() + 1).toString().padStart(2, '0');
+            const d = (收租結束月.getDate()).toString().padStart(2, '0');
             $('#text-顯示計租年月').val(`${y}-${m}-${d}`);
 
             // ✅ 顯示殘期提示
-            const 殘期月數 = 預計收幾個月 > 剩餘月 ? 剩餘月 % 每期月數 : 0;
+            const 殘期月數 = 本次收幾個月 > 租約剩餘可收月數 ? 租約剩餘可收月數 % 每期月數 : 0;
             if (殘期月數 > 0) {
                 $('#partial-month-hint')
                     .text(`⚠️ 最後一期為殘期：僅收 ${殘期月數} 月`)
@@ -151,7 +111,7 @@ else
             }
         });
 
-        $('#spin-期數').trigger('input');
+        $('#spin-本次收幾期').trigger('input');
     });
     </script>
 
