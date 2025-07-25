@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using TR5MidTerm.Helpers;
 using TscLibCore.Attribute;
 
 #nullable disable
@@ -49,7 +50,11 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 案號 { get; set; }
         [Key]
         //[Column(TypeName = "date")]
+        [HiddenForView]
         public DateTime 計租年月 { get; set; }
+        [DisplayName("計租年月")]
+        //public string 日期顯示 => 租約終止日期?.ToString("yyyy/MM/dd") ?? string.Empty;
+        public string 日期顯示 => DateHelper.ToTaiwanDateString(計租年月, TaiwanDateFormat.YearMonth);
         [Key]
         //[Column(TypeName = "decimal(18, 0)")]
         public int 流水號 { get; set; }

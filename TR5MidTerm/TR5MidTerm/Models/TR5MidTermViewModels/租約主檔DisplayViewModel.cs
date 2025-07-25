@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using TscLibCore.Attribute;
-
+using TR5MidTerm.Helpers; 
 #nullable disable
 
 namespace TR5MidTerm.Models.TR5MidTermViewModels
@@ -56,17 +56,24 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 租賃用途 { get; set; }
         //[Column(TypeName = "date")]
         [DisplayName("租約起始日期")]
-        public string 日期顯示3 => 租約起始日期.ToString("yyyy/MM/dd") ?? string.Empty;
+        public string 日期顯示3 => DateHelper.ToTaiwanDateString(租約起始日期, TaiwanDateFormat.FullDate);
         [HiddenForView]
         public DateTime 租約起始日期 { get; set; }
+        [HiddenForView]
         public int 累計月數 { get; set; }  // 計算從起始日期至今天過了幾個月
+        [HiddenForView]
         public int 未繳期數 { get; set; } // 累計應收期數 - 已繳期數
+        [DisplayName("整筆租約待繳期數")]
+        public string 整筆租約_待繳期數 => "剩" + 未繳期數 + "期";
+
         [DisplayName("下次收租日期")]
-        public string 日期顯示2 => 下次收租日期?.ToString("yyyy/MM/dd") ?? string.Empty;
+        public string 日期顯示2 => DateHelper.ToTaiwanDateString(下次收租日期, TaiwanDateFormat.FullDate);
         [HiddenForView]
 
         public DateTime? 下次收租日期 { get; set; } //
+        [HiddenForView]
         public decimal 每期租金含稅 { get; set; }  //  
+        [HiddenForView]
         public decimal 整體租約_剩餘租金含稅 { get; set; }  // 
         [HiddenForView]
         public bool 可收租 { get; set; }  //
@@ -74,10 +81,17 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public bool 超過收租期限 { get; set; }  //
         //public decimal 累計金額 { get; set; }  //
         public int 租期月數 { get; set; }
+        [HiddenForView]
         public int 計租週期月數 { get; set; }
+        [DisplayName("計租週期月數")] 
+        public string 整筆租約_計租週期月數 => "每" + 計租週期月數 + "月一期";
+        [HiddenForView]
         public int 繳款期限天數 { get; set; }
+        [HiddenForView]
+        public string 每期租約_繳款期限天數 => 繳款期限天數 + "天";
         [DisplayName("租約終止日期")]
-        public string 日期顯示 => 租約終止日期?.ToString("yyyy/MM/dd") ?? string.Empty;
+        //public string 日期顯示 => 租約終止日期?.ToString("yyyy/MM/dd") ?? string.Empty;
+        public string 日期顯示  => DateHelper.ToTaiwanDateString(租約終止日期, TaiwanDateFormat.FullDate);
         [HiddenForView]
         public DateTime? 租約終止日期 { get; set; }
         //public DateTime? 租約終止日期顯示 { get; set; }//

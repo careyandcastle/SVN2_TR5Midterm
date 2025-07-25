@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using TR5MidTerm.Helpers;
 using TscLibCore.Attribute;
 
 #nullable disable
@@ -41,10 +42,14 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         public string 分部顯示 { get; set; }
         [Key]
         public string 案號 { get; set; }
- 
+        [HiddenForView]
+        public DateTime 收款日期 { get; set; }//
+        [DisplayName("最新收款日期")]//
+        public string 日期顯示 => DateHelper.ToTaiwanDateString(收款日期, TaiwanDateFormat.FullDate);
         public string 修改人 { get; set; }
         public DateTime 修改時間 { get; set; }
-        public DateTime 收款日期 { get; set; }//
+        
+        
         [HiddenForView]
         public bool 可否展開明細 { get; set; }
         [HiddenForView]

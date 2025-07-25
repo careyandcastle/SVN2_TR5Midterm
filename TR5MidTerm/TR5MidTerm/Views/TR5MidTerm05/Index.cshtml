@@ -379,8 +379,8 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
             const getDetailTableActionButtonConfig = function (rowData) {
                 return [
                     {
-                        text: '編輯明細',
-                        willShow: true, // 預設顯示
+                        @*text: '編輯明細',
+                        willShow: true, 
                         variant: rowData.item.可否修改明細 ? 'outline-detail1' : 'custom-outline-disabled',
                         eventHandler: (event, rowData) => {
                             if (!rowData.item.可否修改明細) {
@@ -389,8 +389,8 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
                             }
                             this.$refs.private_detailTable._editOneDetail(event, rowData);
                             console.log(this);
-                            @*this._editOneDetail(event, rowData);*@
-                        }
+                           
+                        }*@
                     }
                 ];
             };

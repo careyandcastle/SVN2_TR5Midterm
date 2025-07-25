@@ -39,7 +39,7 @@ namespace TR5MidTerm.Models.TR5MidTermViewModels
         [Key]
         //[StringLength(50)]
         public string 建物編號 { get; set; }
-        [Required]
+        //[Required]
         //[StringLength(20)]
         public string 建物名稱 { get; set; }
         //[StringLength(50)]

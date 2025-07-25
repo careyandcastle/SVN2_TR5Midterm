@@ -508,7 +508,11 @@
                         variant: rowData.item.可否刪除明細 ? 'outline-detail1' : 'custom-outline-disabled',
                         eventHandler: (event, rowData) => {
                             if (!rowData.item.可否刪除明細) {
-                                alert('無法刪除：資料狀態不允許或未具刪除權限');
+                                @*alert('無法刪除：資料狀態不允許或未具刪除權限');*@
+                                SharedVue.alertBox().showErrorAlert(
+                                    '無法刪除',
+                                    '資料狀態不允許或未具刪除權限'
+                                );
                                 return;
                             }
                             this.$refs.private_detailTable._deleteOneDetail(event, rowData);
