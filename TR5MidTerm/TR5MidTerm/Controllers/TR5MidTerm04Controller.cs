@@ -100,7 +100,7 @@ namespace TR5MidTerm.Controllers
             {
                 Text = "--不篩選分部--",
                 Value = ""
-            }); 
+            });
             ViewBag.事業選單 = 事業清單;
             ViewBag.單位選單 = 單位清單;
             ViewBag.部門選單 = 部門清單;
@@ -418,7 +418,7 @@ namespace TR5MidTerm.Controllers
             filledData.修改人 = CombineCodeAndName(ua.UserNo, ua.UserName);
             filledData.修改時間 = DateTime.Now;
             _context.Add(filledData);
-             
+
 
             try
             {
@@ -437,7 +437,7 @@ namespace TR5MidTerm.Controllers
                     {
                         data = newData
                     });
-                } 
+                }
             }
             catch (Exception ex)
             {
@@ -773,7 +773,7 @@ namespace TR5MidTerm.Controllers
                 return PartialView();
             }
             #endregion
-             
+
             #region ✅ 查詢最後一筆收款明細（推算下次計租年月）
             var lastYm = await _context.收款明細檔
                 .Where(x => x.事業 == 事業 && x.單位 == 單位 &&
@@ -829,6 +829,48 @@ namespace TR5MidTerm.Controllers
             var 每期租金含稅 = 每月租金含稅 * 計租週期;
             #endregion
 
+
+            
+            // 取得所有收款明細的計租年月（按升冪排序）
+            //var 收款明細清單 = await _context.收款明細檔
+            //    .Where(x => x.事業 == 事業 &&
+            //                x.單位 == 單位 &&
+            //                x.部門 == 部門 &&
+            //                x.分部 == 分部 &&
+            //                x.案號 == 案號)
+            //    .OrderBy(x => x.計租年月)
+            //    .ToListAsync();
+
+            // 無收款紀錄 ➜ 已繳期數為 0
+            int 已繳期數 = 0;
+
+            if (lastYm.HasValue)
+            {
+                // 起始點
+                var 起始年月 = rentMaster.租約起始日期;
+
+                // 累加總共收了幾個月  
+                int 總已繳月數 = (lastYm.Value.Year - 起始年月.Year) * 12 +
+                (lastYm.Value.Month - 起始年月.Month);
+
+                // 換算成期數
+                已繳期數 = (int)Math.Floor((decimal)總已繳月數 / 計租週期);
+            }
+            var 已過月數 = 0;
+            var 今天 = DateTime.Today;
+            if(今天 < rentMaster.租約終止日期)
+            {
+                已過月數 = (今天.Year - 起始日.Year) * 12 + (今天.Month - 起始日.Month);
+            }
+            else
+            {
+                已過月數 = (終止日.Year - 起始日.Year) * 12 + (終止日.Month - 起始日.Month);
+            }
+            
+            int 至今應收幾期 = (int)Math.Ceiling((decimal)已過月數 / 計租週期);
+
+            int 本次應繳期數 = Math.Max(0, 至今應收幾期 - 已繳期數);
+
             #region ✅ 組合回傳用的 ViewModel 給畫面顯示（Razor View）
             var viewModel = new 收款明細檔CreateViewModel
             {
@@ -844,7 +886,8 @@ namespace TR5MidTerm.Controllers
                 每月租金含稅 = 每月租金含稅,           // 月租金（含稅）
                 每期租金含稅 = 每期租金含稅,           // 期租金（含稅）
                 剩餘可收月數 = 剩餘月數,               // 剩下的月數（尚未收的）
-                可收期數上限 = 可收期數上限             // 頁面上限用來限制下拉選單
+                可收期數上限 = 可收期數上限,             // 頁面上限用來限制下拉選單
+                追繳應收期數 = 本次應繳期數
             };
             #endregion
 
@@ -853,7 +896,7 @@ namespace TR5MidTerm.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ProcUseRang(ProcNo, ProcUseRang.Update)] 
+        [ProcUseRang(ProcNo, ProcUseRang.Update)]
         public async Task<IActionResult> Charge([Bind("事業,單位,部門,分部,案號,計租年月, 計租年月_判斷殘月用,本次收幾期")] 收款明細檔CreateViewModel postData)
         {
             // ✅ 前端欄位驗證不通過
@@ -1098,7 +1141,7 @@ namespace TR5MidTerm.Controllers
                         可否修改明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部),
                         可否刪除明細 = (ua.BusinessNo == m.事業 && ua.DepartmentNo == m.單位 && ua.DivisionNo == m.部門 && ua.BranchNo == m.分部)
                     }
-                ) ;
+                );
         }
         #endregion
         #region CreateDetail
@@ -1404,7 +1447,7 @@ namespace TR5MidTerm.Controllers
         [ProcUseRang(ProcNo, ProcUseRang.Delete)]
         public async Task<IActionResult> DeleteDetailConfirmed(string 事業, string 單位, string 部門, string 分部, string 案號, string 商品編號, [Bind("事業,單位,部門,分部,案號,商品編號")] 租約明細檔DisplayViewModel postData)
         {
-            
+
             if (ModelState.IsValid == false)
                 return CreatedAtAction(nameof(DeleteDetailConfirmed), new ReturnData(ReturnState.ReturnCode.DELETE_ERROR));
 
@@ -1525,7 +1568,7 @@ namespace TR5MidTerm.Controllers
                     }
                 });
             }
-             
+
 
             return Ok(new
             {

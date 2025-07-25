@@ -67,15 +67,29 @@ else
                 <input type="text" class="form-control" id="text-顯示計租年月" value="@Model.計租年月.ToString("yyyy-MM-dd")" readonly />
 
             </div>
+            @*<div class="col-md-5 form-group">
+
+                </div>*@
+
 
             <input asp-for="計租年月" type="hidden" />
             <input asp-for="計租年月_判斷殘月用" type="hidden" />
             <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
             <input type="hidden" id="每期月數" value="@Model.每期月數" />
+             
+            <div class="col-md-12 form-group d-flex justify-content-end align-items-center gap-2">
+                    <button type="button" id="btn-帶入追繳期數" class="btn btn-secondary">
+                        至今欠期 
+                    </button>
 
-            <div class="col-md-12 form-group text-right">
-                <button type="submit" class="btn btn-primary">儲存收款明細</button>
-            </div>
+                    <button type="submit" class="btn btn-success ml-2">儲存收款明細</button>
+                </div>
+
+                @*<div class="col-md-12">
+                    <small class="form-text text-muted text-end d-block">
+                        請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
+                    </small>
+                </div>*@
         </div>
     </form>
 
@@ -86,7 +100,11 @@ else
         const 每期月數 = parseInt('@Model.每期月數');
         const 租約剩餘可收月數 = parseInt('@Model.剩餘可收月數');
         debugger;
-
+        // 👉 加這段：綁定按鈕點擊事件
+        $('#btn-帶入追繳期數').on('click', function () {
+            const 追繳期數 = @Model.追繳應收期數;
+            $('#spin-本次收幾期').val(追繳期數).trigger('input');
+        });
         $('#spin-本次收幾期').on('input', function () {
             const 本次收幾期 = parseInt($(this).val());
             const 本次收幾個月 = 本次收幾期 * 每期月數;
