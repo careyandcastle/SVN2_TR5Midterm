@@ -40,13 +40,29 @@ else
                 <input type="text" class="form-control" readonly value="@Model.每期租金含稅" />
             </div>
 
-            <div class="col-md-6 form-group">
-                <label asp-for="本次收幾期">本次欲收款期數（每期 @Model.每期月數 月）</label>
-                <input asp-for="本次收幾期" id="spin-本次收幾期" type="number" class="form-control" min="1" max="@Model.可收期數上限" />
+            <div class="col-md-6 form-group text-center ">
+                <label>本次欲收款期數（每期 @Model.每期月數 月）</label>
+
+                <!-- 🔹第一排：range + number input -->
+                <div class="d-flex align-items-center justify-content-end gap-2">
+                    <input id="range-收期數" type="range" min="1" max="@Model.可收期數上限"
+                           class="form-range flex-grow-1" style="max-width: 250px;" />
+
+                    <input id="input-收期數" type="number" min="1" max="@Model.可收期數上限"
+                           class="form-control form-control-sm  mt-2" style="width: 70px;" />
+                </div>
+
+                <!-- 🔹第二排：顯示文字另起一行並置中 -->
+                <div class="text-center mt-1">
+                    <span id="label-收期數視覺" class="fw-bold text-dark">共收 @Model.追繳應收期數 期</span>
+                </div>
+
                 <span asp-validation-for="本次收幾期" class="text-danger"></span>
-                <small class="form-text text-muted">
+
+                <small class="text-center  form-text text-muted">
                     請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
                 </small>
+
                 <div id="partial-month-hint" class="form-text text-warning" style="display:none;"></div>
             </div>
 
@@ -76,16 +92,16 @@ else
             <input asp-for="計租年月_判斷殘月用" type="hidden" />
             <input type="hidden" id="剩餘月數" value="@Model.剩餘可收月數" />
             <input type="hidden" id="每期月數" value="@Model.每期月數" />
-             
+
             <div class="col-md-12 form-group d-flex justify-content-end align-items-center gap-2">
-                    <button type="button" id="btn-帶入追繳期數" class="btn btn-secondary">
-                        至今欠期 
-                    </button>
+                <button type="button" id="btn-帶入追繳期數" class="btn btn-secondary">
+                    至今欠期
+                </button>
 
-                    <button type="submit" class="btn btn-success ml-2">儲存收款明細</button>
-                </div>
+                <button type="submit" class="btn btn-success ml-2">儲存收款明細</button>
+            </div>
 
-                @*<div class="col-md-12">
+            @*<div class="col-md-12">
                     <small class="form-text text-muted text-end d-block">
                         請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
                     </small>
@@ -94,54 +110,103 @@ else
     </form>
 
     <script>
-    $(document).ready(function () {
-        const 起算年月 = new Date('@Model.計租年月.ToString("yyyy-MM-dd")');
-        const 每月租金 = parseFloat('@Model.每月租金含稅');
-        const 每期月數 = parseInt('@Model.每期月數');
-        const 租約剩餘可收月數 = parseInt('@Model.剩餘可收月數');
-        debugger;
-        // 👉 加這段：綁定按鈕點擊事件
-        $('#btn-帶入追繳期數').on('click', function () {
-            const 追繳期數 = @Model.追繳應收期數;
-            $('#spin-本次收幾期').val(追繳期數).trigger('input');
-        });
-        $('#spin-本次收幾期').on('input', function () {
-            const 本次收幾期 = parseInt($(this).val());
-            const 本次收幾個月 = 本次收幾期 * 每期月數;
-            const 實際收幾個月 = Math.min(本次收幾個月, 租約剩餘可收月數);
-            const 完整期數 = Math.floor(實際收幾個月 / 每期月數);
-            const 殘月數 = 實際收幾個月 % 每期月數;
+$(document).ready(function () {
+    const 起算年月 = new Date('@Model.計租年月.ToString("yyyy-MM-dd")');
+    const 每月租金 = parseFloat('@Model.每月租金含稅');
+    const 每期月數 = parseInt('@Model.每期月數');
+    const 租約剩餘可收月數 = parseInt('@Model.剩餘可收月數');
+    const 可收期數上限 = parseInt('@Model.可收期數上限');
+    const 追繳應收期數 = parseInt('@Model.追繳應收期數');
 
-            const totalRentThisTime = (完整期數 * 每期月數 * 每月租金) + (殘月數 * 每月租金);
-            $('#input-欲收租金總額').val(totalRentThisTime.toFixed(2));
+    const $range = $('#range-收期數');
+    const $input = $('#input-收期數');
+    const $label = $('#label-收期數視覺');
 
-            // ✅ 更新送出的 hidden 欄位
-            $('input[name="計租年月"]').val(起算年月.toISOString().split('T')[0]);
-            $('input[name="計租年月_判斷殘月用"]').val(起算年月.toISOString().split('T')[0]);
+    // 共用邏輯函式
+    const 更新畫面 = function (本次收幾期) {
+        const 本次收幾個月 = 本次收幾期 * 每期月數;
+        const 實際收幾個月 = Math.min(本次收幾個月, 租約剩餘可收月數);
+        const 完整期數 = Math.floor(實際收幾個月 / 每期月數);
+        const 殘月數 = 實際收幾個月 % 每期月數;
+        const totalRentThisTime = (完整期數 * 每期月數 * 每月租金) + (殘月數 * 每月租金);
+        $('#input-欲收租金總額').val(totalRentThisTime.toFixed(2));
 
-            // ✅ 計算收租結束月（DateTime 型）
-            let 收租結束月 = new Date(起算年月);
-            收租結束月.setMonth(收租結束月.getMonth() + 本次收幾個月);
+        $('input[name="計租年月"]').val(起算年月.toISOString().split('T')[0]);
+        $('input[name="計租年月_判斷殘月用"]').val(起算年月.toISOString().split('T')[0]);
 
-            const y = 收租結束月.getFullYear();
-            const m = (收租結束月.getMonth() + 1).toString().padStart(2, '0');
-            const d = (收租結束月.getDate()).toString().padStart(2, '0');
-            $('#text-顯示計租年月').val(`${y}-${m}-${d}`);
+        let 收租結束月 = new Date(起算年月);
+        收租結束月.setMonth(收租結束月.getMonth() + 本次收幾個月);
 
-            // ✅ 顯示殘期提示
-            const 殘期月數 = 本次收幾個月 > 租約剩餘可收月數 ? 租約剩餘可收月數 % 每期月數 : 0;
-            if (殘期月數 > 0) {
-                $('#partial-month-hint')
-                    .text(`⚠️ 最後一期為殘期：僅收 ${殘期月數} 月`)
-                    .show();
-            } else {
-                $('#partial-month-hint').hide();
-            }
-        });
+        const y = 收租結束月.getFullYear();
+        const m = (收租結束月.getMonth() + 1).toString().padStart(2, '0');
+        const d = 收租結束月.getDate().toString().padStart(2, '0');
+        $('#text-顯示計租年月').val(`${y}-${m}-${d}`);
 
-        $('#spin-本次收幾期').trigger('input');
+        const 殘期月數 = 本次收幾個月 > 租約剩餘可收月數 ? 租約剩餘可收月數 % 每期月數 : 0;
+        if (殘期月數 > 0) {
+            $('#partial-month-hint')
+                .text(`⚠️ 最後一期為殘期：僅收 ${殘期月數} 月`)
+                .show();
+        } else {
+            $('#partial-month-hint').hide();
+        }
+         
+        // 🟢 顏色與文字更新（含欠繳計算）
+        let prefix = '';
+        let colorClass = '';
+        let labelText = '';
+
+        if (本次收幾期 < 追繳應收期數) {
+            const 欠繳期數 = 追繳應收期數 - 本次收幾期;
+            prefix = `還欠繳 ${欠繳期數} 期`;
+            colorClass = 'text-danger';
+            labelText = prefix;
+        } else if (本次收幾期 === 追繳應收期數) {
+            labelText = `共收 ${本次收幾期} 期`;
+            colorClass = 'text-dark';
+        } else {
+            labelText = `超收 ${本次收幾期} 期`;
+            colorClass = 'text-primary';
+        }
+
+        $label.text(labelText);
+        $label.removeClass('text-danger text-dark text-primary').addClass(colorClass);
+
+        if (本次收幾期 < 追繳應收期數) {
+            $label.addClass('text-danger'); // 🔴 少收
+        } else if (本次收幾期 == 追繳應收期數) {
+            $label.addClass('text-dark'); // ⚫ 剛好
+        } else {
+            $label.addClass('text-primary'); // 🔵 超收
+        }
+    };
+
+    // 雙向綁定
+    $range.on('input', function () {
+        const val = parseInt($(this).val());
+        $input.val(val);
+        更新畫面(val);
     });
+
+    $input.on('input', function () {
+        let val = parseInt($(this).val());
+        if (isNaN(val)) val = 1;
+        val = Math.min(Math.max(val, 1), 可收期數上限);
+        $(this).val(val);
+        $range.val(val);
+        更新畫面(val);
+    });
+
+    $('#btn-帶入追繳期數').on('click', function () {
+        $range.val(追繳應收期數).trigger('input');
+    });
+
+    // 預設觸發一次
+    $range.trigger('input');
+});
+
     </script>
+
 
 }
 
