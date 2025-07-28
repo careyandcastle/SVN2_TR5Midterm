@@ -464,7 +464,11 @@
                         variant: rowData.item.可否展開明細 ? 'outline-detail1' : 'custom-outline-disabled',
                         eventHandler: (event, rowData) => {
                             if (!rowData.item.可否展開明細) {
-                                alert('查無明細'); // ✅ 顯示理由
+                                SharedVue.alertBox(2).showErrorAlert(
+                                    '無法展開主檔',
+                                    '此筆主檔不具明細'
+                                );
+                                @*alert('查無明細'); // ✅ 顯示理由*@
                                 return;
                             }
                             this._toggleRowDetail(event, rowData);  // ✅ 正確方法
@@ -477,7 +481,11 @@
                         eventHandler: (event, rowData) => {
                         debugger;
                         if (!rowData.item.可否新增明細) {
-                            alert('無法新增：組織不符資格'); // ✅ 顯示理由
+                            @*alert('無法新增：組織不符資格'); // ✅ 顯示理由*@
+                            SharedVue.alertBox(2).showErrorAlert(
+                                '無法新增',
+                                '您不具此筆資料的新增權限'
+                            );
                             return;
                         }
                         else {
@@ -496,7 +504,12 @@
                         variant: rowData.item.可否修改明細 ? 'outline-detail1' : 'custom-outline-disabled',
                         eventHandler: (event, rowData) => {
                             if (!rowData.item.可否修改明細) {
-                                alert('無法編輯：此明細已鎖定或未具編輯權限');
+                                @*alert('無法編輯：此明細已鎖定或未具編輯權限');
+                                return;*@
+                                SharedVue.alertBox(2).showErrorAlert(
+                                    '無法編輯',
+                                    '您不具此筆資料的編輯權限'
+                                );
                                 return;
                             }
                             this.$refs.private_detailTable._editOneDetail(event, rowData);
@@ -509,9 +522,9 @@
                         eventHandler: (event, rowData) => {
                             if (!rowData.item.可否刪除明細) {
                                 @*alert('無法刪除：資料狀態不允許或未具刪除權限');*@
-                                SharedVue.alertBox().showErrorAlert(
+                                SharedVue.alertBox(2).showErrorAlert(
                                     '無法刪除',
-                                    '資料狀態不允許或未具刪除權限'
+                                    '您不具此筆資料的刪除權限'
                                 );
                                 return;
                             }

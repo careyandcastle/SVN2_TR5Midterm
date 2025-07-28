@@ -368,7 +368,11 @@ foreach (var propName in ((TableFieldDescDictionary)tablesField)[TableType.Detai
                         variant: rowData.item.可否展開明細 ? 'outline-detail1' : 'custom-outline-disabled',
                         eventHandler: (event, rowData) => {
                             if (!rowData.item.可否展開明細) {
-                                alert('查無明細'); // ✅ 顯示理由
+                                @*alert('查無明細'); // ✅ 顯示理由*@
+                                SharedVue.alertBox(2).showErrorAlert(
+                                    '查無明細 ',
+                                    ' '
+                                );
                                 return;
                             }
                             this._toggleRowDetail(event, rowData);  // ✅ 正確方法

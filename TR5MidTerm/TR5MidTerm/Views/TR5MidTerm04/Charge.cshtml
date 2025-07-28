@@ -2,8 +2,14 @@
 
 @if (ViewBag.無收款主檔)
 {
-    <div class="alert alert-warning" role="alert">
-        ⚠️ 無可用的收款主檔，無法新增收款明細。
+<div class="alert alert-warning" role="alert">
+    ⚠️ 無可用的收款主檔。請先至05系統，為該案號新增主檔。
+</div>
+    <div class="video-container">
+        <video  height="360" autoplay muted loop>
+            <source src="~/mp4/未建立租約主檔的指示動作.mp4" type="video/mp4">
+            您的瀏覽器不支援影片播放。
+        </video>
     </div>
 }
 else if (ViewBag.無租約明細)
@@ -95,7 +101,7 @@ else
             </div>
             @*<div class="col-md-5 form-group">
 
-        </div>*@
+                </div>*@
 
 
             <input asp-for="計租年月" type="hidden" />
@@ -113,10 +119,10 @@ else
             </div>
 
             @*<div class="col-md-12">
-            <small class="form-text text-muted text-end d-block">
-                請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
-            </small>
-        </div>*@
+                    <small class="form-text text-muted text-end d-block">
+                        請選擇本次要收取的<strong>期數</strong>，最多為 @Model.可收期數上限 期（共 @Model.剩餘可收月數 個月）。
+                    </small>
+                </div>*@
         </div>
     </form>
 
@@ -183,7 +189,7 @@ $(document).ready(function () {
         $input.val(val);
         更新畫面(val);
     };
- 
+
     $range.on('input', function () {
         同步輸入值(parseInt($(this).val()));
     });
